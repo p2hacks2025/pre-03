@@ -56,6 +56,7 @@
       "Bash(gh pr view:*)",
       "Bash(gh pr diff:*)",
       "Bash(gh pr create:*)",
+      "Bash(gh pr edit:*)",
       "Bash(gh repo view:*)",
       "Bash(gh workflow list:*)",
       "Bash(gh workflow view:*)",
