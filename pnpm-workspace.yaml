@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+
+onlyBuiltDependencies:
+  - esbuild
+  - lefthook
+  - msw
+  - sharp
+  - supabase
+  - workerd

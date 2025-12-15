@@ -1,0 +1,32 @@
+name: code-quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: code-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  biome:
+    name: Biome (CI)
+    runs-on: ubuntu-latest
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: biomejs/setup-biome@v2
+      - name: Biome CI
+        run: biome ci --reporter=github .
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Type check
+        run: pnpm typecheck

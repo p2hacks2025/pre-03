@@ -1,0 +1,29 @@
+{
+  "name": "@packages/db",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "check": "biome check .",
+    "check:fix": "biome check --write --unsafe .",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate --config ./drizzle.config.ts",
+    "db:migrate": "drizzle-kit migrate --config ./drizzle.config.ts",
+    "db:push": "drizzle-kit push --config ./drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config ./drizzle.config.ts",
+    "db:seed": "tsx src/seed/index.ts",
+    "clean": "rm -rf .turbo"
+  },
+  "dependencies": {
+    "@packages/env": "workspace:*",
+    "@t3-oss/env-core": "^0.13.8",
+    "drizzle-orm": "^0.44.7",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.83.0",
+    "@types/node": "^20.19.24",
+    "drizzle-kit": "^0.31.7",
+    "tsx": "^4.19.4"
+  }
+}

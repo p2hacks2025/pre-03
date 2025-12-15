@@ -1,0 +1,61 @@
+{
+  "extends": "//",
+  "files": {
+    "includes": ["!cloudflare-env.d.ts"]
+  },
+  "overrides": [
+    {
+      "includes": ["**"],
+      "linter": {
+        "domains": {
+          "react": "recommended",
+          "next": "recommended"
+        },
+        "rules": {
+          "nursery": {
+            "noNextAsyncClientComponent": "error",
+            "useSortedClasses": {
+              "level": "error",
+              "options": { "functions": ["clsx", "cn"] }
+            }
+          }
+        }
+      },
+      "css": { "parser": { "tailwindDirectives": true } },
+      "assist": {
+        "actions": {
+          "source": {
+            // Import周りの自動修正設定
+            "organizeImports": {
+              "level": "on",
+              "options": {
+                "groups": [
+                  // react imports
+                  { "type": false, "source": ["react*", "react/**"] },
+                  // package imports
+                  { "type": false, "source": ":PACKAGE:" },
+                  ":BLANK_LINE:",
+
+                  // alias imports
+                  { "type": false, "source": ":ALIAS:" },
+                  ":BLANK_LINE:",
+
+                  // side effect imports
+                  { "type": false },
+                  ":BLANK_LINE:",
+
+                  // type imports
+                  { "type": true },
+                  ":BLANK_LINE:",
+
+                  // css imports
+                  "**/*.css"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

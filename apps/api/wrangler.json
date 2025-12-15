@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "noval-api",
+  "compatibility_date": "2025-08-03",
+  "main": "./src/app.ts",
+  "tsconfig": "./tsconfig.json",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    }
+  },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "98cd73a5d9454002b8c0e0a3689aa122"
+    }
+  ],
+  "preview_urls": true,
+  "vars": {
+    "ENVIRONMENT": "production",
+    "LOG_LEVEL": "info",
+    "ALLOWED_ORIGINS": "*.fnova.workers.dev,http://localhost:4000"
+  }
+}

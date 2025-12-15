@@ -1,0 +1,339 @@
+name: Database Commands
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  # ============================================================
+  # Job 1: コマンド解析 + 権限チェック
+  # ============================================================
+  parse-command:
+    if: |
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/db ')
+    runs-on: ubuntu-latest
+    outputs:
+      valid: ${{ steps.parse.outputs.valid }}
+      action: ${{ steps.parse.outputs.action }}
+      action_display: ${{ steps.parse.outputs.action_display }}
+      needs_confirm: ${{ steps.parse.outputs.needs_confirm }}
+      has_permission: ${{ steps.permission.outputs.has_permission }}
+      denial_reason: ${{ steps.permission.outputs.denial_reason }}
+
+    steps:
+      - name: Parse command
+        id: parse
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.comment.body.trim();
+
+            // /db <action> [options] 形式をパース
+            const match = body.match(/^\/db\s+(\S+)(?:\s+(.*))?$/);
+
+            if (!match) {
+              core.setOutput('valid', 'false');
+              return;
+            }
+
+            const action = match[1];
+            const optionsStr = match[2] || '';
+
+            // オプション解析
+            const hasForce = /--force\b|-f\b/.test(optionsStr);
+            const hasReset = /--reset\b|-r\b/.test(optionsStr);
+            const hasConfirm = /--confirm\b/.test(optionsStr);
+
+            // アクション正規化
+            let normalizedAction;
+            let actionDisplay;
+
+            switch (action) {
+              case 'migrate':
+                normalizedAction = 'migrate';
+                actionDisplay = 'migrate';
+                break;
+              case 'seed':
+                if (hasReset) {
+                  normalizedAction = 'seed-reset';
+                  actionDisplay = 'seed --reset';
+                } else if (hasForce) {
+                  normalizedAction = 'seed-force';
+                  actionDisplay = 'seed --force';
+                } else {
+                  normalizedAction = 'seed';
+                  actionDisplay = 'seed';
+                }
+                break;
+              case 'migrate-seed':
+                normalizedAction = 'migrate-seed';
+                actionDisplay = 'migrate-seed';
+                break;
+              case 'rollback':
+                normalizedAction = 'rollback';
+                actionDisplay = 'rollback';
+                break;
+              default:
+                core.setOutput('valid', 'false');
+                return;
+            }
+
+            // 危険操作判定
+            const isDangerous = ['rollback', 'seed-reset'].includes(normalizedAction);
+            const needsConfirm = isDangerous && !hasConfirm;
+
+            core.setOutput('valid', 'true');
+            core.setOutput('action', normalizedAction);
+            core.setOutput('action_display', actionDisplay);
+            core.setOutput('needs_confirm', needsConfirm ? 'true' : 'false');
+
+            console.log(`Parsed command: action=${normalizedAction}, needsConfirm=${needsConfirm}`);
+
+      - name: Check permission
+        id: permission
+        if: steps.parse.outputs.valid == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const authorAssociation = context.payload.comment.author_association;
+            const user = context.payload.comment.user.login;
+            const prNumber = context.payload.issue.number;
+
+            console.log(`User: ${user}, Association: ${authorAssociation}`);
+
+            // OWNER は常に実行可能
+            const isOwner = authorAssociation === 'OWNER';
+
+            if (isOwner) {
+              core.setOutput('has_permission', 'true');
+              core.setOutput('denial_reason', '');
+              return;
+            }
+
+            // 許可されたロール
+            const privilegedRoles = ['MEMBER', 'COLLABORATOR', 'CONTRIBUTOR'];
+            const isPrivileged = privilegedRoles.includes(authorAssociation);
+
+            if (!isPrivileged) {
+              core.setOutput('has_permission', 'false');
+              core.setOutput('denial_reason', `あなたのロール (${authorAssociation}) には実行権限がありません。`);
+              return;
+            }
+
+            // PRの承認状態を確認
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+
+            const isApproved = reviews.some(r => r.state === 'APPROVED');
+
+            if (!isApproved) {
+              core.setOutput('has_permission', 'false');
+              core.setOutput('denial_reason', 'このPRはまだApproveされていません。Approve後に再度実行してください。');
+              return;
+            }
+
+            core.setOutput('has_permission', 'true');
+            core.setOutput('denial_reason', '');
+
+      - name: Post invalid command comment
+        if: steps.parse.outputs.valid == 'false'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            :x: **無効なコマンドです**
+
+            利用可能なコマンド:
+            - `/db migrate` - マイグレーション適用
+            - `/db seed` - シード投入（追記モード）
+            - `/db seed --force` - シード投入（上書きモード）
+            - `/db seed --reset` - 全リセット後シード投入
+            - `/db migrate-seed` - マイグレーション + シード
+            - `/db rollback` - ロールバック（全データ削除）
+
+      - name: Post permission denied comment
+        if: steps.parse.outputs.valid == 'true' && steps.permission.outputs.has_permission == 'false'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            :no_entry: **Permission Denied**
+
+            ${{ steps.permission.outputs.denial_reason }}
+
+            実行者: @${{ github.event.comment.user.login }}
+
+  # ============================================================
+  # Job 2: 確認ダイアログ（危険な操作の場合）
+  # ============================================================
+  request-confirm:
+    needs: parse-command
+    if: |
+      needs.parse-command.outputs.valid == 'true' &&
+      needs.parse-command.outputs.has_permission == 'true' &&
+      needs.parse-command.outputs.needs_confirm == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Post confirmation request
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            :warning: **確認が必要です**
+
+            実行しようとしている操作: **`${{ needs.parse-command.outputs.action_display }}`**
+
+            ${{ needs.parse-command.outputs.action == 'rollback' && '⚠️ この操作は**すべてのテーブルを削除**し、mainブランチのマイグレーションを再適用します。**すべてのデータが完全に失われます。**' || '' }}
+            ${{ needs.parse-command.outputs.action == 'seed-reset' && '⚠️ この操作は**既存のシードデータをすべて削除**してから再投入します。' || '' }}
+
+            続行するには以下のコマンドを実行してください:
+            ```
+            /db ${{ needs.parse-command.outputs.action_display }} --confirm
+            ```
+
+            実行者: @${{ github.event.comment.user.login }}
+
+  # ============================================================
+  # Job 3: メイン実行
+  # ============================================================
+  execute:
+    needs: parse-command
+    if: |
+      needs.parse-command.outputs.valid == 'true' &&
+      needs.parse-command.outputs.has_permission == 'true' &&
+      needs.parse-command.outputs.needs_confirm == 'false'
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+    steps:
+      # --- 進捗: 開始 ---
+      - name: Add reaction
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ github.event.comment.id }}
+          reactions: eyes
+
+      - name: Create progress comment (Starting)
+        id: progress
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            ## :hourglass_flowing_sand: Database Operation: `${{ needs.parse-command.outputs.action_display }}`
+
+            **Status:** Starting...
+
+            実行者: @${{ github.event.comment.user.login }}
+            開始時刻: ${{ github.event.comment.created_at }}
+
+      # --- セットアップ ---
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.parse-command.outputs.action == 'rollback' && 'main' || format('refs/pull/{0}/head', github.event.issue.number) }}
+      - uses: ./.github/actions/setup-node-pnpm
+
+      # --- 進捗: 実行中 ---
+      - name: Update progress comment (Executing)
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.progress.outputs.comment-id }}
+          body: |
+            ## :hourglass_flowing_sand: Database Operation: `${{ needs.parse-command.outputs.action_display }}`
+
+            **Status:** Executing...
+
+            実行者: @${{ github.event.comment.user.login }}
+            開始時刻: ${{ github.event.comment.created_at }}
+
+      # --- アクション別実行 ---
+      - name: Execute migrate
+        if: needs.parse-command.outputs.action == 'migrate'
+        run: pnpm db:migrate
+
+      - name: Execute seed
+        if: needs.parse-command.outputs.action == 'seed'
+        run: pnpm db:seed
+
+      - name: Execute seed-force
+        if: needs.parse-command.outputs.action == 'seed-force'
+        run: pnpm db:seed --force
+
+      - name: Execute seed-reset
+        if: needs.parse-command.outputs.action == 'seed-reset'
+        run: pnpm db:seed --reset
+
+      - name: Execute migrate-seed
+        if: needs.parse-command.outputs.action == 'migrate-seed'
+        run: |
+          pnpm db:migrate
+          pnpm db:seed
+
+      - name: Install PostgreSQL client (rollback)
+        if: needs.parse-command.outputs.action == 'rollback'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Execute rollback - Drop tables and migrate
+        if: needs.parse-command.outputs.action == 'rollback'
+        run: |
+          psql "$DATABASE_URL" <<EOF
+          DO \$\$ DECLARE
+            r RECORD;
+          BEGIN
+            FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+              EXECUTE 'DROP TABLE IF EXISTS public.' || quote_ident(r.tablename) || ' CASCADE';
+            END LOOP;
+          END \$\$;
+          EOF
+          pnpm db:migrate
+
+      # --- 進捗: 完了 ---
+      - name: Update progress comment (Success)
+        if: success()
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.progress.outputs.comment-id }}
+          body: |
+            ## :white_check_mark: Database Operation: `${{ needs.parse-command.outputs.action_display }}`
+
+            **Status:** Completed successfully
+
+            ${{ needs.parse-command.outputs.action == 'migrate' && '適用内容: マイグレーション' || '' }}
+            ${{ needs.parse-command.outputs.action == 'seed' && '適用内容: シード投入（追記モード）' || '' }}
+            ${{ needs.parse-command.outputs.action == 'seed-force' && '適用内容: シード投入（上書きモード）' || '' }}
+            ${{ needs.parse-command.outputs.action == 'seed-reset' && '適用内容: 全リセット後シード投入' || '' }}
+            ${{ needs.parse-command.outputs.action == 'migrate-seed' && '適用内容: マイグレーション + シード投入' || '' }}
+            ${{ needs.parse-command.outputs.action == 'rollback' && '適用内容: ロールバック（全テーブル削除 + mainブランチのマイグレーション再適用）' || '' }}
+
+            実行者: @${{ github.event.comment.user.login }}
+            開始時刻: ${{ github.event.comment.created_at }}
+
+      - name: Update progress comment (Failure)
+        if: failure()
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.progress.outputs.comment-id }}
+          body: |
+            ## :x: Database Operation: `${{ needs.parse-command.outputs.action_display }}`
+
+            **Status:** Failed
+
+            ワークフローのログを確認してください。
+            [ログを見る](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            実行者: @${{ github.event.comment.user.login }}
+            開始時刻: ${{ github.event.comment.created_at }}

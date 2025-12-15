@@ -1,0 +1,42 @@
+{
+  "name": "@repo/api",
+  "type": "module",
+  "exports": {
+    "./contract": {
+      "types": "./types/contract.d.ts"
+    }
+  },
+  "scripts": {
+    "dev": "wrangler dev --port 4001 --config wrangler.json",
+    "dev:types": "tsc -p tsconfig.types.json --watch --preserveWatchOutput",
+    "build": "wrangler deploy --dry-run --outdir dist --config wrangler.json",
+    "build:types": "tsc -p tsconfig.types.json",
+    "deploy": "wrangler deploy --config wrangler.json",
+    "deploy:preview": "wrangler versions upload --config wrangler.json --preview-alias $API_PREVIEW_ALIAS",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "check": "biome check .",
+    "check:fix": "biome check --write --unsafe .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist types .turbo .wrangler"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.6",
+    "@hono/swagger-ui": "^0.5.2",
+    "@hono/zod-openapi": "^1.1.4",
+    "@hono/zod-validator": "^0.7.4",
+    "@packages/db": "workspace:*",
+    "@packages/env": "workspace:*",
+    "@packages/logger": "workspace:*",
+    "@packages/schema": "workspace:*",
+    "@supabase/supabase-js": "^2.83.0",
+    "@t3-oss/env-core": "^0.13.8",
+    "drizzle-orm": "^0.44.7",
+    "hono": "^4.10.3",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251120.0",
+    "@types/node": "^20.19.24",
+    "wrangler": "^4.49.1"
+  }
+}

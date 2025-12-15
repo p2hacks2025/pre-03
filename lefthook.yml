@@ -1,0 +1,28 @@
+# lefthook.yml
+# Git hooks設定
+
+pre-commit:
+  parallel: true
+  commands:
+    # mainブランチでのコミットを禁止
+    protect-main:
+      run: |
+        if [ "$(git rev-parse --abbrev-ref HEAD)" = "main" ]; then
+          echo "====================================="
+          echo "ERROR: mainブランチへの直接コミットは禁止されています"
+          echo "新しいブランチを作成してください:"
+          echo "  git checkout -b feature/your-feature-name"
+          echo "====================================="
+          exit 1
+        fi
+
+    # staged filesのみbiomeチェック + 自動修正
+    biome-check:
+      glob: "*.{js,ts,jsx,tsx,json,jsonc,css}"
+      run: pnpm biome check --write --staged --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+pre-push:
+  commands:
+    typecheck:
+      run: pnpm typecheck

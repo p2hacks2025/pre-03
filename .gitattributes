@@ -1,0 +1,4 @@
+* text=auto eol=lf
+pnpm-lock.yaml linguist-generated=true diff=false
+supabase/migrations/*.sql linguist-generated=true diff=false
+supabase/migrations/meta/*.json linguist-generated=true diff=false

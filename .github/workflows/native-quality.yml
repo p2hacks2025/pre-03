@@ -1,0 +1,77 @@
+name: Native Quality Check
+
+on:
+  pull_request:
+    paths:
+      - 'apps/native/**'
+      - 'packages/**'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/native/**'
+      - 'packages/**'
+
+concurrency:
+  group: native-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - uses: actions/cache/save@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: native-ci-${{ github.sha }}
+
+  expo-doctor:
+    name: Expo Doctor
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          install: 'false'
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: native-ci-${{ github.sha }}
+      - name: Run Expo Doctor
+        working-directory: apps/native
+        env:
+          EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK: 1
+        run: npx expo-doctor
+
+  bundle-check:
+    name: Bundle Check (${{ matrix.platform }})
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ios, android]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          install: 'false'
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: native-ci-${{ github.sha }}
+      - name: Check ${{ matrix.platform }} Bundle
+        working-directory: apps/native
+        run: npx expo export --platform ${{ matrix.platform }} --output-dir /tmp/bundle

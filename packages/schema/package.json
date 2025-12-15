@@ -1,0 +1,21 @@
+{
+  "name": "@packages/schema",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "check": "biome check .",
+    "check:fix": "biome check --write --unsafe .",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .turbo"
+  },
+  "dependencies": {
+    "@hono/zod-openapi": "^1.1.4",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.24",
+    "typescript": "~5.9.2"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "types",
+    "stripInternal": true,
+    "noEmit": false,
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/contract.ts", "src/routes/**/*.ts"]
+}

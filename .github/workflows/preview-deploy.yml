@@ -1,0 +1,108 @@
+name: Preview deploy to Cloudflare Workers
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  get-preview-url:
+    runs-on: ubuntu-latest
+    env:
+      CF_WORKERS_SUBDOMAIN: ${{ vars.CF_WORKERS_SUBDOMAIN }}
+
+    outputs:
+      api_alias: ${{ steps.build.outputs.api_alias }}
+      web_alias: ${{ steps.build.outputs.web_alias }}
+      api_url: ${{ steps.build.outputs.api_url }}
+      web_url: ${{ steps.build.outputs.web_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build aliases and URLs
+        id: build
+        run: |
+          PR_NUMBER=${{ github.event.number }}
+          SUBDOMAIN=${{ env.CF_WORKERS_SUBDOMAIN }}
+
+          API_WORKER=$(jq -r '.name' apps/api/wrangler.json)
+          WEB_WORKER=$(jq -r '.name' apps/web/wrangler.json)
+
+          API_ALIAS="pr-${PR_NUMBER}-api"
+          WEB_ALIAS="pr-${PR_NUMBER}-web"
+
+          API_URL="https://${API_ALIAS}-${API_WORKER}.${SUBDOMAIN}.workers.dev"
+          WEB_URL="https://${WEB_ALIAS}-${WEB_WORKER}.${SUBDOMAIN}.workers.dev"
+
+          echo "api_alias=${API_ALIAS}" >> "$GITHUB_OUTPUT"
+          echo "web_alias=${WEB_ALIAS}" >> "$GITHUB_OUTPUT"
+          echo "api_url=${API_URL}"     >> "$GITHUB_OUTPUT"
+          echo "web_url=${WEB_URL}"     >> "$GITHUB_OUTPUT"
+
+  preview-api:
+    runs-on: ubuntu-latest
+    needs: get-preview-url
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      TURBO_RUN_SUMMARY: true
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      API_PREVIEW_ALIAS: ${{ needs.get-preview-url.outputs.api_alias }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Deploy API preview
+        run: pnpm deploy:preview:api
+      - name: Turborepo Summary
+        if: always()
+        uses: charpeni/turborepo-summary-action@v1
+
+  preview-web:
+    runs-on: ubuntu-latest
+    needs: get-preview-url
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      TURBO_RUN_SUMMARY: true
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      NEXT_PUBLIC_API_BASE_URL: ${{ needs.get-preview-url.outputs.api_url }}
+      WEB_PREVIEW_ALIAS: ${{ needs.get-preview-url.outputs.web_alias }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Deploy Web preview
+        run: pnpm deploy:preview:web
+      - name: Turborepo Summary
+        if: always()
+        uses: charpeni/turborepo-summary-action@v1
+
+  comment-preview:
+    runs-on: ubuntu-latest
+    needs:
+      - get-preview-url
+      - preview-api
+      - preview-web
+
+    steps:
+      - name: Comment preview URLs on PR
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          message: |
+            ## 🚀 Preview Environment
+
+            | | URL |
+            |:--|:--|
+            | 🌐 **Web** | ${{ needs.get-preview-url.outputs.web_url }} |
+            | 📡 **API** | ${{ needs.get-preview-url.outputs.api_url }} |
+            | 📖 **API Docs** | ${{ needs.get-preview-url.outputs.api_url }}/docs |
+
+          comment-tag: "cloudflare-workers-preview"

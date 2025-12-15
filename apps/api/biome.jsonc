@@ -1,0 +1,34 @@
+{
+  "root": false,
+  "extends": "//",
+  "overrides": [
+    {
+      "includes": [
+        "**",
+        "!!**/node_modules",
+        "!!**/dist",
+        "!!**/build",
+        "!!**/worker-configuration.d.ts"
+      ],
+      "javascript": {
+        "globals": [
+          "HTMLRewriter",
+          "WebSocket",
+          "WebSocketPair",
+          "caches",
+          "CacheStorage"
+        ]
+      },
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noNodejsModules": "error" // Node 組込みを誤って使わない
+          },
+          "nursery": {
+            "noFloatingPromises": "error" // Promise の握り潰しを禁止
+          }
+        }
+      }
+    }
+  ]
+}

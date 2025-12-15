@@ -1,0 +1,77 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+
+  "globalEnv": [
+    "NEXT_PUBLIC_API_BASE_URL",
+    "DATABASE_URL",
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY"
+  ],
+  "globalPassThroughEnv": [
+    "CLOUDFLARE_API_TOKEN",
+    "CLOUDFLARE_ACCOUNT_ID",
+    "API_PREVIEW_ALIAS",
+    "WEB_PREVIEW_ALIAS"
+  ],
+
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "dev:types": {
+      "cache": false,
+      "persistent": true
+    },
+    "db:studio": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**"]
+    },
+    "build:types": {
+      "cache": true,
+      "outputs": ["types/**/*.d.ts"],
+      "inputs": ["src/**/*.ts", "tsconfig.build.json", "tsconfig.json"]
+    },
+    "build:worker": {
+      "dependsOn": ["build"],
+      "outputs": [".open-next/**"]
+    },
+    "deploy": {
+      "dependsOn": ["build:worker"],
+      "cache": false
+    },
+    "deploy:preview": {
+      "dependsOn": ["build:worker"],
+      "cache": false
+    },
+    "preview": {
+      "dependsOn": ["build:worker"],
+      "cache": false
+    },
+    "check": {
+      "cache": true,
+      "outputs": [],
+      "inputs": ["$TURBO_DEFAULT$", "biome.json"]
+    },
+    "check:fix": {
+      "cache": false,
+      "outputs": [],
+      "inputs": ["$TURBO_DEFAULT$", "biome.json"]
+    },
+    "typecheck": {
+      "dependsOn": ["@repo/api#build:types"],
+      "cache": true,
+      "outputs": [],
+      "inputs": ["$TURBO_DEFAULT$", "tsconfig.json"]
+    },
+    "clean": {
+      "cache": false,
+      "outputs": []
+    }
+  }
+}

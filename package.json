@@ -1,0 +1,37 @@
+{
+  "name": "noval",
+  "version": "1.0.0",
+  "description": "",
+  "packageManager": "pnpm@10.12.1",
+  "scripts": {
+    "workspace:setup": "pnpm install && node scripts/setup.mjs",
+    "dev": "turbo run dev dev:types db:studio",
+    "build": "turbo run build",
+    "check": "turbo run check",
+    "check:fix": "turbo run check:fix",
+    "typecheck": "turbo run typecheck",
+    "api": "pnpm -F '@repo/api'",
+    "web": "pnpm -F '@repo/web'",
+    "native": "pnpm -F '@repo/native'",
+    "clean": "turbo run clean",
+    "build:worker": "turbo run build:worker",
+    "deploy:api": "turbo run deploy --filter=@repo/api",
+    "deploy:web": "turbo run deploy --filter=@repo/web",
+    "deploy:preview:api": "turbo run deploy:preview --filter=@repo/api",
+    "deploy:preview:web": "turbo run deploy:preview --filter=@repo/web",
+    "db:generate": "pnpm -F '@packages/db' db:generate",
+    "db:migrate": "pnpm -F '@packages/db' db:migrate",
+    "db:push": "pnpm -F '@packages/db' db:push",
+    "db:studio": "turbo run db:studio",
+    "db:seed": "pnpm -F '@packages/db' db:seed",
+    "db:setup": "node scripts/db-setup.mjs",
+    "env:update": "node scripts/env-update.mjs"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.8",
+    "lefthook": "^2.0.4",
+    "supabase": "^2.65.7",
+    "turbo": "^2.0.0",
+    "typescript": "~5.9.2"
+  }
+}

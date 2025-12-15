@@ -1,0 +1,10 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build:types": {
+      "dependsOn": ["^build:types"],
+      "outputs": [],
+      "inputs": ["src/**/*.ts", "tsconfig.json"]
+    }
+  }
+}

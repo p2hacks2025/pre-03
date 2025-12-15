@@ -1,0 +1,40 @@
+import type { AppRouteHandler } from "@/context";
+import { createSupabaseAdminClient } from "@/infrastructure/supabase";
+import { AppError } from "@/shared/error/app-error";
+import { getMe, uploadAvatar } from "@/usecase/user";
+import type { getMeRoute, uploadAvatarRoute } from "./route";
+
+export const getMeHandler: AppRouteHandler<typeof getMeRoute> = async (c) => {
+  const user = c.get("user");
+  const db = c.get("db");
+
+  const result = await getMe({ db }, { user });
+
+  return c.json(result);
+};
+
+export const uploadAvatarHandler: AppRouteHandler<
+  typeof uploadAvatarRoute
+> = async (c) => {
+  // parseBody() で multipart/form-data を解析（Hono推奨）
+  // 参考: https://hono.dev/examples/file-upload
+  const body = await c.req.parseBody();
+  const file = body.file;
+
+  // File オブジェクトかどうかを検証
+  if (!file || !(file instanceof File)) {
+    throw new AppError("BAD_REQUEST", { message: "ファイルが必須です" });
+  }
+
+  const user = c.get("user");
+  const db = c.get("db");
+  // Storage 操作にはサービスロールキーを使用（RLSバイパス）
+  const supabaseAdmin = createSupabaseAdminClient(c.env);
+
+  const result = await uploadAvatar(
+    { supabase: supabaseAdmin, db },
+    { userId: user.id, file },
+  );
+
+  return c.json(result);
+};

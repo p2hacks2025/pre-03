@@ -1,0 +1,23 @@
+# packages
+node_modules/
+.turbo/
+dist/
+build/
+
+# env files
+.env
+.env.local
+
+# lefthook
+.lefthook-local.yml
+
+# misc
+.DS_Store
+*.pem
+
+# logs
+*.log
+
+# tmp files
+tmp/
+temp/
