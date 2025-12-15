@@ -43,6 +43,8 @@
       "Bash(git blame:*)",
       "Bash(git fetch:*)",
       "Bash(git pull:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
       "Bash(git branch:*)",
       "Bash(git checkout:*)",
       "Bash(git switch:*)",
@@ -82,8 +84,6 @@
       "Bash(pnpm web:*)",
       "Bash(pnpm native:*)",
       "Bash(turbo run:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
       "Bash(git merge:*)"
     ]
   }
