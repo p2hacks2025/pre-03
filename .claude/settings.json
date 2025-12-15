@@ -71,10 +71,7 @@
       "WebFetch(domain:supabase.com)",
       "WebFetch(domain:docs.expo.dev)"
     ],
-    "deny": [
-      "Bash(pnpm tsc:*)",
-      "Bash(rm:*)"
-    ],
+    "deny": ["Bash(pnpm tsc:*)", "Bash(rm:*)"],
     "ask": [
       "Bash(pnpm add:*)",
       "Bash(pnpm remove:*)",
