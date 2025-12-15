@@ -31,5 +31,5 @@ EOF
   exit 0
 }
 
-echo "All checks passed ✅" >&2
+echo "All checks passed." >&2
 exit 0
