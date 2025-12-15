@@ -59,7 +59,7 @@ pnpm native <command> # Nativeで実行
 
 フロントエンド（Web/Native）とバックエンド間で型安全な通信を実現：
 
-1. `apps/api/src/index.ts` でルートを定義
+1. `apps/api/src/app.ts` でルートを定義
 2. `apps/api/src/contract.ts` で `AppType` をエクスポート
 3. `pnpm dev` 実行時に自動で型定義を生成・更新
 4. `@packages/api-contract` が型安全なクライアント生成関数を提供
@@ -154,7 +154,7 @@ apps/native (@repo/native)
 
 ```
 [1] API ルート定義
-    apps/api/src/index.ts → export { routes }
+    apps/api/src/app.ts → export { routes }
 
 [2] 型エクスポート
     apps/api/src/contract.ts → export type AppType = typeof routes
