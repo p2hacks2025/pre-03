@@ -9,6 +9,13 @@ echo "=== Final quality check ===" >&2
 check_output=$(pnpm check:fix 2>&1) || {
   echo "Biome errors:" >&2
   echo "$check_output" >&2
+  cat <<EOF
+{
+  "decision": "block",
+  "reason": "Biome check errors found. Please fix them before finishing."
+}
+EOF
+  exit 0
 }
 
 # TypeScript type check
