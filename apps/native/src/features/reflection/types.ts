@@ -22,7 +22,7 @@ export interface DayInfo {
  * 週情報
  */
 export interface WeekInfo {
-  /** 週の開始日 (日曜日) の ISO 文字列 "YYYY-MM-DD" - ナビゲーションのID */
+  /** 週の開始日 (月曜日) の ISO 文字列 "YYYY-MM-DD" - ナビゲーションのID */
   weekId: string;
   /** 週を構成する7日間 */
   days: DayInfo[];

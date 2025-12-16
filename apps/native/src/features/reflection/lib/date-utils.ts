@@ -31,12 +31,13 @@ export function isWeekend(date: Date): boolean {
 }
 
 /**
- * 指定された日付を含む週の日曜日を取得（日曜始まり）
+ * 指定された日付を含む週の月曜日を取得（月曜始まり）
  */
 export function getWeekStart(date: Date): Date {
   const result = new Date(date);
   const day = result.getDay();
-  result.setDate(result.getDate() - day);
+  const daysToMonday = (day + 6) % 7;
+  result.setDate(result.getDate() - daysToMonday);
   result.setHours(0, 0, 0, 0);
   return result;
 }
@@ -99,7 +100,7 @@ export function createWeekInfo(weekStartDate: Date): WeekInfo {
 
 /**
  * 過去N週間分の WeekInfo 配列を生成
- * @param startWeekDate 開始となる週の日曜日
+ * @param startWeekDate 開始となる週の月曜日
  * @param count 生成する週の数
  */
 export function generatePastWeeks(
