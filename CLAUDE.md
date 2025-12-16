@@ -12,7 +12,8 @@ Next.js 15 + React Native + Hono のフルスタックモノレポテンプレ�
 apps/
 ├── api/       # Hono 4 API (Cloudflare Workers) - localhost:4001
 ├── web/       # Next.js 15 App Router (Cloudflare Pages) - localhost:4000
-└── native/    # React Native 0.81 + Expo 54 - localhost:4002
+├── native/    # React Native 0.81 + Expo 54 - localhost:4002
+└── worker/    # Node.js バッチ処理・定期実行ワーカー
 packages/
 ├── api-contract/  # Hono RPC クライアント生成
 ├── db/            # Drizzle ORM スキーマ・マイグレーション
@@ -51,6 +52,10 @@ pnpm workspace:setup  # 依存関係インストール + 初期設定
 pnpm api <command>    # APIで実行
 pnpm web <command>    # Webで実行
 pnpm native <command> # Nativeで実行
+
+# Worker（バッチ処理）
+pnpm worker job <job-name>  # ジョブを単発実行
+pnpm worker daemon          # デーモンモードで起動
 ```
 
 ## アーキテクチャ
@@ -122,6 +127,11 @@ apps/native (@repo/native)
 ├─── @packages/env ─────────────┤
 ├─── @packages/logger ──────────┤ ワークスペース依存
 └─── @packages/schema ──────────┘
+
+apps/worker (@repo/worker)
+├─── @packages/db ──────────────┐
+├─── @packages/env ─────────────┤ ワークスペース依存
+└─── @packages/logger ──────────┘
 
 @packages/api-contract
 ├─── @repo/api ─────────────────  AppType 型を参照
@@ -263,6 +273,7 @@ $ pnpm build
 | API | [apps/api/CLAUDE.md](./apps/api/CLAUDE.md) | Hono + OpenAPI 実装ガイド |
 | Web | [apps/web/CLAUDE.md](./apps/web/CLAUDE.md) | Next.js + shadcn/ui 実装ガイド |
 | Native | [apps/native/CLAUDE.md](./apps/native/CLAUDE.md) | Expo + HeroUI Native 実装ガイド |
+| Worker | [apps/worker/CLAUDE.md](./apps/worker/CLAUDE.md) | バッチ処理・定期実行ワーカー |
 
 ### パッケージ
 

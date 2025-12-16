@@ -6,7 +6,8 @@
     "daemon": "tsx src/daemon.ts",
     "check": "biome check .",
     "check:fix": "biome check --write --unsafe .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .turbo"
   },
   "dependencies": {
     "@packages/db": "workspace:*",
