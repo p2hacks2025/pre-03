@@ -11,10 +11,6 @@ export interface TimelineCardProps {
    */
   username: string;
   /**
-   * ユーザーのサブテキスト（表示名など）
-   */
-  userSubtext: string;
-  /**
    * 投稿本文
    */
   content: string;
@@ -38,7 +34,6 @@ export interface TimelineCardProps {
  * ```tsx
  * <TimelineCard
  *   username="poyopoyo"
- *   userSubtext="ぽよぽよ"
  *   content="poyo~~~~~~~~~~~~~~~~~~~~いろはにほへとチリぬるをあああああああああああああああああああ"
  *   timeAgo="5分前"
  *   avatarUri={require("@/assets/user-icon.png")}
@@ -47,7 +42,6 @@ export interface TimelineCardProps {
  */
 export const TimelineCard = ({
   username,
-  userSubtext,
   content,
   timeAgo,
   avatarUri,
@@ -72,17 +66,12 @@ export const TimelineCard = ({
         </StyledView>
 
         {/* 中央: コンテンツエリア */}
-        <StyledView className="flex-1 gap-1">
+        <StyledView className="flex-1">
           {/* ヘッダー: ユーザー名と経過時間 */}
           <StyledView className="flex-row items-start justify-between">
-            <StyledView className="flex-1 gap-0.5">
-              <StyledText className="font-semibold text-base text-foreground">
-                {username}
-              </StyledText>
-              <StyledText className="text-muted text-sm">
-                {userSubtext}
-              </StyledText>
-            </StyledView>
+            <StyledText className="font-semibold text-base text-foreground">
+              {username}
+            </StyledText>
 
             {/* 右上: 経過時間 */}
             <StyledText className="text-muted text-sm">{timeAgo}</StyledText>

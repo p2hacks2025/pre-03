@@ -19,7 +19,6 @@ const SAMPLE_TIMELINE_DATA = [
   {
     id: "1",
     username: "poyopoyo",
-    userSubtext: "ぽよぽよ",
     content:
       "poyo~~~~~~~~~~~~~~~~~~~~いろはにほへとチリぬるをあああああああああああああああああああ",
     timeAgo: "経過時間",
@@ -27,14 +26,12 @@ const SAMPLE_TIMELINE_DATA = [
   {
     id: "2",
     username: "tanaka_taro",
-    userSubtext: "田中太郎",
     content: "今日はとても良い天気ですね。散歩に行ってきました。",
     timeAgo: "5分前",
   },
   {
     id: "3",
     username: "yamada_hanako",
-    userSubtext: "山田花子",
     content:
       "新しいカフェに行ってきました！コーヒーがとても美味しかったです。また行きたいと思います。",
     timeAgo: "1時間前",
@@ -42,28 +39,24 @@ const SAMPLE_TIMELINE_DATA = [
   {
     id: "4",
     username: "sato_ichiro",
-    userSubtext: "佐藤一郎",
     content: "プロジェクトが無事に完了しました。チームのみんなに感謝です。",
     timeAgo: "3時間前",
   },
   {
     id: "5",
     username: "sato_ichiro",
-    userSubtext: "佐藤一郎",
     content: "プロジェクトが無事に完了しました。チームのみんなに感謝です。",
     timeAgo: "3時間前",
   },
   {
     id: "6",
     username: "sato_ichiro",
-    userSubtext: "佐藤一郎",
     content: "プロジェクトが無事に完了しました。チームのみんなに感謝です。",
     timeAgo: "3時間前",
   },
   {
     id: "7",
     username: "sato_ichiro",
-    userSubtext: "佐藤一郎",
     content: "プロジェクトが無事に完了しました。チームのみんなに感謝です。",
     timeAgo: "3時間前",
   },
@@ -108,10 +101,8 @@ export const HomeScreen = () => {
             <TimelineCard
               key={item.id}
               username={item.username}
-              userSubtext={item.userSubtext}
               content={item.content}
               timeAgo={item.timeAgo}
-              avatarUri={require("../../../assets/user-icon.png")}
             />
           ))}
         </View>
