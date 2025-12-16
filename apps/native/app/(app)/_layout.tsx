@@ -1,4 +1,4 @@
-import { Redirect, Slot } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { Spinner } from "heroui-native";
 import { View } from "react-native";
 import { withUniwind } from "uniwind";
@@ -23,6 +23,17 @@ export default function AppLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  // 子ルート（(tabs) や diary/）をそのままレンダリング
-  return <Slot />;
+  // Stack でナビゲーションを管理（diary への遷移アニメーションを有効化）
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen
+        name="diary"
+        options={{
+          presentation: "modal",
+          animation: "slide_from_bottom",
+        }}
+      />
+    </Stack>
+  );
 }
