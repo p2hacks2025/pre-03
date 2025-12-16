@@ -15,11 +15,21 @@
     },
     "preview": {
       "extends": "base",
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "API_REMOTE_URL": "https://noval-api.fnova.workers.dev",
+        "ENVIRONMENT": "staging",
+        "LOG_LEVEL": "debug"
+      }
     },
     "production": {
       "extends": "base",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "API_REMOTE_URL": "https://noval-api.fnova.workers.dev",
+        "ENVIRONMENT": "production",
+        "LOG_LEVEL": "info"
+      }
     }
   },
   "submit": {
