@@ -5,7 +5,7 @@ import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
-import { DetailTabs } from "@/components/reflection";
+import { DetailTabs } from "@/features/reflection/components";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
