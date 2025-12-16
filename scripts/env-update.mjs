@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = join(__dirname, "..");
 
-const ENV_TARGETS = ["apps/api", "apps/web", "apps/native"];
+const ENV_TARGETS = ["apps/api", "apps/web", "apps/native", "apps/worker"];
 
 const SUPABASE_MAPPINGS = {
   DATABASE_URL: "DB_URL",
@@ -56,21 +56,29 @@ function getSupabaseStatus() {
 }
 
 function injectSupabaseConfig(status) {
-  const apiEnvPath = join(ROOT_DIR, "apps/api/.env");
-  let apiEnv = readFileSync(apiEnvPath, "utf-8");
+  const targets = ["apps/api/.env", "apps/worker/.env"];
 
-  for (const [envKey, statusKey] of Object.entries(SUPABASE_MAPPINGS)) {
-    const value = status[statusKey];
-    if (!value) continue;
+  for (const target of targets) {
+    const envPath = join(ROOT_DIR, target);
+    try {
+      let envContent = readFileSync(envPath, "utf-8");
 
-    const regex = new RegExp(`^${envKey}=.*$`, "m");
-    if (regex.test(apiEnv)) {
-      apiEnv = apiEnv.replace(regex, `${envKey}=${value}`);
+      for (const [envKey, statusKey] of Object.entries(SUPABASE_MAPPINGS)) {
+        const value = status[statusKey];
+        if (!value) continue;
+
+        const regex = new RegExp(`^${envKey}=.*$`, "m");
+        if (regex.test(envContent)) {
+          envContent = envContent.replace(regex, `${envKey}=${value}`);
+        }
+      }
+
+      writeFileSync(envPath, envContent);
+      log(`Injected Supabase config into ${target}`);
+    } catch {
+      warn(`Skipped Supabase config injection for ${target} (file not found)`);
     }
   }
-
-  writeFileSync(apiEnvPath, apiEnv);
-  log("Injected Supabase config into apps/api/.env");
 }
 
 async function main() {
