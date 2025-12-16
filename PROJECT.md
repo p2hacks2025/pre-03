@@ -30,6 +30,7 @@ Turborepo + pnpm で管理し、Cloudflare Workers にデプロイ
 | API | [README.md](./apps/api/README.md) | [RECIPES.md](./apps/api/RECIPES.md) |
 | Web | [README.md](./apps/web/README.md) | [RECIPES.md](./apps/web/RECIPES.md) |
 | Native | [README.md](./apps/native/README.md) | [RECIPES.md](./apps/native/RECIPES.md) |
+| Worker | [README.md](./apps/worker/README.md) | [RECIPES.md](./apps/worker/RECIPES.md) |
 
 ### 共有パッケージ
 
@@ -67,6 +68,15 @@ pnpm native dev   # Nativeのみ起動 (Expo)
 pnpm api build    # APIのみビルド
 pnpm web build    # Webのみビルド
 ```
+
+### Worker（バッチ処理）
+
+```bash
+pnpm worker job <job-name>  # ジョブを単発実行
+pnpm worker daemon          # デーモンモードで起動（cron スケジュール）
+```
+
+> 詳細は [apps/worker/README.md](./apps/worker/README.md) を参照
 
 ### データベース
 
