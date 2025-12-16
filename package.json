@@ -13,6 +13,7 @@
     "api": "pnpm -F '@repo/api'",
     "web": "pnpm -F '@repo/web'",
     "native": "pnpm -F '@repo/native'",
+    "worker": "pnpm -F '@repo/worker'",
     "clean": "turbo run clean",
     "build:worker": "turbo run build:worker",
     "deploy:api": "turbo run deploy --filter=@repo/api",

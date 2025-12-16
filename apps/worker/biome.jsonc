@@ -1,0 +1,16 @@
+{
+  "root": false,
+  "extends": "//",
+  "overrides": [
+    {
+      "includes": ["**"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "noFloatingPromises": "error" // Promise の握り潰しを禁止
+          }
+        }
+      }
+    }
+  ]
+}

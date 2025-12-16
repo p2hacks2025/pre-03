@@ -9,6 +9,7 @@
 
 - [大まかな全体像](#大まかな全体像)
   - [ブラウザ](#ブラウザ)
+  - [バッチ処理（Worker）](#バッチ処理worker)
   - [共通パッケージ](#共通パッケージ)
 - [技術スタックと採用理由](#技術スタックと採用理由)
   - [モノレポ管理: Turborepo + pnpm](#モノレポ管理-turborepo--pnpm)
@@ -33,6 +34,12 @@
 1. `packages/db` (Drizzle ORM) 経由で Supabase (Postgres) にアクセス
 1. JSON レスポンスを返却
 1. web で画面を描画
+
+### バッチ処理（Worker）
+1. `apps/worker` (Node.js + tsx)
+1. CLI モード（単発実行）またはデーモンモード（node-cron スケジュール）
+1. `packages/db` (Drizzle ORM) 経由で Supabase (Postgres) にアクセス
+1. 定期的なデータ同期、ヘルスチェックなどを実行
 
 ### 共通パッケージ
 

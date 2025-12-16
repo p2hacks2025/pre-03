@@ -6,3 +6,5 @@ export type { NativeClientKeys } from "./native-keys";
 export { nativeClientKeys } from "./native-keys";
 export type { WebClientKeys, WebServerKeys } from "./web-keys";
 export { webClientKeys, webServerKeys } from "./web-keys";
+export type { WorkerKeys } from "./worker-keys";
+export { workerKeys } from "./worker-keys";

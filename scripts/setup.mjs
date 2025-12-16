@@ -10,6 +10,7 @@ function setupEnvFiles() {
     { example: "apps/api/.env.example", target: "apps/api/.env" },
     { example: "apps/web/.env.example", target: "apps/web/.env" },
     { example: "apps/native/.env.example", target: "apps/native/.env" },
+    { example: "apps/worker/.env.example", target: "apps/worker/.env" },
   ];
 
   for (const { example, target } of envPaths) {
