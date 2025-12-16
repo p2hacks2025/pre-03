@@ -67,14 +67,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
+  /**
+   * リフレッシュトークンを使ってアクセストークンを更新
+   * Cookie ベースなので、空のボディで POST すると Cookie から refreshToken を取得
+   */
+  const tryRefreshToken = useCallback(async (): Promise<boolean> => {
+    try {
+      const res = await client.auth.refresh.$post({
+        json: {},
+      });
+      if (res.ok) {
+        return await checkAuth();
+      }
+    } catch {
+      // リフレッシュ失敗
+    }
+    return false;
+  }, [checkAuth]);
+
+  /**
+   * 認証状態を確認（リフレッシュ付き）
+   * アクセストークンが無効な場合、リフレッシュを試行
+   */
+  const checkAuthWithRefresh = useCallback(async (): Promise<boolean> => {
+    const success = await checkAuth();
+    if (!success) {
+      return await tryRefreshToken();
+    }
+    return success;
+  }, [checkAuth, tryRefreshToken]);
+
   // 初期化（ページロード時に Cookie で認証状態を確認）
   useEffect(() => {
     const initAuth = async () => {
-      await checkAuth();
+      await checkAuthWithRefresh();
       setIsLoading(false);
     };
     initAuth();
-  }, [checkAuth]);
+  }, [checkAuthWithRefresh]);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -127,8 +157,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const refreshAuth = useCallback(async () => {
-    await checkAuth();
-  }, [checkAuth]);
+    await checkAuthWithRefresh();
+  }, [checkAuthWithRefresh]);
 
   const value = useMemo(
     () => ({
