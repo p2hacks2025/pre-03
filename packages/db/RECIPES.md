@@ -130,20 +130,24 @@ Supabase の認証テーブルを参照するパターンです。
 import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { authUsers } from "drizzle-orm/supabase";
 
-export const profiles = pgTable("profiles", {
+export const userProfiles = pgTable("user_profiles", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
     .notNull()
     .references(() => authUsers.id, { onDelete: "cascade" }),
-  displayName: text("display_name"),
+  username: text("username").notNull(),
   avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
-export type Profile = typeof profiles.$inferSelect;
-export type NewProfile = typeof profiles.$inferInsert;
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type NewUserProfile = typeof userProfiles.$inferInsert;
 ```
 
 **ポイント**:
@@ -157,11 +161,11 @@ export type NewProfile = typeof profiles.$inferInsert;
 ```typescript
 import { relations } from "drizzle-orm";
 import { authUsers } from "drizzle-orm/supabase";
-import { profiles } from "./profiles";
+import { userProfiles } from "./user-profiles";
 
-export const profilesRelations = relations(profiles, ({ one }) => ({
+export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
   user: one(authUsers, {
-    fields: [profiles.userId],
+    fields: [userProfiles.userId],
     references: [authUsers.id],
   }),
 }));
@@ -271,26 +275,26 @@ export const deleteProfile = async (
 ```typescript
 import { and, eq, or } from "@packages/db";
 
-export const searchProfiles = async (
+export const searchUserProfiles = async (
   db: DbClient,
-  options: { userId?: string; displayName?: string },
-): Promise<Profile[]> => {
+  options: { userId?: string; username?: string },
+): Promise<UserProfile[]> => {
   const conditions = [];
 
   if (options.userId) {
-    conditions.push(eq(profiles.userId, options.userId));
+    conditions.push(eq(userProfiles.userId, options.userId));
   }
-  if (options.displayName) {
-    conditions.push(eq(profiles.displayName, options.displayName));
+  if (options.username) {
+    conditions.push(eq(userProfiles.username, options.username));
   }
 
   if (conditions.length === 0) {
-    return db.select().from(profiles);
+    return db.select().from(userProfiles);
   }
 
   return db
     .select()
-    .from(profiles)
+    .from(userProfiles)
     .where(and(...conditions));
 };
 ```
