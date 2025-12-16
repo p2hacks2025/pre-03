@@ -23,19 +23,16 @@ export default function AppLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
+  // Stack でナビゲーションを管理（diary への遷移アニメーションを有効化）
   return (
-    <Stack>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
       <Stack.Screen
-        name="index"
-        options={{ headerShown: false, title: "ホーム" }}
-      />
-      <Stack.Screen
-        name="profile"
-        options={{ headerShown: false, title: "プロフィール" }}
-      />
-      <Stack.Screen
-        name="health"
-        options={{ headerShown: false, title: "システム状態" }}
+        name="diary"
+        options={{
+          presentation: "modal",
+          animation: "slide_from_bottom",
+        }}
       />
     </Stack>
   );
