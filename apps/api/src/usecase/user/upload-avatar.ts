@@ -1,7 +1,7 @@
 import type { DbClient } from "@packages/db";
 import type { UploadAvatarOutput } from "@packages/schema/user";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { updateProfile } from "@/repository/profile";
+import { updateUserProfile } from "@/repository/user-profile";
 import { AppError } from "@/shared/error/app-error";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -62,7 +62,7 @@ export const uploadAvatar = async (
   const avatarUrl = publicData.publicUrl;
 
   // 5. DB 更新
-  await updateProfile(deps.db, userId, { avatarUrl });
+  await updateUserProfile(deps.db, userId, { iconUrl: avatarUrl });
 
   return { avatarUrl };
 };

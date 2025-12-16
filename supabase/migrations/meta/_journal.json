@@ -8,6 +8,13 @@
       "when": 1764135190072,
       "tag": "0000_lyrical_snowbird",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1765885940041,
+      "tag": "0001_cheerful_paper_doll",
+      "breakpoints": true
     }
   ]
 }
