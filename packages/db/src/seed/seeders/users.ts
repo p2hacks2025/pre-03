@@ -5,19 +5,19 @@ import type { Seeder } from "./index";
 interface TestUser {
   email: string;
   password: string;
-  name: string;
+  username: string;
 }
 
 const TEST_USERS: TestUser[] = [
   {
     email: "test@example.com",
     password: "password",
-    name: "Test User",
+    username: "Test User",
   },
   {
     email: "admin@example.com",
     password: "password",
-    name: "Admin User",
+    username: "Admin User",
   },
 ];
 
@@ -58,7 +58,7 @@ export const usersSeeder: Seeder = {
       // 2. user_profilesテーブルにプロフィール作成
       await ctx.db.insert(userProfiles).values({
         userId: data.user.id,
-        name: user.name,
+        username: user.username,
       });
 
       console.log(`Created user: ${user.email}: password=${user.password}`);

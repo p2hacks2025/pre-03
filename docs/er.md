@@ -7,8 +7,8 @@ erDiagram
     user_profiles {
         uuid id PK
         uuid user_id UK "認証システムのユーザーID"
-        text name
-        text icon_url "nullable"
+        text username
+        text avatar_url "nullable"
         timestamp created_at
         timestamp updated_at
         timestamp deleted_at "nullable, 論理削除"
@@ -36,8 +36,8 @@ erDiagram
 
     ai_profiles {
         uuid id PK
-        text name
-        text icon_url "nullable"
+        text username
+        text avatar_url "nullable"
         text description
         timestamp created_at
         timestamp updated_at
@@ -83,8 +83,8 @@ erDiagram
 |---------|-----|------|------|
 | id | uuid | PK | 主キー |
 | user_id | uuid | UK, NOT NULL | 認証システム（Supabase Auth）のユーザーID |
-| name | text | NOT NULL | 表示名 |
-| icon_url | text | nullable | アイコン画像URL |
+| username | text | NOT NULL | ユーザー名 |
+| avatar_url | text | nullable | アバター画像URL |
 | created_at | timestamp | NOT NULL | 作成日時 |
 | updated_at | timestamp | NOT NULL | 更新日時 |
 | deleted_at | timestamp | nullable | 論理削除日時 |
@@ -126,8 +126,8 @@ AIキャラクターのプロフィール情報を管理するテーブル。
 | カラム名 | 型 | 制約 | 説明 |
 |---------|-----|------|------|
 | id | uuid | PK | 主キー |
-| name | text | NOT NULL | AI名 |
-| icon_url | text | nullable | アイコン画像URL |
+| username | text | NOT NULL | AI名 |
+| avatar_url | text | nullable | アバター画像URL |
 | description | text | NOT NULL | AIの説明・性格設定など |
 | created_at | timestamp | NOT NULL | 作成日時 |
 | updated_at | timestamp | NOT NULL | 更新日時 |
@@ -167,17 +167,23 @@ weekly_worldの構築進捗を記録するテーブル。1週間かけて9つの
 
 ## インデックス
 
-```sql
--- user_profiles
-CREATE UNIQUE INDEX idx_user_profiles_user_id ON user_profiles(user_id);
+> **Note**: 現時点ではユニーク制約のみ実装。通常のインデックスはデータ量増加後にパフォーマンス問題が発生した場合に追加予定。
 
+### 実装済み（ユニーク制約）
+
+- `user_profiles(user_id)` - UNIQUE
+- `weekly_worlds(user_profile_id, week_start_date)` - UNIQUE
+- `world_build_logs(weekly_world_id, field_id)` - UNIQUE
+
+### 未実装（将来追加検討）
+
+```sql
 -- user_posts
 CREATE INDEX idx_user_posts_user_profile_id ON user_posts(user_profile_id);
 CREATE INDEX idx_user_posts_created_at ON user_posts(created_at DESC);
 
 -- weekly_worlds
 CREATE INDEX idx_weekly_worlds_user_profile_id ON weekly_worlds(user_profile_id);
-CREATE UNIQUE INDEX idx_weekly_worlds_user_week ON weekly_worlds(user_profile_id, week_start_date);
 
 -- ai_profiles
 CREATE INDEX idx_ai_profiles_name ON ai_profiles(name);
@@ -189,7 +195,6 @@ CREATE INDEX idx_ai_posts_created_at ON ai_posts(created_at DESC);
 
 -- world_build_logs
 CREATE INDEX idx_world_build_logs_weekly_world_id ON world_build_logs(weekly_world_id);
-CREATE UNIQUE INDEX idx_world_build_logs_world_field ON world_build_logs(weekly_world_id, field_id);
 CREATE INDEX idx_world_build_logs_create_date ON world_build_logs(create_date);
 ```
 

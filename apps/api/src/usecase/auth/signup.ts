@@ -37,7 +37,7 @@ export const signup = async (
 
   await createUserProfile(deps.db, {
     userId: data.user.id,
-    name: input.displayName ?? "",
+    username: input.displayName ?? "",
   });
 
   return {

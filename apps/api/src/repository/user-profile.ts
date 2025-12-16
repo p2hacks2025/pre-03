@@ -1,12 +1,13 @@
 import {
+  and,
   type DbClient,
   eq,
+  isNull,
   type NewUserProfile,
   type UserProfile,
   type UserProfileUpdate,
   userProfiles,
 } from "@packages/db";
-import { and, isNull } from "drizzle-orm";
 
 export const getUserProfileByUserId = async (
   db: DbClient,

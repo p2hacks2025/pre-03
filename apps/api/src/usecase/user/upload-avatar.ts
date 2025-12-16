@@ -62,7 +62,7 @@ export const uploadAvatar = async (
   const avatarUrl = publicData.publicUrl;
 
   // 5. DB 更新
-  await updateUserProfile(deps.db, userId, { iconUrl: avatarUrl });
+  await updateUserProfile(deps.db, userId, { avatarUrl });
 
   return { avatarUrl };
 };

@@ -2,8 +2,8 @@ import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const aiProfiles = pgTable("ai_profiles", {
   id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
-  iconUrl: text("icon_url"),
+  username: text("username").notNull(),
+  avatarUrl: text("avatar_url"),
   description: text("description").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
@@ -18,5 +18,5 @@ export const aiProfiles = pgTable("ai_profiles", {
 export type AiProfile = typeof aiProfiles.$inferSelect;
 export type NewAiProfile = typeof aiProfiles.$inferInsert;
 export type AiProfileUpdate = Partial<
-  Pick<NewAiProfile, "name" | "iconUrl" | "description">
+  Pick<NewAiProfile, "username" | "avatarUrl" | "description">
 >;

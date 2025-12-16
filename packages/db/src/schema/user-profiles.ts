@@ -8,8 +8,8 @@ export const userProfiles = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => authUsers.id, { onDelete: "cascade" }),
-    name: text("name").notNull(),
-    iconUrl: text("icon_url"),
+    username: text("username").notNull(),
+    avatarUrl: text("avatar_url"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -25,5 +25,5 @@ export const userProfiles = pgTable(
 export type UserProfile = typeof userProfiles.$inferSelect;
 export type NewUserProfile = typeof userProfiles.$inferInsert;
 export type UserProfileUpdate = Partial<
-  Pick<NewUserProfile, "name" | "iconUrl">
+  Pick<NewUserProfile, "username" | "avatarUrl">
 >;
