@@ -79,18 +79,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   /**
+   * リフレッシュトークンを使ってアクセストークンを更新
+   */
+  const tryRefreshToken = useCallback(async (): Promise<boolean> => {
+    const refreshToken = await tokenStorage.getRefreshToken();
+    if (!refreshToken) {
+      return false;
+    }
+
+    try {
+      const res = await client.auth.refresh.$post({
+        json: { refreshToken },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+
+        await tokenStorage.setAccessToken(data.session.accessToken);
+        await tokenStorage.setRefreshToken(data.session.refreshToken);
+
+        return await checkAuth(data.session.accessToken);
+      }
+    } catch {
+      // リフレッシュ失敗
+    }
+
+    await tokenStorage.clearTokens();
+    return false;
+  }, [checkAuth]);
+
+  /**
    * 初期化時にSecureStoreからトークンを読み込んで認証確認
+   * アクセストークンが無効な場合はリフレッシュを試行
    */
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = await tokenStorage.getAccessToken();
       if (storedToken) {
-        await checkAuth(storedToken);
+        const success = await checkAuth(storedToken);
+        if (!success) {
+          await tryRefreshToken();
+        }
+      } else {
+        await tryRefreshToken();
       }
       setIsLoading(false);
     };
     initAuth();
-  }, [checkAuth]);
+  }, [checkAuth, tryRefreshToken]);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -166,9 +202,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const refreshAuth = useCallback(async () => {
     const storedToken = await tokenStorage.getAccessToken();
     if (storedToken) {
-      await checkAuth(storedToken);
+      const success = await checkAuth(storedToken);
+      if (!success) {
+        await tryRefreshToken();
+      }
+    } else {
+      await tryRefreshToken();
     }
-  }, [checkAuth]);
+  }, [checkAuth, tryRefreshToken]);
 
   const value = useMemo(
     () => ({

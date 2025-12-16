@@ -5,6 +5,8 @@ import {
   LogoutOutputSchema,
   PasswordResetInputSchema,
   PasswordResetOutputSchema,
+  RefreshTokenInputSchema,
+  RefreshTokenOutputSchema,
   SignupInputSchema,
   SignupOutputSchema,
 } from "@packages/schema/auth";
@@ -103,6 +105,32 @@ export const passwordResetRoute = createRoute({
         },
       },
       description: "パスワードリセットメール送信成功",
+    },
+    ...DefaultErrorResponses,
+  },
+  tags: ["Auth"],
+});
+
+export const refreshRoute = createRoute({
+  method: "post",
+  path: "/refresh",
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: RefreshTokenInputSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: RefreshTokenOutputSchema,
+        },
+      },
+      description: "トークン更新成功",
     },
     ...DefaultErrorResponses,
   },
