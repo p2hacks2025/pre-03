@@ -4,6 +4,12 @@
       "eas": {
         "projectId": "094a0763-1c2d-4e08-a364-665289a4f7ef"
       }
+    },
+    "ios": {
+      "bundleIdentifier": "net.uiro.noval-ios",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     }
   }
 }
