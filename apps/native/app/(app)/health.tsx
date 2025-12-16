@@ -1,3 +1,3 @@
-import { HealthScreen } from "@/screens/health/health-screen";
+import { HealthScreen } from "@/screens/auth/health-screen";
 
 export default HealthScreen;

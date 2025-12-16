@@ -43,11 +43,7 @@ export const ProfileScreen = () => {
             size={18}
             className="text-accent-soft-foreground"
           />
-          <Button.Label>システム状態</Button.Label>
-        </Button>
-
-        <Button variant="ghost" onPress={() => router.back()}>
-          <Button.Label>戻る</Button.Label>
+          <Button.Label>システム状態（デバッグ用）</Button.Label>
         </Button>
       </StyledView>
     </StyledScrollView>

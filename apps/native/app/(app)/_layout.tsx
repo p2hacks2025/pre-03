@@ -1,4 +1,4 @@
-import { Redirect, Stack } from "expo-router";
+import { Redirect, Slot } from "expo-router";
 import { Spinner } from "heroui-native";
 import { View } from "react-native";
 import { withUniwind } from "uniwind";
@@ -23,20 +23,6 @@ export default function AppLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  return (
-    <Stack>
-      <Stack.Screen
-        name="index"
-        options={{ headerShown: false, title: "ホーム" }}
-      />
-      <Stack.Screen
-        name="profile"
-        options={{ headerShown: false, title: "プロフィール" }}
-      />
-      <Stack.Screen
-        name="health"
-        options={{ headerShown: false, title: "システム状態" }}
-      />
-    </Stack>
-  );
+  // 子ルート（(tabs) や diary/）をそのままレンダリング
+  return <Slot />;
 }
