@@ -9,6 +9,7 @@
 - Node.js 20.x 以上
 - pnpm 10.12.1
 - Docker（Supabase ローカル開発用）
+- [direnv](https://direnv.net/)（環境変数の自動読み込み用）
 
 各自の環境に合わせてインストールしてください。
 
