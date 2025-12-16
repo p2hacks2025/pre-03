@@ -45,10 +45,6 @@ export const ProfileScreen = () => {
           />
           <Button.Label>システム状態</Button.Label>
         </Button>
-
-        <Button variant="ghost" onPress={() => router.back()}>
-          <Button.Label>戻る</Button.Label>
-        </Button>
       </StyledView>
     </StyledScrollView>
   );
