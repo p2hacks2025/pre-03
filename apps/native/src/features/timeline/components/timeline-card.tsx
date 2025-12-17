@@ -1,4 +1,4 @@
-import { Avatar, Card } from "heroui-native";
+import { Avatar } from "heroui-native";
 import { Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
@@ -47,42 +47,38 @@ export const TimelineCard = ({
   avatarUri,
 }: TimelineCardProps) => {
   return (
-    <Card className="w-full">
-      <Card.Body className="flex-row gap-3 p-4">
-        {/* 左側: アバター */}
-        <StyledView>
-          <Avatar size="md" alt={username}>
-            {avatarUri ? (
-              <Avatar.Image
-                source={
-                  typeof avatarUri === "string" ? { uri: avatarUri } : avatarUri
-                }
-              />
-            ) : null}
-            <Avatar.Fallback>
-              {username.slice(0, 2).toUpperCase()}
-            </Avatar.Fallback>
-          </Avatar>
-        </StyledView>
+    <StyledView className="flex-row rounded-md border-4 border-white bg-[#2C2C2E] p-4">
+      {/* 左側: アバター */}
+      <StyledView className="mr-3">
+        <Avatar size="md" alt={username}>
+          {avatarUri ? (
+            <Avatar.Image
+              source={
+                typeof avatarUri === "string" ? { uri: avatarUri } : avatarUri
+              }
+            />
+          ) : null}
+          <Avatar.Fallback>
+            {username.slice(0, 2).toUpperCase()}
+          </Avatar.Fallback>
+        </Avatar>
+      </StyledView>
 
-        {/* 中央: コンテンツエリア */}
-        <StyledView className="flex-1">
-          {/* ヘッダー: ユーザー名と経過時間 */}
-          <StyledView className="flex-row items-start justify-between">
-            <StyledText className="font-semibold text-base text-foreground">
-              {username}
-            </StyledText>
-
-            {/* 右上: 経過時間 */}
-            <StyledText className="text-muted text-sm">{timeAgo}</StyledText>
-          </StyledView>
-
-          {/* 投稿本文 */}
-          <StyledText className="mt-2 text-foreground text-sm leading-5">
-            {content}
+      {/* 右側: コンテンツエリア */}
+      <StyledView className="flex-1">
+        {/* ヘッダー: ユーザー名と経過時間 */}
+        <StyledView className="mb-2 flex-row items-center justify-between">
+          <StyledText className="font-semibold text-base text-white">
+            {username}
           </StyledText>
+          <StyledText className="text-gray-400 text-xs">{timeAgo}</StyledText>
         </StyledView>
-      </Card.Body>
-    </Card>
+
+        {/* 投稿本文 */}
+        <StyledText className="text-sm text-white leading-5">
+          {content}
+        </StyledText>
+      </StyledView>
+    </StyledView>
   );
 };

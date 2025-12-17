@@ -22,7 +22,7 @@ export const ProfileSchema = z
     userId: z
       .uuid()
       .openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
-    displayName: z.string().openapi({ example: "John Doe" }),
+    displayName: z.string().nullable().openapi({ example: "John Doe" }),
     avatarUrl: z
       .url()
       .nullable()

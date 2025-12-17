@@ -1,10 +1,4 @@
-export interface TimelineItem {
-  id: string;
-  username: string;
-  content: string;
-  timeAgo: string;
-  avatarUri?: string;
-}
+import type { TimelineItem } from "../components";
 
 const SAMPLE_TIMELINE_DATA: TimelineItem[] = [
   {
