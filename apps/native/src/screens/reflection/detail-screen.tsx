@@ -27,7 +27,6 @@ export const ReflectionDetailScreen = () => {
       className="flex-1 bg-[#4ECCDD]"
       style={{ paddingTop: insets.top, paddingBottom: 0 }}
     >
-      {/* ヘッダー: タイトルと日付範囲 */}
       <StyledView className="flex-row items-center justify-between px-6 py-6">
         <StyledText className="font-bold text-3xl text-white">
           {data.title}
@@ -37,9 +36,7 @@ export const ReflectionDetailScreen = () => {
         </StyledText>
       </StyledView>
 
-      {/* 世界画像と矢印ナビゲーション */}
       <StyledView className="relative h-60 items-center justify-center">
-        {/* 左矢印 */}
         <StyledPressable
           className="absolute left-4 z-10"
           onPress={handlePrevWorld}
@@ -54,14 +51,12 @@ export const ReflectionDetailScreen = () => {
           </StyledView>
         </StyledPressable>
 
-        {/* 世界画像 */}
         <Image
           source={require("../../../assets/world-example.png")}
           style={{ width: 300, height: 300 }}
           resizeMode="contain"
         />
 
-        {/* 右矢印 */}
         <StyledPressable
           className="absolute right-4 z-10"
           onPress={handleNextWorld}
@@ -77,10 +72,8 @@ export const ReflectionDetailScreen = () => {
         </StyledPressable>
       </StyledView>
 
-      {/* タブ */}
       <DetailTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {/* タブコンテンツ */}
       <StyledView className="flex-1">
         {activeTab === "diary" ? <DetailDiary /> : <DetailTimeline />}
       </StyledView>
