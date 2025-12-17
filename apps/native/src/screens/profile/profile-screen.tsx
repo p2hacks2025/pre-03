@@ -46,7 +46,6 @@ export const ProfileScreen = () => {
         <ProfileHeader />
       </StyledView>
 
-      {/* エントリー一覧 */}
       <EntryList />
     </StyledScrollView>
   );
