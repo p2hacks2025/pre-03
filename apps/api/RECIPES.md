@@ -311,36 +311,38 @@ export const protectedRoute = createRoute({
 
 部分更新（PATCH）を実装するパターンです。
 
-**1. スキーマで Update 用の型を定義** (`@packages/db/src/schema/profiles.ts`)
+**1. スキーマで Update 用の型を定義** (`@packages/db/src/schema/user-profiles.ts`)
 
 ```typescript
 import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-export const profiles = pgTable("profiles", {
+export const userProfiles = pgTable("user_profiles", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull(),
-  displayName: text("display_name"),
+  username: text("username").notNull(),
   avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
 // 基本型
-export type Profile = typeof profiles.$inferSelect;
-export type NewProfile = typeof profiles.$inferInsert;
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type NewUserProfile = typeof userProfiles.$inferInsert;
 
 // Update 用型（更新可能なフィールドのみを Partial で定義）
-export type ProfileUpdate = Partial<Pick<NewProfile, "displayName" | "avatarUrl">>;
+export type UserProfileUpdate = Partial<Pick<NewUserProfile, "username" | "avatarUrl">>;
 ```
 
-**2. Repository で Update 関数を実装** (`src/repository/profile.ts`)
+**2. Repository で Update 関数を実装** (`src/repository/user-profile.ts`)
 
 ```typescript
 import {
   type DbClient,
-  type Profile,
-  type ProfileUpdate,
+  type UserProfile,
+  type UserProfileUpdate,
   eq,
-  profiles,
+  userProfiles,
 } from "@packages/db";
 
 export const updateProfile = async (

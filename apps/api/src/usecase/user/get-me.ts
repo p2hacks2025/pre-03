@@ -1,7 +1,7 @@
 import type { DbClient } from "@packages/db";
 import type { GetMeOutput } from "@packages/schema/user";
 import type { User } from "@supabase/supabase-js";
-import { getProfileByUserId } from "@/repository/profile";
+import { getUserProfileByUserId } from "@/repository/user-profile";
 
 type GetMeDeps = {
   db: DbClient;
@@ -15,7 +15,7 @@ export const getMe = async (
   deps: GetMeDeps,
   input: GetMeInput,
 ): Promise<GetMeOutput> => {
-  const profile = await getProfileByUserId(deps.db, input.user.id);
+  const profile = await getUserProfileByUserId(deps.db, input.user.id);
 
   return {
     user: {
@@ -27,7 +27,7 @@ export const getMe = async (
       ? {
           id: profile.id,
           userId: profile.userId,
-          displayName: profile.displayName,
+          displayName: profile.username,
           avatarUrl: profile.avatarUrl,
           createdAt: profile.createdAt.toISOString(),
         }

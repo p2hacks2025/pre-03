@@ -3,6 +3,10 @@ import { deleteCookie, setCookie } from "hono/cookie";
 import type { Bindings, Variables } from "@/context";
 
 export const COOKIE_NAME = "access_token";
+export const REFRESH_COOKIE_NAME = "refresh_token";
+
+/** refreshToken Cookie の有効期限（30日） */
+const REFRESH_TOKEN_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
 type CookieContext = Context<{ Bindings: Bindings; Variables: Variables }>;
 
@@ -41,6 +45,36 @@ export const setAccessTokenCookie = (
  */
 export const deleteAccessTokenCookie = (c: CookieContext): void => {
   deleteCookie(c, COOKIE_NAME, {
+    httpOnly: true,
+    secure: isProduction(c),
+    sameSite: "Lax",
+    path: "/",
+  });
+};
+
+/**
+ * リフレッシュトークンを HttpOnly Cookie に設定
+ * @param c - Hono Context
+ * @param refreshToken - リフレッシュトークン
+ */
+export const setRefreshTokenCookie = (
+  c: CookieContext,
+  refreshToken: string,
+): void => {
+  setCookie(c, REFRESH_COOKIE_NAME, refreshToken, {
+    httpOnly: true,
+    secure: isProduction(c),
+    sameSite: "Lax",
+    path: "/",
+    maxAge: REFRESH_TOKEN_MAX_AGE_SECONDS,
+  });
+};
+
+/**
+ * リフレッシュトークン Cookie を削除
+ */
+export const deleteRefreshTokenCookie = (c: CookieContext): void => {
+  deleteCookie(c, REFRESH_COOKIE_NAME, {
     httpOnly: true,
     secure: isProduction(c),
     sameSite: "Lax",

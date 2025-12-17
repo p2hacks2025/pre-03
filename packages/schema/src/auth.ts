@@ -22,7 +22,7 @@ export const ProfileSchema = z
     userId: z
       .uuid()
       .openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
-    displayName: z.string().nullable().openapi({ example: "John Doe" }),
+    displayName: z.string().openapi({ example: "John Doe" }),
     avatarUrl: z
       .url()
       .nullable()
@@ -135,3 +135,26 @@ export const PasswordResetOutputSchema = z
   .openapi("PasswordResetOutput");
 
 export type PasswordResetOutput = z.infer<typeof PasswordResetOutputSchema>;
+
+/**
+ * POST /auth/refresh
+ */
+
+export const RefreshTokenInputSchema = z
+  .object({
+    refreshToken: z.string().optional().openapi({
+      description: "Native アプリ用。Web は Cookie から取得するため省略可",
+      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    }),
+  })
+  .openapi("RefreshTokenInput");
+
+export type RefreshTokenInput = z.infer<typeof RefreshTokenInputSchema>;
+
+export const RefreshTokenOutputSchema = z
+  .object({
+    session: SessionSchema,
+  })
+  .openapi("RefreshTokenOutput");
+
+export type RefreshTokenOutput = z.infer<typeof RefreshTokenOutputSchema>;

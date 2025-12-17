@@ -11,7 +11,10 @@
     "typecheck": "tsc --noEmit",
     "check": "biome check .",
     "check:fix": "biome check --write --unsafe .",
-    "clean": "rm -rf node_modules/.cache .expo dist web-build"
+    "clean": "rm -rf node_modules/.cache .expo dist web-build",
+    "eas:build": "eas build --platform all",
+    "eas:build:ios": "eas build --platform ios --auto-submit",
+    "eas:build:android": "eas build --platform android"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -27,6 +30,7 @@
     "expo-constants": "^18.0.12",
     "expo-device": "^8.0.10",
     "expo-font": "~14.0.10",
+    "expo-image-picker": "~17.0.10",
     "expo-linking": "^8.0.10",
     "expo-router": "~6.0.19",
     "expo-secure-store": "^15.0.8",
@@ -54,6 +58,7 @@
     "@types/react": "^19.1.17",
     "@types/react-dom": "^19.1.11",
     "babel-plugin-module-resolver": "^5.0.2",
+    "babel-preset-expo": "~54.0.8",
     "typescript": "~5.9.2"
   },
   "private": true

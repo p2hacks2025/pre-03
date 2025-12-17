@@ -5,8 +5,8 @@ dotenv.config({ path: ".env", override: true });
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "native",
-  slug: "native",
+  name: "noval",
+  slug: "noval",
   scheme: "native",
   version: "1.0.0",
   orientation: "portrait",
@@ -20,6 +20,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     supportsTablet: true,
+    bundleIdentifier: "net.uiro.noval-ios",
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+      NSPhotoLibraryUsageDescription:
+        "日記に写真を添付するためにフォトライブラリへのアクセスが必要です。",
+    },
   },
   android: {
     adaptiveIcon: {
@@ -31,8 +37,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   web: {
     favicon: "./assets/favicon.png",
   },
-  plugins: ["expo-router", "expo-font"],
+  plugins: [
+    "expo-router",
+    "expo-font",
+    [
+      "expo-image-picker",
+      {
+        photosPermission:
+          "日記に写真を添付するためにフォトライブラリへのアクセスが必要です。",
+      },
+    ],
+  ],
   extra: {
+    eas: {
+      projectId: "094a0763-1c2d-4e08-a364-665289a4f7ef",
+    },
     API_BASE_URL: process.env.API_BASE_URL ?? "http://localhost:4001",
     API_REMOTE_URL: process.env.API_REMOTE_URL,
     ENVIRONMENT: process.env.ENVIRONMENT ?? "native",
