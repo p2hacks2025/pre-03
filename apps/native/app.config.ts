@@ -23,6 +23,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier: "net.uiro.noval-ios",
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
+      NSPhotoLibraryUsageDescription:
+        "日記に写真を添付するためにフォトライブラリへのアクセスが必要です。",
     },
   },
   android: {
@@ -35,7 +37,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   web: {
     favicon: "./assets/favicon.png",
   },
-  plugins: ["expo-router", "expo-font"],
+  plugins: [
+    "expo-router",
+    "expo-font",
+    [
+      "expo-image-picker",
+      {
+        photosPermission:
+          "日記に写真を添付するためにフォトライブラリへのアクセスが必要です。",
+      },
+    ],
+  ],
   extra: {
     eas: {
       projectId: "094a0763-1c2d-4e08-a364-665289a4f7ef",
