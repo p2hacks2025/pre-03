@@ -1,16 +1,13 @@
-import type { WorkerContext } from "@/lib";
 import {
   createOrUpdateWorldBuildLog,
-  fetchImageAsBase64,
-  generateImage,
-  getGuideImageBase64,
   getUserPostsByDate,
   getWeeklyWorld,
-  getWeekStartDate,
   selectFieldId,
   updateWeeklyWorldImage,
   uploadGeneratedImage,
-} from "@/tasks";
+  type WorkerContext,
+} from "@/lib";
+import { fetchImageAsBase64, generateImage, getWeekStartDate } from "@/tasks";
 
 export type DailyUpdateDateResult = {
   success: boolean;
@@ -70,12 +67,11 @@ export const dailyUpdateDate = async (
       const currentImageBase64 = await fetchImageAsBase64(
         weeklyWorld.weeklyWorldImageUrl,
       );
-      const guideImageBase64 = getGuideImageBase64(fieldId);
 
       const imageBuffer = await generateImage(
         ctx,
         currentImageBase64,
-        guideImageBase64,
+        fieldId,
         diaryContent,
       );
 

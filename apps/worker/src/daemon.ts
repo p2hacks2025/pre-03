@@ -1,12 +1,10 @@
 import cron from "node-cron";
 import { jobs } from "@/jobs";
-import { getContext } from "@/lib";
+import { getContext, TIMEZONE } from "@/lib";
 
 const schedules = [
   { name: "daily-update", cron: "5 0 * * *", job: jobs["daily-update"] },
 ] as const;
-
-const TIMEZONE = "Asia/Tokyo";
 const ctx = getContext();
 
 for (const schedule of schedules) {

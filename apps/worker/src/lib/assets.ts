@@ -1,10 +1,13 @@
 import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const ASSETS_DIR = resolve(__dirname, "../../assets");
+import { resolve } from "node:path";
+import { ASSETS_DIR } from "./constants";
 
 export const getSystemPrompt = (): string => {
   return readFileSync(resolve(ASSETS_DIR, "prompts/system_prompt.md"), "utf-8");
+};
+
+export const getGuideImageBase64 = (fieldId: number): string => {
+  const guidePath = resolve(ASSETS_DIR, `images/guides/guide${fieldId}.png`);
+  const buffer = readFileSync(guidePath);
+  return buffer.toString("base64");
 };
