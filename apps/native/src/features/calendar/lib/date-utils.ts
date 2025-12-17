@@ -63,8 +63,12 @@ function createDayInfo(date: Date): DayInfo {
 /**
  * 指定された週の開始日から WeekInfo を生成
  * @param weekStartDate 週の開始日（月曜日）
+ * @param imageUrl 週の画像URL（デフォルト: null）
  */
-export function createWeekInfo(weekStartDate: Date): WeekInfo {
+export function createWeekInfo(
+  weekStartDate: Date,
+  imageUrl: string | null = null,
+): WeekInfo {
   const days: DayInfo[] = [];
   const monthCounts: Record<number, number> = {};
 
@@ -93,6 +97,7 @@ export function createWeekInfo(weekStartDate: Date): WeekInfo {
     primaryMonth,
     startDate: new Date(weekStartDate),
     endDate,
+    imageUrl,
   };
 }
 

@@ -10,11 +10,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
-import {
-  Calendar,
-  type MonthGroup,
-  useInfinitePastWeeks,
-} from "@/features/calendar";
+import { Calendar, type MonthGroup, useCalendar } from "@/features/calendar";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
@@ -22,11 +18,10 @@ const StyledText = withUniwind(Text);
 export const CalendarScreen = () => {
   const insets = useSafeAreaInsets();
 
-  const { monthGroups, isLoadingMore, loadMore, hasMore } =
-    useInfinitePastWeeks({
-      initialWeekCount: 12,
-      loadMoreCount: 8,
-    });
+  const { monthGroups, isLoadingMore, loadMore, hasMore } = useCalendar({
+    initialWeekCount: 12,
+    loadMoreCount: 8,
+  });
 
   const [currentYear, setCurrentYear] = useState<number>(() =>
     new Date().getFullYear(),
