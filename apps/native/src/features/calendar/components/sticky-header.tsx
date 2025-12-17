@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import { Animated, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
+const StyledAnimatedView = withUniwind(Animated.View);
 
 const HEADER_HEIGHT = 40;
 
@@ -43,42 +44,36 @@ export const StickyYearHeader = ({ year }: StickyYearHeaderProps) => {
   }, [year, isAnimating, offsetAnim]);
 
   return (
-    <StyledView style={styles.yearContainer}>
+    <StyledView className="h-10 flex-1 justify-center overflow-hidden">
       {prevYear !== null && (
-        <Animated.View
-          style={[
-            styles.yearTextContainer,
-            {
-              transform: [
-                {
-                  translateY: Animated.add(
-                    offsetAnim,
-                    directionRef.current === "up"
-                      ? HEADER_HEIGHT
-                      : -HEADER_HEIGHT,
-                  ),
-                },
-              ],
-            },
-          ]}
+        <StyledAnimatedView
+          className="absolute h-10 w-full justify-center"
+          style={{
+            transform: [
+              {
+                translateY: Animated.add(
+                  offsetAnim,
+                  directionRef.current === "up"
+                    ? HEADER_HEIGHT
+                    : -HEADER_HEIGHT,
+                ),
+              },
+            ],
+          }}
         >
           <StyledText className="text-center font-bold text-foreground text-xl">
             {prevYear}年
           </StyledText>
-        </Animated.View>
+        </StyledAnimatedView>
       )}
-      <Animated.View
-        style={[
-          styles.yearTextContainer,
-          {
-            transform: [{ translateY: offsetAnim }],
-          },
-        ]}
+      <StyledAnimatedView
+        className="absolute h-10 w-full justify-center"
+        style={{ transform: [{ translateY: offsetAnim }] }}
       >
         <StyledText className="text-center font-bold text-foreground text-xl">
           {year}年
         </StyledText>
-      </Animated.View>
+      </StyledAnimatedView>
     </StyledView>
   );
 };
@@ -126,71 +121,36 @@ export const StickyMonthHeader = ({ month }: StickyMonthHeaderProps) => {
   }, [month, isAnimating, offsetAnim]);
 
   return (
-    <StyledView style={styles.monthContainer}>
+    <StyledView className="h-10 w-12 items-center justify-center overflow-hidden">
       {prevMonth !== null && (
-        <Animated.View
-          style={[
-            styles.monthTextContainer,
-            {
-              transform: [
-                {
-                  translateY: Animated.add(
-                    offsetAnim,
-                    directionRef.current === "up"
-                      ? HEADER_HEIGHT
-                      : -HEADER_HEIGHT,
-                  ),
-                },
-              ],
-            },
-          ]}
+        <StyledAnimatedView
+          className="absolute h-10 w-full items-center justify-center"
+          style={{
+            transform: [
+              {
+                translateY: Animated.add(
+                  offsetAnim,
+                  directionRef.current === "up"
+                    ? HEADER_HEIGHT
+                    : -HEADER_HEIGHT,
+                ),
+              },
+            ],
+          }}
         >
           <StyledText className="font-bold text-2xl text-foreground">
             {(prevMonth ?? 0) + 1}月
           </StyledText>
-        </Animated.View>
+        </StyledAnimatedView>
       )}
-      <Animated.View
-        style={[
-          styles.monthTextContainer,
-          {
-            transform: [{ translateY: offsetAnim }],
-          },
-        ]}
+      <StyledAnimatedView
+        className="absolute h-10 w-full items-center justify-center"
+        style={{ transform: [{ translateY: offsetAnim }] }}
       >
         <StyledText className="font-bold text-2xl text-foreground">
           {month + 1}月
         </StyledText>
-      </Animated.View>
+      </StyledAnimatedView>
     </StyledView>
   );
 };
-
-const styles = StyleSheet.create({
-  yearContainer: {
-    flex: 1,
-    height: HEADER_HEIGHT,
-    overflow: "hidden",
-    justifyContent: "center",
-  },
-  yearTextContainer: {
-    position: "absolute",
-    width: "100%",
-    height: HEADER_HEIGHT,
-    justifyContent: "center",
-  },
-  monthContainer: {
-    width: 48,
-    height: HEADER_HEIGHT,
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  monthTextContainer: {
-    position: "absolute",
-    width: "100%",
-    height: HEADER_HEIGHT,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
