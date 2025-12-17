@@ -1,8 +1,7 @@
 import { createRouter } from "@/config/router";
-import { createEntryHandler } from "./handlers";
-import { createEntryRoute } from "./route";
+import { createEntryHandler, getTimelineHandler } from "./handlers";
+import { createEntryRoute, getTimelineRoute } from "./route";
 
-export const entriesRouter = createRouter().openapi(
-  createEntryRoute,
-  createEntryHandler,
-);
+export const entriesRouter = createRouter()
+  .openapi(createEntryRoute, createEntryHandler)
+  .openapi(getTimelineRoute, getTimelineHandler);
