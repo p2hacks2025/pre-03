@@ -26,15 +26,15 @@ const MonthIndicator = ({ month }: { month: number }) => {
   );
 };
 
-interface MonthSectionProps {
+interface CalendarProps {
   monthGroup: MonthGroup;
   showYearSeparator?: boolean;
 }
 
-export const MonthSection = ({
+export const Calendar = ({
   monthGroup,
   showYearSeparator = false,
-}: MonthSectionProps) => {
+}: CalendarProps) => {
   return (
     <StyledView className="mb-4">
       {showYearSeparator && <YearHeader year={monthGroup.year} />}

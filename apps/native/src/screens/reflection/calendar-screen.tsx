@@ -11,8 +11,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
 import {
+  Calendar,
   type MonthGroup,
-  MonthSection,
   useInfinitePastWeeks,
 } from "@/features/calendar";
 
@@ -62,7 +62,7 @@ export const CalendarScreen = () => {
 
   const renderItem: ListRenderItem<MonthGroup> = useCallback(
     ({ item }) => (
-      <MonthSection
+      <Calendar
         monthGroup={item}
         showYearSeparator={yearSeparatorMonthIds.has(item.monthId)}
       />
