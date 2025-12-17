@@ -10,6 +10,10 @@ import {
 } from "react";
 import { tokenStorage } from "@/features/auth/lib/token-storage";
 import { client, createAuthenticatedClient } from "@/lib/api";
+import {
+  clearOneSignalExternalUserId,
+  setOneSignalExternalUserId,
+} from "@/lib/onesignal";
 
 interface AuthContextType {
   user: User | null;
@@ -61,16 +65,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(data.user);
         setProfile(data.profile);
         setAccessToken(token);
+        // OneSignal に external_id を登録（通知の送信先として識別）
+        await setOneSignalExternalUserId(data.user.id);
         return true;
       }
       // 認証失敗時はトークンを削除
       await tokenStorage.clearTokens();
+      await clearOneSignalExternalUserId();
       setUser(null);
       setProfile(null);
       setAccessToken(null);
       return false;
     } catch {
       await tokenStorage.clearTokens();
+      await clearOneSignalExternalUserId();
       setUser(null);
       setProfile(null);
       setAccessToken(null);
@@ -188,6 +196,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // ログアウト失敗してもクライアント側はクリア
     }
     await tokenStorage.clearTokens();
+    await clearOneSignalExternalUserId();
     setUser(null);
     setProfile(null);
     setAccessToken(null);
