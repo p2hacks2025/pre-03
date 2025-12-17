@@ -48,10 +48,10 @@ const MOCK_WEEK_DATA: CalendarWeekData[] = [
 ];
 
 /** weekId から画像URLを取得 */
-function getImageUrlForWeek(weekId: string): string | null {
+const getImageUrlForWeek = (weekId: string): string | null => {
   const weekData = MOCK_WEEK_DATA.find((w) => w.weekId === weekId);
   return weekData?.imageUrl ?? null;
-}
+};
 
 interface UseCalendarOptions {
   initialWeekCount?: number;
@@ -66,9 +66,9 @@ interface UseCalendarReturn {
   hasMore: boolean;
 }
 
-export function useCalendar(
+export const useCalendar = (
   options: UseCalendarOptions = {},
-): UseCalendarReturn {
+): UseCalendarReturn => {
   const { initialWeekCount = 12, loadMoreCount = 8 } = options;
 
   const [weeks, setWeeks] = useState<WeekInfo[]>(() => {
@@ -124,4 +124,4 @@ export function useCalendar(
   }, [isLoadingMore, hasMore, loadMoreCount]);
 
   return { weeks, monthGroups, isLoadingMore, loadMore, hasMore };
-}
+};

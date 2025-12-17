@@ -5,70 +5,68 @@ import type { DayInfo, MonthGroup, WeekInfo } from "../types";
  * @param date 変換する日付
  * @returns "YYYY-MM-DD" 形式の文字列
  */
-export function formatDateToISO(date: Date): string {
+export const formatDateToISO = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
-}
+};
 
 /**
  * 日付が今日かどうか判定
  * @param date 判定する日付
  */
-export function isToday(date: Date): boolean {
+export const isToday = (date: Date): boolean => {
   const today = new Date();
   return (
     date.getFullYear() === today.getFullYear() &&
     date.getMonth() === today.getMonth() &&
     date.getDate() === today.getDate()
   );
-}
+};
 
 /**
  * 日付が週末かどうか判定
  * @param date 判定する日付
  */
-export function isWeekend(date: Date): boolean {
+export const isWeekend = (date: Date): boolean => {
   const day = date.getDay();
   return day === 0 || day === 6;
-}
+};
 
 /**
  * 指定された日付を含む週の月曜日を取得
  * @param date 基準となる日付
  * @returns その週の月曜日 00:00:00
  */
-export function getWeekStart(date: Date): Date {
+export const getWeekStart = (date: Date): Date => {
   const result = new Date(date);
   const day = result.getDay();
   const daysToMonday = (day + 6) % 7;
   result.setDate(result.getDate() - daysToMonday);
   result.setHours(0, 0, 0, 0);
   return result;
-}
+};
 
-function createDayInfo(date: Date): DayInfo {
-  return {
-    date: new Date(date),
-    day: date.getDate(),
-    month: date.getMonth(),
-    year: date.getFullYear(),
-    isWeekend: isWeekend(date),
-    isToday: isToday(date),
-    dateString: formatDateToISO(date),
-  };
-}
+const createDayInfo = (date: Date): DayInfo => ({
+  date: new Date(date),
+  day: date.getDate(),
+  month: date.getMonth(),
+  year: date.getFullYear(),
+  isWeekend: isWeekend(date),
+  isToday: isToday(date),
+  dateString: formatDateToISO(date),
+});
 
 /**
  * 指定された週の開始日から WeekInfo を生成
  * @param weekStartDate 週の開始日（月曜日）
  * @param imageUrl 週の画像URL（デフォルト: null）
  */
-export function createWeekInfo(
+export const createWeekInfo = (
   weekStartDate: Date,
   imageUrl: string | null = null,
-): WeekInfo {
+): WeekInfo => {
   const days: DayInfo[] = [];
   const monthCounts: Record<number, number> = {};
 
@@ -99,7 +97,7 @@ export function createWeekInfo(
     endDate,
     imageUrl,
   };
-}
+};
 
 /**
  * 過去N週間分の WeekInfo 配列を生成
@@ -108,11 +106,11 @@ export function createWeekInfo(
  * @param getImageUrl weekId から画像URLを取得するコールバック（省略可）
  * @returns 現在週から過去に向かう週の配列
  */
-export function generatePastWeeks(
+export const generatePastWeeks = (
   startWeekDate: Date,
   count: number,
   getImageUrl?: (weekId: string) => string | null,
-): WeekInfo[] {
+): WeekInfo[] => {
   const weeks: WeekInfo[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -124,14 +122,14 @@ export function generatePastWeeks(
   }
 
   return weeks;
-}
+};
 
 /**
  * 週リストを月ごとにグループ化
  * @param weeks グループ化する週の配列
  * @returns primaryMonth を基準にグループ化された月の配列
  */
-export function groupWeeksByMonth(weeks: WeekInfo[]): MonthGroup[] {
+export const groupWeeksByMonth = (weeks: WeekInfo[]): MonthGroup[] => {
   const groupMap = new Map<string, MonthGroup>();
 
   for (const week of weeks) {
@@ -159,4 +157,4 @@ export function groupWeeksByMonth(weeks: WeekInfo[]): MonthGroup[] {
   }
 
   return Array.from(groupMap.values());
-}
+};
