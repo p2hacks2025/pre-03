@@ -28,16 +28,13 @@ export const CalendarScreen = () => {
       loadMoreCount: 8,
     });
 
-  // 現在表示中の年
   const [currentYear, setCurrentYear] = useState<number>(() =>
     new Date().getFullYear(),
   );
 
-  // 年セパレーターを表示すべき monthId のセット
   const yearSeparatorMonthIds = useMemo(() => {
     const ids = new Set<string>();
     for (const group of monthGroups) {
-      // 1月の場合は年セパレーターを表示
       if (group.month === 0) {
         ids.add(group.monthId);
       }
@@ -45,7 +42,6 @@ export const CalendarScreen = () => {
     return ids;
   }, [monthGroups]);
 
-  // 表示中のアイテムが変わったときのコールバック
   const handleViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (viewableItems.length === 0) return;
@@ -91,12 +87,10 @@ export const CalendarScreen = () => {
     }
   }, [hasMore, isLoadingMore, loadMore]);
 
-  // スティッキーヘッダーの高さ
   const stickyHeaderHeight = 40;
 
   return (
     <StyledView className="flex-1 bg-background">
-      {/* スティッキー年ヘッダー */}
       <StyledView
         className="absolute top-0 right-0 left-0 z-10 bg-background px-4"
         style={{

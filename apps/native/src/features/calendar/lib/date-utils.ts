@@ -1,8 +1,5 @@
 import type { DayInfo, MonthGroup, WeekInfo } from "../types";
 
-/**
- * ISO形式の日付文字列を生成 "YYYY-MM-DD"
- */
 export function formatDateToISO(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -10,9 +7,6 @@ export function formatDateToISO(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-/**
- * 日付が今日かどうか判定
- */
 export function isToday(date: Date): boolean {
   const today = new Date();
   return (
@@ -22,17 +16,11 @@ export function isToday(date: Date): boolean {
   );
 }
 
-/**
- * 日付が週末かどうか判定 (土曜 = 6, 日曜 = 0)
- */
 export function isWeekend(date: Date): boolean {
   const day = date.getDay();
   return day === 0 || day === 6;
 }
 
-/**
- * 指定された日付を含む週の月曜日を取得（月曜始まり）
- */
 export function getWeekStart(date: Date): Date {
   const result = new Date(date);
   const day = result.getDay();
@@ -42,9 +30,6 @@ export function getWeekStart(date: Date): Date {
   return result;
 }
 
-/**
- * DayInfo を作成
- */
 function createDayInfo(date: Date): DayInfo {
   return {
     date: new Date(date),
@@ -57,9 +42,6 @@ function createDayInfo(date: Date): DayInfo {
   };
 }
 
-/**
- * 指定された週の開始日から WeekInfo を生成
- */
 export function createWeekInfo(weekStartDate: Date): WeekInfo {
   const days: DayInfo[] = [];
   const monthCounts: Record<number, number> = {};
@@ -71,18 +53,15 @@ export function createWeekInfo(weekStartDate: Date): WeekInfo {
     const dayInfo = createDayInfo(currentDate);
     days.push(dayInfo);
 
-    // 月のカウント（primaryMonth 計算用）
     const month = dayInfo.month;
     monthCounts[month] = (monthCounts[month] || 0) + 1;
   }
 
-  // 主要な月（最も多くの日が属する月）
   const months = Object.keys(monthCounts).map(Number);
   const primaryMonth = months.reduce((a, b) =>
     monthCounts[a] >= monthCounts[b] ? a : b,
   );
 
-  // 週の終了日
   const endDate = new Date(weekStartDate);
   endDate.setDate(weekStartDate.getDate() + 6);
 
@@ -95,11 +74,6 @@ export function createWeekInfo(weekStartDate: Date): WeekInfo {
   };
 }
 
-/**
- * 過去N週間分の WeekInfo 配列を生成
- * @param startWeekDate 開始となる週の月曜日
- * @param count 生成する週の数
- */
 export function generatePastWeeks(
   startWeekDate: Date,
   count: number,
@@ -115,18 +89,12 @@ export function generatePastWeeks(
   return weeks;
 }
 
-/**
- * 週リストを月ごとにグループ化
- * 週の primaryMonth を基準にグループ化する
- */
 export function groupWeeksByMonth(weeks: WeekInfo[]): MonthGroup[] {
   const groupMap = new Map<string, MonthGroup>();
 
   for (const week of weeks) {
-    // primaryMonth を基準に月を決定
-    // 週の最初の日の年と primaryMonth を使用
     const year = week.startDate.getFullYear();
-    // primaryMonth が前年の月の場合を考慮
+    // 年末年始で primaryMonth と startDate の月がずれる場合の年調整
     const adjustedYear =
       week.primaryMonth === 11 && week.startDate.getMonth() === 0
         ? year - 1
@@ -148,6 +116,5 @@ export function groupWeeksByMonth(weeks: WeekInfo[]): MonthGroup[] {
     groupMap.get(monthId)?.weeks.push(week);
   }
 
-  // 配列に変換（既に時系列順）
   return Array.from(groupMap.values());
 }

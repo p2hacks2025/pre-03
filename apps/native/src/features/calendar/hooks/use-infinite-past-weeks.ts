@@ -7,22 +7,15 @@ import {
 import type { MonthGroup, WeekInfo } from "../types";
 
 interface UseInfinitePastWeeksOptions {
-  /** 初期表示する週の数 (デフォルト: 12) */
   initialWeekCount?: number;
-  /** 追加読み込み時の週数 (デフォルト: 8) */
   loadMoreCount?: number;
 }
 
 interface UseInfinitePastWeeksReturn {
-  /** 週リスト (現在週が先頭、過去に向かって追加) */
   weeks: WeekInfo[];
-  /** 月ごとにグループ化された週 */
   monthGroups: MonthGroup[];
-  /** ロード中フラグ */
   isLoadingMore: boolean;
-  /** さらに過去のデータを読み込む */
   loadMore: () => void;
-  /** まだ読み込めるデータがあるか */
   hasMore: boolean;
 }
 
@@ -57,13 +50,10 @@ export function useInfinitePastWeeks(
         }
 
         const lastWeekStart = new Date(lastWeek.startDate);
-
-        // 1週間前から開始
         lastWeekStart.setDate(lastWeekStart.getDate() - 7);
 
         const newWeeks = generatePastWeeks(lastWeekStart, loadMoreCount);
 
-        // 2年前までの制限
         const twoYearsAgo = new Date();
         twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
 

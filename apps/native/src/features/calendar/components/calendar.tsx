@@ -6,8 +6,6 @@ import { WeekRow } from "./week-row";
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
 
-// --- 内部コンポーネント: YearHeader ---
-
 const YearHeader = ({ year }: { year: number }) => {
   return (
     <StyledView className="py-2">
@@ -18,8 +16,6 @@ const YearHeader = ({ year }: { year: number }) => {
   );
 };
 
-// --- 内部コンポーネント: MonthIndicator ---
-
 const MonthIndicator = ({ month }: { month: number }) => {
   return (
     <StyledView className="w-14 items-center pt-1">
@@ -29,8 +25,6 @@ const MonthIndicator = ({ month }: { month: number }) => {
     </StyledView>
   );
 };
-
-// --- メインコンポーネント ---
 
 interface MonthSectionProps {
   monthGroup: MonthGroup;
