@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "heroui-native";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
@@ -13,10 +13,19 @@ const StyledText = withUniwind(Text);
 type TabType = "diary" | "timeline";
 
 export const ReflectionDetailScreen = () => {
-  const { date } = useLocalSearchParams<{ date: string }>();
+  const { week } = useLocalSearchParams<{ week: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabType>("diary");
+
+  const weekRange = useMemo(() => {
+    if (!week) return "";
+    const startDate = new Date(week);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 6);
+
+    return `${startDate.getMonth() + 1}/${startDate.getDate()} - ${endDate.getMonth() + 1}/${endDate.getDate()}`;
+  }, [week]);
 
   return (
     <StyledView
@@ -25,7 +34,7 @@ export const ReflectionDetailScreen = () => {
     >
       <StyledView className="px-4 py-4">
         <StyledText className="mb-4 font-bold text-foreground text-xl">
-          {date} の振り返り
+          {weekRange} の振り返り
         </StyledText>
       </StyledView>
 
@@ -34,11 +43,11 @@ export const ReflectionDetailScreen = () => {
       <StyledView className="flex-1 items-center justify-center px-4">
         {activeTab === "diary" ? (
           <StyledText className="text-foreground">
-            日記コンテンツ: {date}
+            日記コンテンツ: {week}
           </StyledText>
         ) : (
           <StyledText className="text-foreground">
-            タイムラインコンテンツ: {date}
+            タイムラインコンテンツ: {week}
           </StyledText>
         )}
       </StyledView>
