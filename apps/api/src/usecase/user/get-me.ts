@@ -27,7 +27,7 @@ export const getMe = async (
       ? {
           id: profile.id,
           userId: profile.userId,
-          displayName: profile.username,
+          displayName: profile.username ?? "",
           avatarUrl: profile.avatarUrl,
           createdAt: profile.createdAt.toISOString(),
         }

@@ -14,7 +14,7 @@ export interface DiaryEntry {
    */
   content: string;
   /**
-   * 投稿日時（例: "12/14 22:39"）
+   * 投稿日時（例: "2025/12/14 22:39"）
    */
   timestamp: string;
   /**
@@ -55,7 +55,6 @@ export interface DetailDiaryData {
 export const useDetailDiary = () => {
   const [currentWorldIndex, setCurrentWorldIndex] = useState(0);
 
-  // モックデータ（将来的にAPIから取得）
   const data: DetailDiaryData = {
     title: "今までの世界",
     startDate: "2025/12/15",
@@ -66,25 +65,26 @@ export const useDetailDiary = () => {
         id: "1",
         username: "ユーザーネーム",
         content: "なんかピザが食べたくなってきたな、頼んじゃおうかな",
-        timestamp: "12/14 22:39",
+        timestamp: "2025/12/14 22:39",
       },
       {
         id: "2",
         username: "ユーザーネーム",
-        content: "なんかピザが食べたくなってきたな、頼んじゃおうかな",
-        timestamp: "12/14 22:39",
+        content:
+          "なんかピザが食べたくなってきたな、頼んじゃおうかなあああああああああああああああああああああああああああああいいいいいいいいいいいいいいいいいいいいいい",
+        timestamp: "2025/12/14 22:39",
       },
       {
         id: "3",
         username: "ユーザーネーム",
         content: "なんかピザが食べたくなってきたな、頼んじゃおうかな",
-        timestamp: "12/14 22:39",
+        timestamp: "2025/12/14 22:39",
       },
       {
         id: "4",
         username: "ユーザーネーム",
         content: "なんかピザが食べたくなってきたな、頼んじゃおうかな",
-        timestamp: "12/14 22:39",
+        timestamp: "2025/12/14 22:39",
       },
     ],
   };

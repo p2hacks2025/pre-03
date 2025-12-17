@@ -27,11 +27,8 @@ export const ReflectionDetailScreen = () => {
       className="flex-1 bg-[#4ECCDD]"
       style={{ paddingTop: insets.top, paddingBottom: 0 }}
     >
-      <StyledView className="flex-row items-center justify-between px-6 py-6">
-        <StyledText className="font-bold text-3xl text-white">
-          {data.title}
-        </StyledText>
-        <StyledText className="text-sm text-white">
+      <StyledView className="items-center justify-center px-6 py-6">
+        <StyledText className="text-white text-xl">
           {data.startDate}~{data.endDate}
         </StyledText>
       </StyledView>
@@ -42,12 +39,9 @@ export const ReflectionDetailScreen = () => {
           onPress={handlePrevWorld}
         >
           <StyledView className="h-12 w-12 items-center justify-center">
-            <Ionicons
-              name="triangle"
-              size={24}
-              color="#DF6800"
-              style={{ transform: [{ rotate: "270deg" }] }}
-            />
+            <View style={{ transform: [{ rotate: "270deg" }] }}>
+              <Ionicons name="triangle" size={24} color="#DF6800" />
+            </View>
           </StyledView>
         </StyledPressable>
 
@@ -62,12 +56,9 @@ export const ReflectionDetailScreen = () => {
           onPress={handleNextWorld}
         >
           <StyledView className="h-12 w-12 items-center justify-center">
-            <Ionicons
-              name="triangle"
-              size={24}
-              color="#DF6800"
-              style={{ transform: [{ rotate: "90deg" }] }}
-            />
+            <View style={{ transform: [{ rotate: "90deg" }] }}>
+              <Ionicons name="triangle" size={24} color="#DF6800" />
+            </View>
           </StyledView>
         </StyledPressable>
       </StyledView>

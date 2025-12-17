@@ -14,10 +14,12 @@ interface DetailTabsProps {
 
 export const DetailTabs = ({ activeTab, onTabChange }: DetailTabsProps) => {
   return (
-    <StyledView className="flex-row border-white border-b-2">
+    <StyledView className="flex-row">
       <StyledPressable
         className={`flex-1 items-center py-3 ${
-          activeTab === "diary" ? "border-[#1100FF] border-b-2" : ""
+          activeTab === "diary"
+            ? "border-[#1100FF] border-b-2"
+            : "border-white border-b-2"
         }`}
         onPress={() => onTabChange("diary")}
       >
@@ -31,7 +33,9 @@ export const DetailTabs = ({ activeTab, onTabChange }: DetailTabsProps) => {
       </StyledPressable>
       <StyledPressable
         className={`flex-1 items-center py-3 ${
-          activeTab === "timeline" ? "border-[#1100FF] border-b-2" : ""
+          activeTab === "timeline"
+            ? "border-[#1100FF] border-b-2"
+            : "border-white border-b-2"
         }`}
         onPress={() => onTabChange("timeline")}
       >

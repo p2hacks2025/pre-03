@@ -1,9 +1,8 @@
 import { ScrollView, View } from "react-native";
 import { withUniwind } from "uniwind";
 
-import { TimelineCard } from "@/features/timeline/components";
-
 import { useDetailDiary } from "../hooks";
+import { DiaryCard } from "./diary-card";
 
 const StyledView = withUniwind(View);
 const StyledScrollView = withUniwind(ScrollView);
@@ -21,12 +20,10 @@ export const DetailDiary = () => {
     <StyledScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       <StyledView className="gap-3 px-4 pt-4 pb-6">
         {data.diaryEntries.map((entry) => (
-          <TimelineCard
+          <DiaryCard
             key={entry.id}
-            username={entry.username}
+            date={entry.timestamp}
             content={entry.content}
-            timeAgo={entry.timestamp}
-            avatarUri={entry.avatarUri}
           />
         ))}
       </StyledView>
