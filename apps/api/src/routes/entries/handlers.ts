@@ -1,3 +1,4 @@
+import { fileTypeFromBuffer } from "file-type";
 import type { AppRouteHandler } from "@/context";
 import { createSupabaseAdminClient } from "@/infrastructure/supabase";
 import { AppError } from "@/shared/error/app-error";
@@ -18,6 +19,18 @@ export const createEntryHandler: AppRouteHandler<
 
   if (file !== undefined && !(file instanceof File)) {
     throw new AppError("BAD_REQUEST", { message: "無効なファイル形式です" });
+  }
+
+  if (file instanceof File) {
+    const allowedMimeTypes = ["image/jpeg", "image/png"];
+    const buffer = await file.arrayBuffer();
+    const detectedType = await fileTypeFromBuffer(buffer);
+
+    if (!detectedType || !allowedMimeTypes.includes(detectedType.mime)) {
+      throw new AppError("BAD_REQUEST", {
+        message: "画像はJPEGまたはPNG形式のみ対応しています",
+      });
+    }
   }
 
   const user = c.get("user");
