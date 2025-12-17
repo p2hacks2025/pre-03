@@ -9,18 +9,8 @@ const StyledText = withUniwind(Text);
 const YearHeader = ({ year }: { year: number }) => {
   return (
     <StyledView className="py-2">
-      <StyledText className="font-bold text-foreground text-xl">
+      <StyledText className="text-center font-bold text-foreground text-xl">
         {year}年
-      </StyledText>
-    </StyledView>
-  );
-};
-
-const MonthIndicator = ({ month }: { month: number }) => {
-  return (
-    <StyledView className="w-14 items-center pt-1">
-      <StyledText className="font-bold text-3xl text-foreground">
-        {month + 1}
       </StyledText>
     </StyledView>
   );
@@ -35,18 +25,21 @@ export const Calendar = ({
   monthGroup,
   showYearSeparator = false,
 }: CalendarProps) => {
+  const reversedWeeks = [...monthGroup.weeks].reverse();
+
   return (
     <StyledView className="mb-4">
       {showYearSeparator && <YearHeader year={monthGroup.year} />}
 
-      <StyledView className="flex-row">
-        <MonthIndicator month={monthGroup.month} />
-
-        <StyledView className="flex-1">
-          {[...monthGroup.weeks].reverse().map((week) => (
-            <WeekRow key={week.weekId} week={week} />
-          ))}
-        </StyledView>
+      <StyledView>
+        {reversedWeeks.map((week, index) => (
+          <WeekRow
+            key={week.weekId}
+            week={week}
+            showMonthIndicator={index === 0}
+            month={monthGroup.month}
+          />
+        ))}
       </StyledView>
     </StyledView>
   );

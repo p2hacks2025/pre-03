@@ -3,17 +3,21 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import {
   FlatList,
   type ListRenderItem,
-  Text,
   View,
   type ViewToken,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
-import { Calendar, type MonthGroup, useCalendar } from "@/features/calendar";
+import {
+  Calendar,
+  type MonthGroup,
+  StickyMonthHeader,
+  StickyYearHeader,
+  useCalendar,
+} from "@/features/calendar";
 
 const StyledView = withUniwind(View);
-const StyledText = withUniwind(Text);
 
 export const CalendarScreen = () => {
   const insets = useSafeAreaInsets();
@@ -25,6 +29,9 @@ export const CalendarScreen = () => {
 
   const [currentYear, setCurrentYear] = useState<number>(() =>
     new Date().getFullYear(),
+  );
+  const [currentMonth, setCurrentMonth] = useState<number>(() =>
+    new Date().getMonth(),
   );
 
   const yearSeparatorMonthIds = useMemo(() => {
@@ -47,6 +54,7 @@ export const CalendarScreen = () => {
         | undefined;
       if (topItem) {
         setCurrentYear(topItem.year);
+        setCurrentMonth(topItem.month);
       }
     },
   ).current;
@@ -82,7 +90,7 @@ export const CalendarScreen = () => {
     }
   }, [hasMore, isLoadingMore, loadMore]);
 
-  const stickyHeaderHeight = 40;
+  const stickyHeaderHeight = 56;
 
   return (
     <StyledView className="flex-1 bg-background">
@@ -93,10 +101,10 @@ export const CalendarScreen = () => {
           height: insets.top + stickyHeaderHeight,
         }}
       >
-        <StyledView className="flex-1 justify-center">
-          <StyledText className="font-bold text-foreground text-xl">
-            {currentYear}年
-          </StyledText>
+        <StyledView className="flex-1 flex-row items-center">
+          <StickyMonthHeader month={currentMonth} />
+          <StickyYearHeader year={currentYear} />
+          <StyledView className="w-12" />
         </StyledView>
       </StyledView>
 

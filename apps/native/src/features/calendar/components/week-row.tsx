@@ -14,18 +14,45 @@ const getTextColorClass = (day: DayInfo): string => {
   return "text-foreground";
 };
 
-const WeekDatesRow = ({ days }: { days: DayInfo[] }) => {
+const MonthIndicator = ({ month }: { month: number }) => {
   return (
-    <StyledView className="flex-row justify-between px-2">
-      {days.map((day) => (
-        <StyledView key={day.dateString} className="w-8 items-center">
-          <StyledText
-            className={`text-base ${getTextColorClass(day)} ${day.isToday ? "font-bold" : "font-medium"}`}
-          >
-            {day.day}
-          </StyledText>
-        </StyledView>
-      ))}
+    <StyledView className="items-center justify-center pr-2">
+      <StyledText className="font-bold text-2xl text-foreground">
+        {month + 1}月
+      </StyledText>
+    </StyledView>
+  );
+};
+
+interface WeekDatesRowProps {
+  days: DayInfo[];
+  showMonthIndicator?: boolean;
+  month?: number;
+}
+
+const WeekDatesRow = ({
+  days,
+  showMonthIndicator = false,
+  month,
+}: WeekDatesRowProps) => {
+  return (
+    <StyledView className="flex-row items-center">
+      {showMonthIndicator && month !== undefined ? (
+        <MonthIndicator month={month} />
+      ) : (
+        <StyledView className="w-12" />
+      )}
+      <StyledView className="flex-1 flex-row justify-between px-2">
+        {days.map((day) => (
+          <StyledView key={day.dateString} className="w-8 items-center">
+            <StyledText
+              className={`text-base ${getTextColorClass(day)} ${day.isToday ? "font-bold" : "font-medium"}`}
+            >
+              {day.day}
+            </StyledText>
+          </StyledView>
+        ))}
+      </StyledView>
     </StyledView>
   );
 };
@@ -47,9 +74,15 @@ const WeekContent = ({ imageUrl }: { imageUrl: string | null }) => {
 };
 interface WeekRowProps {
   week: WeekInfo;
+  showMonthIndicator?: boolean;
+  month?: number;
 }
 
-export const WeekRow = ({ week }: WeekRowProps) => {
+export const WeekRow = ({
+  week,
+  showMonthIndicator = false,
+  month,
+}: WeekRowProps) => {
   const router = useRouter();
 
   const handlePress = () => {
@@ -59,8 +92,14 @@ export const WeekRow = ({ week }: WeekRowProps) => {
   return (
     <Pressable onPress={handlePress}>
       <StyledView className="mb-2">
-        <WeekDatesRow days={week.days} />
-        <WeekContent imageUrl={week.imageUrl} />
+        <WeekDatesRow
+          days={week.days}
+          showMonthIndicator={showMonthIndicator}
+          month={month}
+        />
+        <StyledView className="ml-12">
+          <WeekContent imageUrl={week.imageUrl} />
+        </StyledView>
       </StyledView>
     </Pressable>
   );
