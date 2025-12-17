@@ -47,6 +47,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           "日記に写真を添付するためにフォトライブラリへのアクセスが必要です。",
       },
     ],
+    [
+      "onesignal-expo-plugin",
+      {
+        mode: "development",
+      },
+    ],
   ],
   extra: {
     eas: {
@@ -56,5 +62,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     API_REMOTE_URL: process.env.API_REMOTE_URL,
     ENVIRONMENT: process.env.ENVIRONMENT ?? "native",
     LOG_LEVEL: process.env.LOG_LEVEL ?? "debug",
+    ONESIGNAL_APP_ID: "0de60db5-b01c-46a6-89d8-7e4e03f1825a",
   },
 });
