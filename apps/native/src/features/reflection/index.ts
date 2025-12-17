@@ -1,4 +1,3 @@
 export * from "./components";
-export * from "./hooks";
-export * from "./lib";
-export * from "./types";
+export { useInfinitePastWeeks } from "./hooks/use-infinite-past-weeks";
+export type { DayInfo, MonthGroup, WeekInfo } from "./types";

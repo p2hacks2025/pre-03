@@ -71,15 +71,13 @@ export function createWeekInfo(weekStartDate: Date): WeekInfo {
     const dayInfo = createDayInfo(currentDate);
     days.push(dayInfo);
 
-    // 月のカウント
+    // 月のカウント（primaryMonth 計算用）
     const month = dayInfo.month;
     monthCounts[month] = (monthCounts[month] || 0) + 1;
   }
 
-  // 含まれる月のリスト
-  const months = Object.keys(monthCounts).map(Number);
-
   // 主要な月（最も多くの日が属する月）
+  const months = Object.keys(monthCounts).map(Number);
   const primaryMonth = months.reduce((a, b) =>
     monthCounts[a] >= monthCounts[b] ? a : b,
   );
@@ -91,7 +89,6 @@ export function createWeekInfo(weekStartDate: Date): WeekInfo {
   return {
     weekId: formatDateToISO(weekStartDate),
     days,
-    months,
     primaryMonth,
     startDate: new Date(weekStartDate),
     endDate,

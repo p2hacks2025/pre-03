@@ -1,15 +1,39 @@
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 import type { MonthGroup } from "../types";
-import { MonthIndicator } from "./month-indicator";
 import { WeekRow } from "./week-row";
-import { YearHeader } from "./year-header";
 
 const StyledView = withUniwind(View);
+const StyledText = withUniwind(Text);
+
+// --- 内部コンポーネント: YearHeader ---
+
+const YearHeader = ({ year }: { year: number }) => {
+  return (
+    <StyledView className="py-2">
+      <StyledText className="font-bold text-foreground text-xl">
+        {year}年
+      </StyledText>
+    </StyledView>
+  );
+};
+
+// --- 内部コンポーネント: MonthIndicator ---
+
+const MonthIndicator = ({ month }: { month: number }) => {
+  return (
+    <StyledView className="w-14 items-center pt-1">
+      <StyledText className="font-bold text-3xl text-foreground">
+        {month + 1}
+      </StyledText>
+    </StyledView>
+  );
+};
+
+// --- メインコンポーネント ---
 
 interface MonthSectionProps {
   monthGroup: MonthGroup;
-  /** 年セパレーターを表示するか */
   showYearSeparator?: boolean;
 }
 
@@ -19,14 +43,11 @@ export const MonthSection = ({
 }: MonthSectionProps) => {
   return (
     <StyledView className="mb-4">
-      {/* 年セパレーター（1月の上に表示） */}
       {showYearSeparator && <YearHeader year={monthGroup.year} />}
 
       <StyledView className="flex-row">
-        {/* 左: 月インジケーター（縦長バー） */}
         <MonthIndicator month={monthGroup.month} />
 
-        {/* 右: 週の一覧（古い順：上が古く、下が新しい） */}
         <StyledView className="flex-1">
           {[...monthGroup.weeks].reverse().map((week) => (
             <WeekRow key={week.weekId} week={week} />

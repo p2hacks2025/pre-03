@@ -26,8 +26,6 @@ export interface WeekInfo {
   weekId: string;
   /** 週を構成する7日間 */
   days: DayInfo[];
-  /** この週に含まれる月のリスト (月またぎの場合複数) */
-  months: number[];
   /** 表示用の主要な月 (最も多くの日が属する月) */
   primaryMonth: number;
   /** 週の開始日 */
