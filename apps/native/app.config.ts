@@ -25,6 +25,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       ITSAppUsesNonExemptEncryption: false,
       NSPhotoLibraryUsageDescription:
         "日記に写真を添付するためにフォトライブラリへのアクセスが必要です。",
+      NSLocationWhenInUseUsageDescription:
+        "このアプリは位置情報機能を使用しません。",
     },
   },
   android: {
