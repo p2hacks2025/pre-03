@@ -11,4 +11,8 @@ export const createDbClient = (connectionString: string) => {
   return drizzle(client, { schema });
 };
 
-export type DbClient = ReturnType<typeof createDbClient>;
+type BaseDbClient = ReturnType<typeof createDbClient>;
+
+type TxClient = Parameters<Parameters<BaseDbClient["transaction"]>[0]>[0];
+
+export type DbClient = BaseDbClient | TxClient;
