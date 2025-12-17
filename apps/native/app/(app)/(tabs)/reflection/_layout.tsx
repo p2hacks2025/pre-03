@@ -5,7 +5,7 @@ export default function ReflectionLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen
-        name="[date]"
+        name="[week]"
         options={{
           animation: "slide_from_right",
         }}
