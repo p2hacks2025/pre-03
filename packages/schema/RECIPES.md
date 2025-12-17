@@ -192,8 +192,8 @@ export const UpdateTodoInputSchema = TodoSchema
 
 ```typescript
 export const ProfileSchema = z.object({
-  displayName: z.string().nullable(),  // string | null
-  avatarUrl: z.url().nullable(),
+  displayName: z.string(),             // 必須フィールド
+  avatarUrl: z.url().nullable(),       // string | null
 }).openapi("Profile");
 ```
 
@@ -269,7 +269,7 @@ export const UserSchema = z.object({
 export const ProfileSchema = z.object({
   id: z.uuid(),
   userId: z.uuid(),
-  displayName: z.string().nullable(),
+  displayName: z.string(),
   avatarUrl: z.url().nullable(),
   createdAt: z.iso.datetime(),
 }).openapi("Profile");

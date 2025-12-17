@@ -1,7 +1,7 @@
 import type { DbClient } from "@packages/db";
 import type { SignupInput, SignupOutput } from "@packages/schema/auth";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createProfile } from "@/repository/profile";
+import { createUserProfile } from "@/repository/user-profile";
 import { AppError } from "@/shared/error/app-error";
 
 type SignupDeps = {
@@ -35,9 +35,9 @@ export const signup = async (
     });
   }
 
-  await createProfile(deps.db, {
+  await createUserProfile(deps.db, {
     userId: data.user.id,
-    displayName: input.displayName,
+    username: input.displayName ?? "",
   });
 
   return {

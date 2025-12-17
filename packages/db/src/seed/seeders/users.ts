@@ -1,23 +1,23 @@
-import { profiles } from "../../schema";
+import { userProfiles } from "../../schema";
 import { resetAuthUsers } from "../utils/reset";
 import type { Seeder } from "./index";
 
 interface TestUser {
   email: string;
   password: string;
-  displayName: string;
+  username: string;
 }
 
 const TEST_USERS: TestUser[] = [
   {
     email: "test@example.com",
     password: "password",
-    displayName: "Test User",
+    username: "Test User",
   },
   {
     email: "admin@example.com",
     password: "password",
-    displayName: "Admin User",
+    username: "Admin User",
   },
 ];
 
@@ -28,7 +28,7 @@ export const usersSeeder: Seeder = {
     console.log("Resetting auth users...");
     const deletedCount = await resetAuthUsers(ctx.adminSupabase);
     console.log(
-      `Deleted ${deletedCount} auth users (profiles cascade deleted)`,
+      `Deleted ${deletedCount} auth users (user_profiles cascade deleted)`,
     );
   },
 
@@ -55,10 +55,10 @@ export const usersSeeder: Seeder = {
         throw new Error(`Failed to create user: ${user.email}`);
       }
 
-      // 2. profilesテーブルにプロフィール作成
-      await ctx.db.insert(profiles).values({
+      // 2. user_profilesテーブルにプロフィール作成
+      await ctx.db.insert(userProfiles).values({
         userId: data.user.id,
-        displayName: user.displayName,
+        username: user.username,
       });
 
       console.log(`Created user: ${user.email}: password=${user.password}`);
