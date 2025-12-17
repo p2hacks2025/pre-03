@@ -18,6 +18,13 @@ app.use("*", corsMiddleware);
 app.route("/", routes);
 
 // OpenAPI設定
+app.openAPIRegistry.registerComponent("securitySchemes", "Bearer", {
+  type: "http",
+  scheme: "bearer",
+  bearerFormat: "JWT",
+  description: "Supabase Auth JWT token",
+});
+
 app.doc("/openapi", {
   openapi: "3.0.0",
   info: {
