@@ -66,19 +66,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setProfile(data.profile);
         setAccessToken(token);
         // OneSignal に external_id を登録（通知の送信先として識別）
-        await setOneSignalExternalUserId(data.user.id);
+        try {
+          await setOneSignalExternalUserId(data.user.id);
+        } catch (error) {
+          console.warn("Failed to set OneSignal user ID:", error);
+        }
         return true;
       }
       // 認証失敗時はトークンを削除
       await tokenStorage.clearTokens();
-      await clearOneSignalExternalUserId();
+      try {
+        await clearOneSignalExternalUserId();
+      } catch (error) {
+        console.warn("Failed to clear OneSignal user ID:", error);
+      }
       setUser(null);
       setProfile(null);
       setAccessToken(null);
       return false;
     } catch {
       await tokenStorage.clearTokens();
-      await clearOneSignalExternalUserId();
+      try {
+        await clearOneSignalExternalUserId();
+      } catch (error) {
+        console.warn("Failed to clear OneSignal user ID:", error);
+      }
       setUser(null);
       setProfile(null);
       setAccessToken(null);
@@ -196,7 +208,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // ログアウト失敗してもクライアント側はクリア
     }
     await tokenStorage.clearTokens();
-    await clearOneSignalExternalUserId();
+    try {
+      await clearOneSignalExternalUserId();
+    } catch (error) {
+      console.warn("Failed to clear OneSignal user ID:", error);
+    }
     setUser(null);
     setProfile(null);
     setAccessToken(null);

@@ -64,7 +64,7 @@ export const sendNotification = async (
       });
       return {
         success: false,
-        error: result.errors?.[0] || `HTTP ${response.status}`,
+        error: result.errors?.join(", ") || `HTTP ${response.status}`,
       };
     }
 
