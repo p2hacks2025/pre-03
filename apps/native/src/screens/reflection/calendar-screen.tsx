@@ -14,7 +14,7 @@ import {
   type MonthGroup,
   MonthSection,
   useInfinitePastWeeks,
-} from "@/features/reflection";
+} from "@/features/calendar";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
