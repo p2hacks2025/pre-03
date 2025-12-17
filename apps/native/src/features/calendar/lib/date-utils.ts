@@ -1,5 +1,7 @@
 import type { DayInfo, MonthGroup, WeekInfo } from "../types";
 
+const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
+
 /**
  * ISO形式の日付文字列を生成
  * @param date 変換する日付
@@ -11,6 +13,21 @@ export function formatDateToISO(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
+
+/**
+ * 日付を「○月○日(曜) HH:MM」形式にフォーマット
+ * @param date 変換する日付
+ * @returns "○月○日(曜) HH:MM" 形式の文字列
+ */
+export const formatDateTime = (date: Date): string => {
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const weekday = WEEKDAYS[date.getDay()];
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${month}月${day}日(${weekday}) ${hours}:${minutes}`;
+};
 
 /**
  * 日付が今日かどうか判定
