@@ -105,18 +105,22 @@ export function createWeekInfo(
  * 過去N週間分の WeekInfo 配列を生成
  * @param startWeekDate 開始となる週の月曜日
  * @param count 生成する週の数
+ * @param getImageUrl weekId から画像URLを取得するコールバック（省略可）
  * @returns 現在週から過去に向かう週の配列
  */
 export function generatePastWeeks(
   startWeekDate: Date,
   count: number,
+  getImageUrl?: (weekId: string) => string | null,
 ): WeekInfo[] {
   const weeks: WeekInfo[] = [];
 
   for (let i = 0; i < count; i++) {
     const weekStart = new Date(startWeekDate);
     weekStart.setDate(startWeekDate.getDate() - i * 7);
-    weeks.push(createWeekInfo(weekStart));
+    const weekId = formatDateToISO(weekStart);
+    const imageUrl = getImageUrl?.(weekId) ?? null;
+    weeks.push(createWeekInfo(weekStart, imageUrl));
   }
 
   return weeks;

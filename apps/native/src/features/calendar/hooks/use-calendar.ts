@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import {
-  createWeekInfo,
-  formatDateToISO,
+  generatePastWeeks,
   getWeekStart,
   groupWeeksByMonth,
 } from "../lib/date-utils";
@@ -54,24 +53,6 @@ function getImageUrlForWeek(weekId: string): string | null {
   return weekData?.imageUrl ?? null;
 }
 
-/** 過去N週間分の WeekInfo 配列を生成（imageUrl 付き） */
-function generatePastWeeksWithImages(
-  startWeekDate: Date,
-  count: number,
-): WeekInfo[] {
-  const weeks: WeekInfo[] = [];
-
-  for (let i = 0; i < count; i++) {
-    const weekStart = new Date(startWeekDate);
-    weekStart.setDate(startWeekDate.getDate() - i * 7);
-    const weekId = formatDateToISO(weekStart);
-    const imageUrl = getImageUrlForWeek(weekId);
-    weeks.push(createWeekInfo(weekStart, imageUrl));
-  }
-
-  return weeks;
-}
-
 interface UseCalendarOptions {
   initialWeekCount?: number;
   loadMoreCount?: number;
@@ -93,7 +74,11 @@ export function useCalendar(
   const [weeks, setWeeks] = useState<WeekInfo[]>(() => {
     const today = new Date();
     const currentWeekStart = getWeekStart(today);
-    return generatePastWeeksWithImages(currentWeekStart, initialWeekCount);
+    return generatePastWeeks(
+      currentWeekStart,
+      initialWeekCount,
+      getImageUrlForWeek,
+    );
   });
 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -118,9 +103,10 @@ export function useCalendar(
         const lastWeekStart = new Date(lastWeek.startDate);
         lastWeekStart.setDate(lastWeekStart.getDate() - 7);
 
-        const newWeeks = generatePastWeeksWithImages(
+        const newWeeks = generatePastWeeks(
           lastWeekStart,
           loadMoreCount,
+          getImageUrlForWeek,
         );
 
         const twoYearsAgo = new Date();
