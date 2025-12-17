@@ -1,14 +1,15 @@
 import { useRouter } from "expo-router";
+import type { ImageRequireSource } from "react-native";
 import { Image, Pressable, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 import type { DayInfo, WeekInfo } from "../types";
 
+const DEMO_IMAGE =
+  require("../../../../assets/demo/demo-sekai.png") as ImageRequireSource;
+
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
 const StyledImage = withUniwind(Image);
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const DEMO_IMAGE = require("../../../../assets/demo/demo-sekai.png") as number;
 
 /**
  * 曜日に応じたテキストカラークラスを取得
