@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
@@ -10,24 +10,32 @@ const HEADER_HEIGHT = 40;
 
 type Direction = "up" | "down";
 
-interface StickyYearHeaderProps {
-  year: number;
+interface UseStickyAnimationOptions<T extends number> {
+  value: T;
+  getDirection: (prev: T, current: T) => Direction;
 }
 
-export const StickyYearHeader = ({ year }: StickyYearHeaderProps) => {
-  const [prevYear, setPrevYear] = useState<number | null>(null);
-  const [isAnimating, setIsAnimating] = useState(false);
+interface UseStickyAnimationResult<T> {
+  prevValue: T | null;
+  offsetAnim: Animated.Value;
+  direction: Direction;
+}
+
+const useStickyAnimation = <T extends number>({
+  value,
+  getDirection,
+}: UseStickyAnimationOptions<T>): UseStickyAnimationResult<T> => {
+  const [prevValue, setPrevValue] = useState<T | null>(null);
   const offsetAnim = useRef(new Animated.Value(0)).current;
   const directionRef = useRef<Direction>("up");
-  const lastYearRef = useRef(year);
+  const lastValueRef = useRef(value);
 
   useEffect(() => {
-    if (year !== lastYearRef.current && !isAnimating) {
-      const direction: Direction = year < lastYearRef.current ? "up" : "down";
+    if (value !== lastValueRef.current && prevValue === null) {
+      const direction = getDirection(lastValueRef.current, value);
       directionRef.current = direction;
-      setPrevYear(lastYearRef.current);
-      lastYearRef.current = year;
-      setIsAnimating(true);
+      setPrevValue(lastValueRef.current as T);
+      lastValueRef.current = value;
 
       const startOffset = direction === "up" ? -HEADER_HEIGHT : HEADER_HEIGHT;
       offsetAnim.setValue(startOffset);
@@ -37,15 +45,33 @@ export const StickyYearHeader = ({ year }: StickyYearHeaderProps) => {
         duration: 150,
         useNativeDriver: true,
       }).start(() => {
-        setPrevYear(null);
-        setIsAnimating(false);
+        setPrevValue(null);
       });
     }
-  }, [year, isAnimating, offsetAnim]);
+  }, [value, prevValue, getDirection, offsetAnim]);
+
+  return { prevValue, offsetAnim, direction: directionRef.current };
+};
+
+interface StickyYearHeaderProps {
+  year: number;
+}
+
+export const StickyYearHeader = ({ year }: StickyYearHeaderProps) => {
+  const getYearDirection = useCallback(
+    (prev: number, current: number): Direction =>
+      current < prev ? "up" : "down",
+    [],
+  );
+
+  const { prevValue, offsetAnim, direction } = useStickyAnimation({
+    value: year,
+    getDirection: getYearDirection,
+  });
 
   return (
     <StyledView className="h-10 flex-1 justify-center overflow-hidden">
-      {prevYear !== null && (
+      {prevValue !== null && (
         <StyledAnimatedView
           className="absolute h-10 w-full justify-center"
           style={{
@@ -53,16 +79,14 @@ export const StickyYearHeader = ({ year }: StickyYearHeaderProps) => {
               {
                 translateY: Animated.add(
                   offsetAnim,
-                  directionRef.current === "up"
-                    ? HEADER_HEIGHT
-                    : -HEADER_HEIGHT,
+                  direction === "up" ? HEADER_HEIGHT : -HEADER_HEIGHT,
                 ),
               },
             ],
           }}
         >
           <StyledText className="text-center font-bold text-foreground text-xl">
-            {prevYear}年
+            {prevValue}年
           </StyledText>
         </StyledAnimatedView>
       )}
@@ -83,46 +107,23 @@ interface StickyMonthHeaderProps {
 }
 
 export const StickyMonthHeader = ({ month }: StickyMonthHeaderProps) => {
-  const [prevMonth, setPrevMonth] = useState<number | null>(null);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const offsetAnim = useRef(new Animated.Value(0)).current;
-  const directionRef = useRef<Direction>("up");
-  const lastMonthRef = useRef(month);
+  const getMonthDirection = useCallback(
+    (prev: number, current: number): Direction => {
+      if (prev === 11 && current === 0) return "down"; // 12月→1月は未来へ
+      if (prev === 0 && current === 11) return "up"; // 1月→12月は過去へ
+      return current < prev ? "up" : "down";
+    },
+    [],
+  );
 
-  useEffect(() => {
-    if (month !== lastMonthRef.current && !isAnimating) {
-      const lastMonth = lastMonthRef.current;
-      let direction: Direction;
-      if (lastMonth === 11 && month === 0) {
-        direction = "down"; // 12月→1月は未来へ
-      } else if (lastMonth === 0 && month === 11) {
-        direction = "up"; // 1月→12月は過去へ
-      } else {
-        direction = month < lastMonth ? "up" : "down";
-      }
-
-      directionRef.current = direction;
-      setPrevMonth(lastMonth);
-      lastMonthRef.current = month;
-      setIsAnimating(true);
-
-      const startOffset = direction === "up" ? -HEADER_HEIGHT : HEADER_HEIGHT;
-      offsetAnim.setValue(startOffset);
-
-      Animated.timing(offsetAnim, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }).start(() => {
-        setPrevMonth(null);
-        setIsAnimating(false);
-      });
-    }
-  }, [month, isAnimating, offsetAnim]);
+  const { prevValue, offsetAnim, direction } = useStickyAnimation({
+    value: month,
+    getDirection: getMonthDirection,
+  });
 
   return (
     <StyledView className="h-10 w-12 items-center justify-center overflow-hidden">
-      {prevMonth !== null && (
+      {prevValue !== null && (
         <StyledAnimatedView
           className="absolute h-10 w-full items-center justify-center"
           style={{
@@ -130,16 +131,14 @@ export const StickyMonthHeader = ({ month }: StickyMonthHeaderProps) => {
               {
                 translateY: Animated.add(
                   offsetAnim,
-                  directionRef.current === "up"
-                    ? HEADER_HEIGHT
-                    : -HEADER_HEIGHT,
+                  direction === "up" ? HEADER_HEIGHT : -HEADER_HEIGHT,
                 ),
               },
             ],
           }}
         >
           <StyledText className="font-bold text-2xl text-foreground">
-            {(prevMonth ?? 0) + 1}月
+            {(prevValue ?? 0) + 1}月
           </StyledText>
         </StyledAnimatedView>
       )}
