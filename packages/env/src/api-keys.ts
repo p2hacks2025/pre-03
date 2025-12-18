@@ -9,6 +9,8 @@ export const apiKeys = {
   ALLOWED_ORIGINS: z.string().min(1).optional(),
   ENVIRONMENT: z.enum(["development", "staging", "production"]).optional(),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error", "fatal"]).optional(),
+  ONESIGNAL_APP_ID: z.string().uuid().optional(),
+  ONESIGNAL_REST_API_KEY: z.string().min(1).optional(),
 };
 
 export type ApiKeys = typeof apiKeys;
