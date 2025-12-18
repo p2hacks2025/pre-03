@@ -126,6 +126,13 @@ export const HomeScreen = () => {
 
   const keyExtractor = useCallback((item: Entry) => item.id, []);
 
+  // 画面フォーカス時に自動リフレッシュ
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
+
   // 初回ローディング表示
   if (isLoading && entries.length === 0) {
     return (
