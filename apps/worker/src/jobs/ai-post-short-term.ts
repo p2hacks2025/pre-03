@@ -11,10 +11,12 @@ import {
   generateStandalonePosts,
   getRandomPublishedAt,
   groupPostsByUser,
+  shouldExecuteWithChance,
 } from "@/tasks";
 
 export type AiPostShortTermJobResult = {
   success: boolean;
+  skipped: boolean;
   processedUsers: number;
   generatedPosts: number;
   standaloneGenerated: number;
@@ -26,8 +28,22 @@ export const aiPostShortTerm = async (
 ): Promise<AiPostShortTermJobResult> => {
   ctx.logger.info("Starting ai-post-short-term job");
 
+  // Probability check (10%)
+  if (!shouldExecuteWithChance(AI_POST_CONFIG.SHORT_TERM_POST_CHANCE)) {
+    ctx.logger.info("Skipping ai-post-short-term job due to probability check");
+    return {
+      success: true,
+      skipped: true,
+      processedUsers: 0,
+      generatedPosts: 0,
+      standaloneGenerated: 0,
+      errors: [],
+    };
+  }
+
   const result: AiPostShortTermJobResult = {
     success: true,
+    skipped: false,
     processedUsers: 0,
     generatedPosts: 0,
     standaloneGenerated: 0,

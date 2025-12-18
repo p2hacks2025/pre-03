@@ -7,6 +7,7 @@ export {
   generateStandalonePosts,
   getRandomPublishedAt,
   groupPostsByUser,
+  shouldExecuteWithChance,
 } from "./ai-post";
 export {
   fetchImageAsBase64,

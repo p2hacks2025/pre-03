@@ -9,10 +9,12 @@ import {
   generateAiPostContents,
   generateStandalonePosts,
   getRandomPublishedAt,
+  shouldExecuteWithChance,
 } from "@/tasks";
 
 export type AiPostLongTermJobResult = {
   success: boolean;
+  skipped: boolean;
   generatedPosts: number;
   standaloneGenerated: number;
   errors: string[];
@@ -23,8 +25,21 @@ export const aiPostLongTerm = async (
 ): Promise<AiPostLongTermJobResult> => {
   ctx.logger.info("Starting ai-post-long-term job");
 
+  // Probability check (50%)
+  if (!shouldExecuteWithChance(AI_POST_CONFIG.LONG_TERM_POST_CHANCE)) {
+    ctx.logger.info("Skipping ai-post-long-term job due to probability check");
+    return {
+      success: true,
+      skipped: true,
+      generatedPosts: 0,
+      standaloneGenerated: 0,
+      errors: [],
+    };
+  }
+
   const result: AiPostLongTermJobResult = {
     success: true,
+    skipped: false,
     generatedPosts: 0,
     standaloneGenerated: 0,
     errors: [],

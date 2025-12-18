@@ -19,8 +19,11 @@ export const AI_POST_CONFIG = {
   LONG_TERM_SCHEDULE_MAX: 1440,
   MAX_RETRIES: 3,
   MAX_POST_LENGTH: 50,
+  MAX_INPUT_LENGTH: 1000,
   POSTS_PER_USER: 3,
   STANDALONE_POST_COUNT: 2,
+  SHORT_TERM_POST_CHANCE: 0.1,
+  LONG_TERM_POST_CHANCE: 0.5,
 } as const;
 
 export type DiaryGroup = {
@@ -39,9 +42,12 @@ type PostsResponse = {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+export const shouldExecuteWithChance = (chance: number): boolean =>
+  Math.random() < chance;
+
 const sanitizeUserInput = (input: string): string => {
   return input
-    .slice(0, 1000) // Limit length
+    .slice(0, AI_POST_CONFIG.MAX_INPUT_LENGTH) // Limit length
     .replace(/```/g, "") // Remove code blocks
     .replace(/\{[^}]*\}/g, "") // Remove template-like patterns
     .replace(
@@ -106,7 +112,7 @@ const callOpenAIJsonWithRetry = async (
         (error instanceof Error && error.message.includes("rate limit"));
 
       if (isRateLimit && attempt < maxRetries - 1) {
-        const delay = 2 ** (attempt + 1) * 1000;
+        const delay = Math.min(2 ** (attempt + 2) * 1000, 30000);
         ctx.logger.warn("Rate limited, retrying...", { attempt, delay });
         await sleep(delay);
         continue;
