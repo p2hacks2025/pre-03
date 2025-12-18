@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { Entry } from "@packages/schema/entry";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { Spinner } from "heroui-native";
 import { useCallback, useRef } from "react";
 import {

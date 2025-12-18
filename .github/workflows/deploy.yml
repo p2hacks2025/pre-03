@@ -35,3 +35,29 @@ jobs:
       - uses: ./.github/actions/setup-node-pnpm
       - name: Deploy Web
         run: pnpm deploy:web
+
+  deploy-worker:
+    runs-on: [self-hosted, macOS, ARM64]
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
+      ONESIGNAL_REST_API_KEY: ${{ secrets.ONESIGNAL_REST_API_KEY }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Restart worker daemon
+        run: |
+          cd apps/worker
+          pm2 delete worker || true
+          pm2 start "pnpm daemon" --name worker
+          pm2 save
