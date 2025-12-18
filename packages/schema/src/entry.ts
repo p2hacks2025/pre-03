@@ -51,12 +51,14 @@ export type CreateEntryOutput = z.infer<typeof CreateEntryOutputSchema>;
 export const GetTimelineInputSchema = z
   .object({
     from: z.iso.date().optional().openapi({
-      description: "開始日（この日以降の日記を取得）",
-      example: "2024-01-01",
+      description:
+        "開始日（この日を含む、この日以降の日記を取得）。ISO 8601 日付形式（YYYY-MM-DD）",
+      example: "2025-12-13",
     }),
     to: z.iso.date().optional().openapi({
-      description: "終了日（この日以前の日記を取得）",
-      example: "2024-12-31",
+      description:
+        "終了日（この日を含む、この日以前の日記を取得）。ISO 8601 日付形式（YYYY-MM-DD）",
+      example: "2025-12-21",
     }),
     cursor: z.string().optional().openapi({
       description: "ページネーションカーソル（Base64エンコード）",
