@@ -6,9 +6,11 @@ import {
   type WorkerContext,
 } from "@/lib";
 import {
+  AI_POST_CONFIG,
   determinePostCount,
+  determineStandalonePostCount,
   generateAiPostContent,
-  generateStandaloneAiPostContent,
+  generateStandalonePosts,
   getRandomScheduledAt,
   groupPostsByUser,
 } from "@/tasks";
@@ -19,38 +21,6 @@ export type AiPostShortTermJobResult = {
   generatedPosts: number;
   standaloneGenerated: number;
   errors: string[];
-};
-
-const generateStandalonePosts = async (
-  ctx: WorkerContext,
-  result: AiPostShortTermJobResult,
-): Promise<void> => {
-  const postCount = Math.random() < 0.5 ? 1 : 2;
-  ctx.logger.info("Generating standalone AI posts", { postCount });
-
-  for (let i = 0; i < postCount; i++) {
-    try {
-      const aiProfile = await getRandomAiProfile(ctx);
-      const content = await generateStandaloneAiPostContent(ctx, aiProfile);
-      const now = new Date();
-      await createAiPost(ctx, {
-        aiProfileId: aiProfile.id,
-        userProfileId: null,
-        content,
-        sourceStartAt: now,
-        sourceEndAt: now,
-        scheduledAt: getRandomScheduledAt(1, 30),
-      });
-      result.standaloneGenerated++;
-    } catch (error) {
-      result.errors.push(`Standalone: ${(error as Error).message}`);
-      ctx.logger.error(
-        "Failed to generate standalone post",
-        {},
-        error as Error,
-      );
-    }
-  }
 };
 
 export const aiPostShortTerm = async (
@@ -67,13 +37,24 @@ export const aiPostShortTerm = async (
   };
 
   try {
-    const posts = await getRecentUserPosts(ctx, 30);
+    const posts = await getRecentUserPosts(
+      ctx,
+      AI_POST_CONFIG.SHORT_TERM_MINUTES,
+    );
     const groups = groupPostsByUser(posts);
 
     if (groups.length === 0) {
       ctx.logger.info("No recent diaries found, generating standalone posts");
-      await generateStandalonePosts(ctx, result);
-      result.success = result.errors.length === 0;
+      const postCount = determineStandalonePostCount(false);
+      const standalone = await generateStandalonePosts(
+        ctx,
+        postCount,
+        AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
+        AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
+      );
+      result.standaloneGenerated = standalone.generated;
+      result.errors.push(...standalone.errors);
+      result.success = standalone.errors.length === 0;
       return result;
     }
 
@@ -112,7 +93,10 @@ export const aiPostShortTerm = async (
             content,
             sourceStartAt,
             sourceEndAt,
-            scheduledAt: getRandomScheduledAt(1, 30),
+            scheduledAt: getRandomScheduledAt(
+              AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
+              AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
+            ),
           });
           result.generatedPosts++;
         }
@@ -133,6 +117,7 @@ export const aiPostShortTerm = async (
     ctx.logger.info("ai-post-short-term job completed", {
       processedUsers: result.processedUsers,
       generatedPosts: result.generatedPosts,
+      standaloneGenerated: result.standaloneGenerated,
     });
     return result;
   } catch (error) {

@@ -302,16 +302,21 @@ export const getRandomHistoricalPosts = async (
 
 export const hasExistingAiPost = async (
   ctx: WorkerContext,
-  userProfileId: string,
+  userProfileId: string | null,
   sourceStartAt: Date,
   sourceEndAt: Date,
 ): Promise<boolean> => {
+  const userCondition =
+    userProfileId === null
+      ? isNull(aiPosts.userProfileId)
+      : eq(aiPosts.userProfileId, userProfileId);
+
   const existing = await ctx.db
     .select({ id: aiPosts.id })
     .from(aiPosts)
     .where(
       and(
-        eq(aiPosts.userProfileId, userProfileId),
+        userCondition,
         eq(aiPosts.sourceStartAt, sourceStartAt),
         eq(aiPosts.sourceEndAt, sourceEndAt),
         isNull(aiPosts.deletedAt),
@@ -354,21 +359,7 @@ export const publishDueAiPosts = async (
   ctx: WorkerContext,
 ): Promise<string[]> => {
   const now = new Date();
-  const postsToPublish = await ctx.db
-    .select({ id: aiPosts.id })
-    .from(aiPosts)
-    .where(
-      and(
-        lte(aiPosts.scheduledAt, now),
-        isNull(aiPosts.publishedAt),
-        isNull(aiPosts.deletedAt),
-      ),
-    );
-
-  if (postsToPublish.length === 0) return [];
-
-  const ids = postsToPublish.map((p) => p.id);
-  await ctx.db
+  const published = await ctx.db
     .update(aiPosts)
     .set({ publishedAt: now })
     .where(
@@ -377,7 +368,8 @@ export const publishDueAiPosts = async (
         isNull(aiPosts.publishedAt),
         isNull(aiPosts.deletedAt),
       ),
-    );
+    )
+    .returning({ id: aiPosts.id });
 
-  return ids;
+  return published.map((p) => p.id);
 };

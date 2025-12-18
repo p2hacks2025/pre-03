@@ -5,8 +5,10 @@ import {
   type WorkerContext,
 } from "@/lib";
 import {
+  AI_POST_CONFIG,
+  determineStandalonePostCount,
   generateAiPostContent,
-  generateStandaloneAiPostContent,
+  generateStandalonePosts,
   getRandomScheduledAt,
 } from "@/tasks";
 
@@ -15,38 +17,6 @@ export type AiPostLongTermJobResult = {
   generatedPosts: number;
   standaloneGenerated: number;
   errors: string[];
-};
-
-const generateStandalonePosts = async (
-  ctx: WorkerContext,
-  result: AiPostLongTermJobResult,
-): Promise<void> => {
-  const postCount = Math.floor(Math.random() * 3) + 1;
-  ctx.logger.info("Generating standalone AI posts", { postCount });
-
-  for (let i = 0; i < postCount; i++) {
-    try {
-      const aiProfile = await getRandomAiProfile(ctx);
-      const content = await generateStandaloneAiPostContent(ctx, aiProfile);
-      const now = new Date();
-      await createAiPost(ctx, {
-        aiProfileId: aiProfile.id,
-        userProfileId: null,
-        content,
-        sourceStartAt: now,
-        sourceEndAt: now,
-        scheduledAt: getRandomScheduledAt(60, 1440),
-      });
-      result.standaloneGenerated++;
-    } catch (error) {
-      result.errors.push(`Standalone: ${(error as Error).message}`);
-      ctx.logger.error(
-        "Failed to generate standalone post",
-        {},
-        error as Error,
-      );
-    }
-  }
 };
 
 export const aiPostLongTerm = async (
@@ -62,14 +32,26 @@ export const aiPostLongTerm = async (
   };
 
   try {
-    const diaries = await getRandomHistoricalPosts(ctx, 10, 7);
+    const diaries = await getRandomHistoricalPosts(
+      ctx,
+      AI_POST_CONFIG.LONG_TERM_FETCH_COUNT,
+      AI_POST_CONFIG.LONG_TERM_EXCLUDE_DAYS,
+    );
 
     if (diaries.length === 0) {
       ctx.logger.info(
         "No historical diaries found, generating standalone posts",
       );
-      await generateStandalonePosts(ctx, result);
-      result.success = result.errors.length === 0;
+      const postCount = determineStandalonePostCount(true);
+      const standalone = await generateStandalonePosts(
+        ctx,
+        postCount,
+        AI_POST_CONFIG.LONG_TERM_SCHEDULE_MIN,
+        AI_POST_CONFIG.LONG_TERM_SCHEDULE_MAX,
+      );
+      result.standaloneGenerated = standalone.generated;
+      result.errors.push(...standalone.errors);
+      result.success = standalone.errors.length === 0;
       return result;
     }
 
@@ -89,7 +71,10 @@ export const aiPostLongTerm = async (
           content,
           sourceStartAt: sourceDate,
           sourceEndAt: sourceDate,
-          scheduledAt: getRandomScheduledAt(60, 1440),
+          scheduledAt: getRandomScheduledAt(
+            AI_POST_CONFIG.LONG_TERM_SCHEDULE_MIN,
+            AI_POST_CONFIG.LONG_TERM_SCHEDULE_MAX,
+          ),
         });
         result.generatedPosts++;
       } catch (error) {
@@ -105,6 +90,7 @@ export const aiPostLongTerm = async (
 
     ctx.logger.info("ai-post-long-term job completed", {
       generatedPosts: result.generatedPosts,
+      standaloneGenerated: result.standaloneGenerated,
     });
     return result;
   } catch (error) {
