@@ -4,6 +4,7 @@ import { getContext, TIMEZONE } from "@/lib";
 
 const schedules = [
   { name: "daily-update", cron: "5 0 * * *", job: jobs["daily-update"] },
+  { name: "weekly-reset", cron: "10 0 * * 1", job: jobs["weekly-reset"] },
 ] as const;
 const ctx = getContext();
 
