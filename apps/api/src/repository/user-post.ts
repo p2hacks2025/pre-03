@@ -8,6 +8,7 @@ import {
   lt,
   type NewUserPost,
   or,
+  sql,
   type UserPost,
   userPosts,
 } from "@packages/db";
@@ -72,4 +73,45 @@ export const getUserPostsByProfileId = async (
     .where(and(...conditions))
     .orderBy(desc(userPosts.createdAt), desc(userPosts.id))
     .limit(limit);
+};
+
+export type GetEntryDatesByMonthOptions = {
+  profileId: string;
+  year: number;
+  month: number;
+};
+
+// PostgreSQLのDATE型は文字列として返される場合がある
+export type EntryDateResult = { date: Date | string };
+
+/**
+ * 指定月に日記を投稿した日のリストを取得（DISTINCTで重複排除）
+ * UTCベースで日付範囲を指定（DBはUTCで保存されているため）
+ */
+export const getEntryDatesByMonth = async (
+  db: DbClient,
+  options: GetEntryDatesByMonthOptions,
+): Promise<EntryDateResult[]> => {
+  const { profileId, year, month } = options;
+
+  // UTCで日付範囲を作成（タイムゾーンズレ防止）
+  const monthStart = new Date(Date.UTC(year, month - 1, 1));
+  const monthEnd = new Date(Date.UTC(year, month, 1)); // 翌月1日
+
+  const result = await db
+    .selectDistinct({
+      date: sql<Date>`DATE(${userPosts.createdAt})`.as("date"),
+    })
+    .from(userPosts)
+    .where(
+      and(
+        eq(userPosts.userProfileId, profileId),
+        gte(userPosts.createdAt, monthStart),
+        lt(userPosts.createdAt, monthEnd),
+        isNull(userPosts.deletedAt),
+      ),
+    )
+    .orderBy(sql`DATE(${userPosts.createdAt})`);
+
+  return result;
 };
