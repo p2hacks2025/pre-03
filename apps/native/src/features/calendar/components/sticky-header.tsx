@@ -107,10 +107,11 @@ interface StickyMonthHeaderProps {
 }
 
 export const StickyMonthHeader = ({ month }: StickyMonthHeaderProps) => {
+  // month は 1-12 形式
   const getMonthDirection = useCallback(
     (prev: number, current: number): Direction => {
-      if (prev === 11 && current === 0) return "down"; // 12月→1月は未来へ
-      if (prev === 0 && current === 11) return "up"; // 1月→12月は過去へ
+      if (prev === 12 && current === 1) return "down"; // 12月→1月は未来へ
+      if (prev === 1 && current === 12) return "up"; // 1月→12月は過去へ
       return current < prev ? "up" : "down";
     },
     [],
@@ -138,7 +139,7 @@ export const StickyMonthHeader = ({ month }: StickyMonthHeaderProps) => {
           }}
         >
           <StyledText className="font-bold text-2xl text-foreground">
-            {(prevValue ?? 0) + 1}月
+            {prevValue}月
           </StyledText>
         </StyledAnimatedView>
       )}
@@ -147,7 +148,7 @@ export const StickyMonthHeader = ({ month }: StickyMonthHeaderProps) => {
         style={{ transform: [{ translateY: offsetAnim }] }}
       >
         <StyledText className="font-bold text-2xl text-foreground">
-          {month + 1}月
+          {month}月
         </StyledText>
       </StyledAnimatedView>
     </StyledView>

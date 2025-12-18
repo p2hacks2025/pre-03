@@ -1,11 +1,7 @@
 import { useRouter } from "expo-router";
-import type { ImageRequireSource } from "react-native";
 import { Image, Pressable, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 import type { DayInfo, WeekInfo } from "../types";
-
-const DEMO_IMAGE =
-  require("../../../../assets/demo/demo-sekai.png") as ImageRequireSource;
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
@@ -28,7 +24,7 @@ const MonthIndicator = ({ month }: { month: number }) => {
   return (
     <StyledView className="items-center justify-center pr-2">
       <StyledText className="font-bold text-2xl text-foreground">
-        {month + 1}月
+        {month}月
       </StyledText>
     </StyledView>
   );
@@ -38,12 +34,14 @@ interface WeekDatesRowProps {
   days: DayInfo[];
   showMonthIndicator?: boolean;
   month?: number;
+  entryDates: string[];
 }
 
 const WeekDatesRow = ({
   days,
   showMonthIndicator = false,
   month,
+  entryDates,
 }: WeekDatesRowProps) => {
   return (
     <StyledView className="flex-row items-center">
@@ -53,25 +51,43 @@ const WeekDatesRow = ({
         <StyledView className="w-12" />
       )}
       <StyledView className="flex-1 flex-row justify-between px-2">
-        {days.map((day) => (
-          <StyledView key={day.dateString} className="w-8 items-center">
-            <StyledText
-              className={`text-base ${getTextColorClass(day)} ${day.isToday ? "font-bold" : "font-medium"}`}
-            >
-              {day.day}
-            </StyledText>
-          </StyledView>
-        ))}
+        {days.map((day) => {
+          const hasEntry = entryDates.includes(day.dateString);
+          return (
+            <StyledView key={day.dateString} className="w-8 items-center">
+              <StyledView
+                className={`h-8 w-8 items-center justify-center rounded-full ${hasEntry ? "border-[3px]" : ""}`}
+                style={hasEntry ? { borderColor: "#4ECCDD" } : undefined}
+              >
+                <StyledText
+                  className={`text-base ${getTextColorClass(day)} ${day.isToday ? "font-bold" : "font-medium"}`}
+                >
+                  {day.day}
+                </StyledText>
+              </StyledView>
+            </StyledView>
+          );
+        })}
       </StyledView>
     </StyledView>
   );
 };
 
 const WeekContent = ({ imageUrl }: { imageUrl: string | null }) => {
+  if (imageUrl === null) {
+    return (
+      <StyledView className="mt-2 h-48 items-center justify-center overflow-hidden rounded-lg bg-surface-secondary">
+        <StyledText className="text-center text-foreground/60">
+          世界がありません
+        </StyledText>
+      </StyledView>
+    );
+  }
+
   return (
     <StyledView className="mt-2 h-48 items-center justify-center overflow-hidden rounded-lg bg-surface-secondary">
       <StyledImage
-        source={imageUrl ? { uri: imageUrl } : DEMO_IMAGE}
+        source={{ uri: imageUrl }}
         className="h-full w-full"
         resizeMode="contain"
       />
@@ -82,12 +98,14 @@ interface WeekRowProps {
   week: WeekInfo;
   showMonthIndicator?: boolean;
   month?: number;
+  entryDates: string[];
 }
 
 export const WeekRow = ({
   week,
   showMonthIndicator = false,
   month,
+  entryDates,
 }: WeekRowProps) => {
   const router = useRouter();
 
@@ -102,6 +120,7 @@ export const WeekRow = ({
           days={week.days}
           showMonthIndicator={showMonthIndicator}
           month={month}
+          entryDates={entryDates}
         />
         <StyledView className="ml-12">
           <WeekContent imageUrl={week.imageUrl} />
