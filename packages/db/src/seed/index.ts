@@ -2,11 +2,10 @@ import { createClient } from "@supabase/supabase-js";
 import { createDbClient } from "../client";
 import { runSeeders } from "./runner";
 import type { SeedOptions } from "./seeders";
-
+// Data seeders（データ初期化）
+import { postsSeeder } from "./seeders/posts";
 // Infrastructure seeders（インフラ初期化）
 import { storageSeeder } from "./seeders/storage";
-
-// Data seeders（データ初期化）
 import { usersSeeder } from "./seeders/users";
 import { weeklyWorldsSeeder } from "./seeders/weekly-worlds";
 import { workerPostsSeeder } from "./seeders/worker-posts";
@@ -54,10 +53,12 @@ const main = async () => {
    * 実行順序:
    * 1. Infrastructure seeders（バケット、RLSポリシーなど）
    * 2. Data seeders（テストユーザーなど）
+   * 3. postsSeeder（usersSeederに依存）
    */
   const seeders = [
     storageSeeder,
     usersSeeder,
+    postsSeeder,
     weeklyWorldsSeeder,
     workerPostsSeeder,
   ];

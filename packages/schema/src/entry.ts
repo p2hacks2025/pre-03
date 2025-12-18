@@ -44,3 +44,46 @@ export type CreateEntryInput = z.infer<typeof CreateEntryInputSchema>;
 export const CreateEntryOutputSchema = EntrySchema.openapi("CreateEntryOutput");
 
 export type CreateEntryOutput = z.infer<typeof CreateEntryOutputSchema>;
+
+/**
+ * GET /entries/timeline - タイムライン取得
+ */
+export const GetTimelineInputSchema = z
+  .object({
+    from: z.iso.date().optional().openapi({
+      description:
+        "開始日（この日を含む、この日以降の日記を取得）。ISO 8601 日付形式（YYYY-MM-DD）",
+      example: "2025-12-13",
+    }),
+    to: z.iso.date().optional().openapi({
+      description:
+        "終了日（この日を含む、この日以前の日記を取得）。ISO 8601 日付形式（YYYY-MM-DD）",
+      example: "2025-12-21",
+    }),
+    cursor: z.string().optional().openapi({
+      description: "ページネーションカーソル（Base64エンコード）",
+    }),
+    limit: z.coerce.number().int().min(1).max(50).default(20).openapi({
+      description: "取得件数（1-50、デフォルト20）",
+      example: 20,
+    }),
+  })
+  .openapi("GetTimelineInput");
+
+export type GetTimelineInput = z.infer<typeof GetTimelineInputSchema>;
+
+export const GetTimelineOutputSchema = z
+  .object({
+    entries: z.array(EntrySchema).openapi({
+      description: "日記一覧",
+    }),
+    nextCursor: z.string().nullable().openapi({
+      description: "次ページのカーソル（nullの場合は次ページなし）",
+    }),
+    hasMore: z.boolean().openapi({
+      description: "次ページの有無",
+    }),
+  })
+  .openapi("GetTimelineOutput");
+
+export type GetTimelineOutput = z.infer<typeof GetTimelineOutputSchema>;
