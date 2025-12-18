@@ -8,6 +8,9 @@ const StyledImage = withUniwind(Image);
 const StyledPressable = withUniwind(Pressable);
 const AnimatedView = withUniwind(Animated.View);
 
+// ローカルアセット画像（1:1）
+const SEKAI_IMAGE = require("../../../../assets/demo/demo-sekai.png");
+
 interface PopupCardProps {
   title: string;
   message: string;
@@ -24,7 +27,6 @@ interface PopupCardProps {
  */
 export const PopupCard = ({
   title,
-  imageUrl,
   closeButtonLabel = "OK",
   onClose,
   remainingCount = 0,
@@ -41,16 +43,16 @@ export const PopupCard = ({
           {title}
         </StyledText>
 
-        {/* 画像エリア（中央） */}
-        {imageUrl && (
-          <StyledView className="mb-4 overflow-hidden rounded-xl">
+        {/* 画像エリア（中央・1:1） */}
+        <StyledView className="mb-4 items-center">
+          <StyledView className="h-60 w-60 overflow-hidden rounded-xl">
             <StyledImage
-              source={{ uri: imageUrl }}
-              className="aspect-square w-full"
-              resizeMode="contain"
+              source={SEKAI_IMAGE}
+              className="h-full w-full"
+              resizeMode="cover"
             />
           </StyledView>
-        )}
+        </StyledView>
 
         {/* 閉じるボタン */}
         <StyledPressable

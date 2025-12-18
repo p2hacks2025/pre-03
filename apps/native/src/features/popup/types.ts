@@ -38,6 +38,8 @@ export interface PopupContextValue {
   dismiss: () => void;
   /** 全てのポップアップをクリア */
   clearAll: () => void;
+  /** ストレージからキューの読み込みが完了したか */
+  isLoaded: boolean;
 }
 
 /**

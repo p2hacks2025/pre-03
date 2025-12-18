@@ -36,6 +36,7 @@ export const PopupOverlay = () => {
         className="flex-1 items-center justify-center bg-black/50 p-6"
       >
         <PopupCard
+          key={currentPopup.id}
           title={currentPopup.title}
           message={currentPopup.message}
           imageUrl={currentPopup.imageUrl}

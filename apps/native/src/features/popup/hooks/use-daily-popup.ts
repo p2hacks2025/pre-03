@@ -32,19 +32,19 @@ const fetchDailyUpdate = async (): Promise<DailyUpdateResponse> => {
  * 更新があればポップアップを表示する
  */
 export const useDailyPopup = () => {
-  const { enqueue } = usePopup();
+  const { enqueue, isLoaded } = usePopup();
   const hasCheckedRef = useRef(false);
 
   useEffect(() => {
+    // ストレージからの読み込みが完了するまで待機
+    if (!isLoaded) return;
+
     // 重複実行防止
     if (hasCheckedRef.current) return;
     hasCheckedRef.current = true;
 
     const checkAndShowPopup = async () => {
       try {
-        // TODO: テスト完了後に削除 - 毎回ポップアップを表示するためのリセット
-        await popupStorage.clearLastLaunchDate();
-
         const todayJST = getJSTDateString();
         const lastLaunchDate = await popupStorage.getLastLaunchDate();
 
@@ -103,5 +103,5 @@ export const useDailyPopup = () => {
     };
 
     checkAndShowPopup();
-  }, [enqueue]);
+  }, [enqueue, isLoaded]);
 };
