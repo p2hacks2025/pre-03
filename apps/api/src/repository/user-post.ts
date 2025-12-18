@@ -8,9 +8,11 @@ import {
   lt,
   type NewUserPost,
   or,
+  sql,
   type UserPost,
   userPosts,
 } from "@packages/db";
+import { jstToUTC } from "@/shared/date";
 
 export const createUserPost = async (
   db: DbClient,
@@ -72,4 +74,47 @@ export const getUserPostsByProfileId = async (
     .where(and(...conditions))
     .orderBy(desc(userPosts.createdAt), desc(userPosts.id))
     .limit(limit);
+};
+
+export type GetEntryDatesByMonthOptions = {
+  profileId: string;
+  year: number;
+  month: number;
+};
+
+// PostgreSQLのDATE型は文字列として返される場合がある
+export type EntryDateResult = { date: Date | string };
+
+/**
+ * 指定月に日記を投稿した日のリストを取得（DISTINCTで重複排除）
+ * JST基準で日付を返却
+ */
+export const getEntryDatesByMonth = async (
+  db: DbClient,
+  options: GetEntryDatesByMonthOptions,
+): Promise<EntryDateResult[]> => {
+  const { profileId, year, month } = options;
+
+  // JST基準の月範囲をUTCで取得（個別に変換）
+  const monthStart = jstToUTC(year, month, 1); // JST月初 0:00 → UTC
+  const monthEnd = jstToUTC(year, month + 1, 1); // JST翌月初 0:00 → UTC
+
+  const result = await db
+    .selectDistinct({
+      date: sql<string>`DATE(${userPosts.createdAt} AT TIME ZONE 'Asia/Tokyo')`.as(
+        "date",
+      ),
+    })
+    .from(userPosts)
+    .where(
+      and(
+        eq(userPosts.userProfileId, profileId),
+        gte(userPosts.createdAt, monthStart),
+        lt(userPosts.createdAt, monthEnd),
+        isNull(userPosts.deletedAt),
+      ),
+    )
+    .orderBy(sql`DATE(${userPosts.createdAt} AT TIME ZONE 'Asia/Tokyo')`);
+
+  return result;
 };
