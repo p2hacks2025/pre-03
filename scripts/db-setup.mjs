@@ -1,68 +1,24 @@
 import { execSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { error, log, printDirenvReloadMessage, warn } from "./lib/logger.mjs";
+import { ROOT_DIR } from "./lib/paths.mjs";
+import {
+  buildEnvOverrides,
+  ensureSupabaseRunning,
+  getSupabaseStatus,
+  injectSupabaseConfig,
+} from "./lib/supabase.mjs";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT_DIR = join(__dirname, "..");
-
-function log(message) {
-  console.log(`✓ ${message}`);
-}
-function warn(message) {
-  console.log(`⚠ ${message}`);
-}
-function error(message) {
-  console.error(`✗ ${message}`);
-}
-
-function ensureSupabaseRunning() {
-  try {
-    execSync("pnpm exec supabase status", { stdio: "pipe" });
-    log("Supabase is running");
-    return true;
-  } catch {
-    log("Starting Supabase...");
-    execSync("pnpm exec supabase start", { stdio: "inherit" });
-    log("Supabase started");
-    return true;
-  }
-}
-
-function updateEnvWithSupabaseConfig() {
-  const output = execSync("pnpm exec supabase status --output json", {
-    encoding: "utf-8",
-  });
-  const status = JSON.parse(output);
-
-  const apiEnvPath = join(ROOT_DIR, "apps/api/.env");
-  let apiEnv = readFileSync(apiEnvPath, "utf-8");
-
-  const updates = {
-    DATABASE_URL: status.DB_URL,
-    SUPABASE_URL: status.API_URL,
-    SUPABASE_ANON_KEY: status.ANON_KEY,
-    SUPABASE_SERVICE_ROLE_KEY: status.SERVICE_ROLE_KEY,
-    CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE: status.DB_URL,
-  };
-
-  for (const [key, value] of Object.entries(updates)) {
-    const regex = new RegExp(`^${key}=.*$`, "m");
-    if (regex.test(apiEnv)) {
-      apiEnv = apiEnv.replace(regex, `${key}=${value}`);
-    }
-  }
-
-  writeFileSync(apiEnvPath, apiEnv);
-  log("Updated apps/api/.env with Supabase config");
-}
-
-function runMigration() {
+/**
+ * マイグレーションを実行
+ * @param {object} envOverrides - 環境変数オーバーライド
+ */
+const runMigration = (envOverrides) => {
   log("Running database migration...");
   try {
     execSync("pnpm db:migrate", {
       stdio: ["inherit", "inherit", "pipe"],
       cwd: ROOT_DIR,
+      env: { ...process.env, ...envOverrides },
     });
     log("Migration completed");
   } catch (err) {
@@ -74,31 +30,47 @@ function runMigration() {
       throw err;
     }
   }
-}
+};
 
-function runSeed() {
+/**
+ * シードを実行
+ * @param {object} envOverrides - 環境変数オーバーライド
+ */
+const runSeed = (envOverrides) => {
   log("Running database seed...");
   try {
     execSync("pnpm db:seed", {
       stdio: "inherit",
       cwd: ROOT_DIR,
+      env: { ...process.env, ...envOverrides },
     });
     log("Seed completed");
   } catch (_err) {
     warn("Seed failed or already applied");
   }
-}
+};
 
-async function main() {
+const main = async () => {
   console.log("\n🗄️  Setting up database environment...\n");
 
   ensureSupabaseRunning();
-  updateEnvWithSupabaseConfig();
-  runMigration();
-  runSeed();
 
-  console.log("\n✅ Database setup completed!\n");
-}
+  const status = getSupabaseStatus();
+  if (!status) {
+    throw new Error("Failed to get Supabase status");
+  }
+
+  // .env ファイルを更新（次回以降の手動コマンド用）
+  injectSupabaseConfig(status);
+
+  // 環境変数を直接渡して migrate/seed を実行
+  const envOverrides = buildEnvOverrides(status);
+  runMigration(envOverrides);
+  runSeed(envOverrides);
+
+  console.log("\n✅ Database setup completed!");
+  printDirenvReloadMessage();
+};
 
 main().catch((err) => {
   error(err.message);
