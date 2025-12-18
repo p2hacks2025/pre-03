@@ -19,6 +19,11 @@ const TEST_USERS: TestUser[] = [
     password: "password",
     username: "Admin User",
   },
+  {
+    email: "worker@example.com",
+    password: "password",
+    username: "Worker Test User",
+  },
 ];
 
 export const usersSeeder: Seeder = {
