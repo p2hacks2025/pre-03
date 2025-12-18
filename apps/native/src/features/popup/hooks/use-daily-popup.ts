@@ -3,18 +3,7 @@ import { usePopup } from "@/contexts/popup-context";
 import { logger } from "@/lib/logger";
 import { MOCK_DAILY_UPDATE_RESPONSE } from "../lib/mock-data";
 import { popupStorage } from "../lib/popup-storage";
-import type { DailyUpdateResponse } from "../types";
-
-/**
- * 日本時間（JST）の今日の日付を YYYY-MM-DD 形式で取得
- */
-const getJSTDateString = (): string => {
-  const now = new Date();
-  // UTC + 9時間 = JST
-  const jstOffset = 9 * 60 * 60 * 1000;
-  const jstDate = new Date(now.getTime() + jstOffset);
-  return jstDate.toISOString().split("T")[0];
-};
+import type { DailyUpdateResponse, PopupConfig } from "../types";
 
 /**
  * 日付更新 API を呼び出す（現在はモックデータを返す）
@@ -27,6 +16,38 @@ const fetchDailyUpdate = async (): Promise<DailyUpdateResponse> => {
 };
 
 /**
+ * API レスポンスからポップアップアイテムのリストを生成
+ * ウィークリーが先、デイリーが後（優先度順）
+ */
+const createPopupItemsFromResponse = (
+  response: DailyUpdateResponse,
+): PopupConfig[] => {
+  const items: PopupConfig[] = [];
+
+  if (response.weekly) {
+    items.push({
+      id: `weekly-${response.date}`,
+      title: response.weekly.title,
+      message: response.weekly.message,
+      imageUrl: response.weekly.imageUrl,
+      closeButtonLabel: "確認しました",
+    });
+  }
+
+  if (response.daily) {
+    items.push({
+      id: `daily-${response.date}`,
+      title: response.daily.title,
+      message: response.daily.message,
+      imageUrl: response.daily.imageUrl,
+      closeButtonLabel: "閉じる",
+    });
+  }
+
+  return items;
+};
+
+/**
  * useDailyPopup
  * 毎日 JST 0:00 以降の初回起動時に日付更新をチェックし、
  * 更新があればポップアップを表示する
@@ -36,34 +57,25 @@ export const useDailyPopup = () => {
   const hasCheckedRef = useRef(false);
 
   useEffect(() => {
-    // ストレージからの読み込みが完了するまで待機
-    if (!isLoaded) return;
-
-    // 重複実行防止
-    if (hasCheckedRef.current) return;
+    if (!isLoaded || hasCheckedRef.current) return;
     hasCheckedRef.current = true;
 
     const checkAndShowPopup = async () => {
       try {
-        const todayJST = getJSTDateString();
         const lastLaunchDate = await popupStorage.getLastLaunchDate();
+        const response = await fetchDailyUpdate();
 
         logger.debug("Daily popup check", {
-          todayJST,
+          responseDate: response.date,
           lastLaunchDate,
         });
 
-        // 既に今日起動済みの場合はスキップ
-        if (lastLaunchDate === todayJST) {
-          logger.debug("Already launched today, skipping popup check");
+        if (lastLaunchDate === response.date) {
+          logger.debug("Already checked this date, skipping popup");
           return;
         }
 
-        // 今日の日付を記録
-        await popupStorage.setLastLaunchDate(todayJST);
-
-        // 日付更新情報を取得
-        const response = await fetchDailyUpdate();
+        await popupStorage.setLastLaunchDate(response.date);
 
         logger.info("Daily update response", {
           date: response.date,
@@ -72,26 +84,9 @@ export const useDailyPopup = () => {
           hasWeekly: !!response.weekly,
         });
 
-        // ウィークリー更新があれば先に追加（優先度高）
-        if (response.weekly) {
-          enqueue({
-            id: `weekly-${response.date}`,
-            title: response.weekly.title,
-            message: response.weekly.message,
-            imageUrl: response.weekly.imageUrl,
-            closeButtonLabel: "確認しました",
-          });
-        }
-
-        // デイリー更新があれば追加
-        if (response.daily) {
-          enqueue({
-            id: `daily-${response.date}`,
-            title: response.daily.title,
-            message: response.daily.message,
-            imageUrl: response.daily.imageUrl,
-            closeButtonLabel: "閉じる",
-          });
+        const popupItems = createPopupItemsFromResponse(response);
+        for (const item of popupItems) {
+          enqueue(item);
         }
       } catch (error) {
         logger.error(
