@@ -1,21 +1,35 @@
-import { Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { withUniwind } from "uniwind";
 
+import { TimelineCard } from "@/features/timeline/components/timeline-card";
+
+import { useDetailTimeline } from "../hooks";
+
 const StyledView = withUniwind(View);
-const StyledText = withUniwind(Text);
+const StyledScrollView = withUniwind(ScrollView);
 
 /**
  * 振り返り詳細画面の住人の様子タブコンポーネント
  *
- * タイムライン表示のプレースホルダーコンポーネント。
- * #18 で実装予定のため、現在は空のコンポーネントとして定義。
+ * タイムラインエントリのリストを表示します。
+ * 将来的にはAPIから取得したデータを表示します。
  */
 export const DetailTimeline = () => {
+  const { data } = useDetailTimeline();
+
   return (
-    <StyledView className="flex-1 items-center justify-center p-4">
-      <StyledText className="text-center text-muted">
-        住人の様子は #18 で実装予定です
-      </StyledText>
-    </StyledView>
+    <StyledScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <StyledView className="gap-3 px-4 pt-4 pb-6">
+        {data.timelineEntries.map((entry) => (
+          <TimelineCard
+            key={entry.id}
+            username={entry.username}
+            content={entry.content}
+            timeAgo={entry.timeAgo}
+            avatarUri={entry.avatarUri}
+          />
+        ))}
+      </StyledView>
+    </StyledScrollView>
   );
 };
