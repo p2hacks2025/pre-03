@@ -1,9 +1,15 @@
 import {
+  type AiPost,
+  type AiProfile,
+  aiPosts,
+  aiProfiles,
   and,
   eq,
   gte,
   isNull,
   lt,
+  lte,
+  sql,
   type UserPost,
   type UserProfile,
   userPosts,
@@ -248,4 +254,130 @@ export const findWeeklyWorld = async (
     .limit(1);
 
   return existing[0] ?? null;
+};
+
+// AI Post related
+
+export const getRandomAiProfile = async (
+  ctx: WorkerContext,
+): Promise<AiProfile> => {
+  const profiles = await ctx.db
+    .select()
+    .from(aiProfiles)
+    .where(isNull(aiProfiles.deletedAt));
+
+  if (profiles.length === 0) {
+    throw new Error("No AI profiles found");
+  }
+
+  return profiles[Math.floor(Math.random() * profiles.length)];
+};
+
+export const getRecentUserPosts = async (
+  ctx: WorkerContext,
+  minutes: number,
+): Promise<UserPost[]> => {
+  const since = new Date(Date.now() - minutes * 60 * 1000);
+  return ctx.db
+    .select()
+    .from(userPosts)
+    .where(and(gte(userPosts.createdAt, since), isNull(userPosts.deletedAt)));
+};
+
+export const getRandomHistoricalPosts = async (
+  ctx: WorkerContext,
+  count: number,
+  excludeDays: number,
+): Promise<UserPost[]> => {
+  const excludeDate = new Date(Date.now() - excludeDays * 24 * 60 * 60 * 1000);
+  return ctx.db
+    .select()
+    .from(userPosts)
+    .where(
+      and(lt(userPosts.createdAt, excludeDate), isNull(userPosts.deletedAt)),
+    )
+    .orderBy(sql`RANDOM()`)
+    .limit(count);
+};
+
+export const hasExistingAiPost = async (
+  ctx: WorkerContext,
+  userProfileId: string,
+  sourceStartAt: Date,
+  sourceEndAt: Date,
+): Promise<boolean> => {
+  const existing = await ctx.db
+    .select({ id: aiPosts.id })
+    .from(aiPosts)
+    .where(
+      and(
+        eq(aiPosts.userProfileId, userProfileId),
+        eq(aiPosts.sourceStartAt, sourceStartAt),
+        eq(aiPosts.sourceEndAt, sourceEndAt),
+        isNull(aiPosts.deletedAt),
+      ),
+    )
+    .limit(1);
+  return existing.length > 0;
+};
+
+export type CreateAiPostParams = {
+  aiProfileId: string;
+  userProfileId: string | null;
+  content: string;
+  sourceStartAt: Date;
+  sourceEndAt: Date;
+  scheduledAt: Date;
+  imageUrl?: string;
+};
+
+export const createAiPost = async (
+  ctx: WorkerContext,
+  params: CreateAiPostParams,
+): Promise<AiPost> => {
+  const [created] = await ctx.db
+    .insert(aiPosts)
+    .values({
+      aiProfileId: params.aiProfileId,
+      userProfileId: params.userProfileId,
+      content: params.content,
+      imageUrl: params.imageUrl ?? null,
+      sourceStartAt: params.sourceStartAt,
+      sourceEndAt: params.sourceEndAt,
+      scheduledAt: params.scheduledAt,
+    })
+    .returning();
+  return created;
+};
+
+export const publishDueAiPosts = async (
+  ctx: WorkerContext,
+): Promise<string[]> => {
+  const now = new Date();
+  const postsToPublish = await ctx.db
+    .select({ id: aiPosts.id })
+    .from(aiPosts)
+    .where(
+      and(
+        lte(aiPosts.scheduledAt, now),
+        isNull(aiPosts.publishedAt),
+        isNull(aiPosts.deletedAt),
+      ),
+    );
+
+  if (postsToPublish.length === 0) return [];
+
+  const ids = postsToPublish.map((p) => p.id);
+  await ctx.db
+    .update(aiPosts)
+    .set({ publishedAt: now })
+    .where(
+      and(
+        lte(aiPosts.scheduledAt, now),
+        isNull(aiPosts.publishedAt),
+        isNull(aiPosts.deletedAt),
+      ),
+    );
+
+  return ids;
 };

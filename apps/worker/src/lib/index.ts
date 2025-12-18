@@ -1,4 +1,6 @@
 export {
+  getAiPostGenerationPrompt,
+  getAiPostStandalonePrompt,
   getBaseImageBase64,
   getBaseImageBuffer,
   getGuideImageBase64,
@@ -16,13 +18,20 @@ export {
 export { getContext, type WorkerContext } from "./context";
 export { type Env, env } from "./env";
 export {
+  type CreateAiPostParams,
+  createAiPost,
   createOrUpdateWorldBuildLog,
   createWeeklyWorld,
   findWeeklyWorld,
   getAllUserProfiles,
+  getRandomAiProfile,
+  getRandomHistoricalPosts,
+  getRecentUserPosts,
   getUserPostsByDate,
   getUserPostsForWeek,
   getWeeklyWorld,
+  hasExistingAiPost,
+  publishDueAiPosts,
   selectFieldId,
   type UserPostsGroupedByUser,
   updateWeeklyWorldImage,

@@ -10,15 +10,17 @@ export const aiPosts = pgTable(
     aiProfileId: uuid("ai_profile_id")
       .notNull()
       .references(() => aiProfiles.id, { onDelete: "cascade" }),
-    userProfileId: uuid("user_profile_id")
-      .notNull()
-      .references(() => userProfiles.id, { onDelete: "cascade" }),
+    userProfileId: uuid("user_profile_id").references(() => userProfiles.id, {
+      onDelete: "cascade",
+    }),
     content: text("content").notNull(),
     imageUrl: text("image_url"),
     sourceStartAt: timestamp("source_start_at", {
       withTimezone: true,
     }).notNull(),
     sourceEndAt: timestamp("source_end_at", { withTimezone: true }).notNull(),
+    scheduledAt: timestamp("scheduled_at", { withTimezone: true }).notNull(),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -38,4 +40,6 @@ export const aiPosts = pgTable(
 
 export type AiPost = typeof aiPosts.$inferSelect;
 export type NewAiPost = typeof aiPosts.$inferInsert;
-export type AiPostUpdate = Partial<Pick<NewAiPost, "content" | "imageUrl">>;
+export type AiPostUpdate = Partial<
+  Pick<NewAiPost, "content" | "imageUrl" | "publishedAt">
+>;

@@ -1,4 +1,12 @@
 export {
+  type DiaryGroup,
+  determinePostCount,
+  generateAiPostContent,
+  generateStandaloneAiPostContent,
+  getRandomScheduledAt,
+  groupPostsByUser,
+} from "./ai-post";
+export {
   fetchImageAsBase64,
   generateImage,
   getJstToday,
