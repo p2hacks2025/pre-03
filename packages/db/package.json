@@ -21,6 +21,7 @@
     "postgres": "^3.4.7"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.1.0",
     "@supabase/supabase-js": "^2.83.0",
     "@types/node": "^20.19.24",
     "drizzle-kit": "^0.31.7",

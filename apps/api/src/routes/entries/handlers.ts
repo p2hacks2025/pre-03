@@ -2,8 +2,8 @@ import { fileTypeFromBuffer } from "file-type";
 import type { AppRouteHandler } from "@/context";
 import { createSupabaseAdminClient } from "@/infrastructure/supabase";
 import { AppError } from "@/shared/error/app-error";
-import { createEntry } from "@/usecase/entries";
-import type { createEntryRoute } from "./route";
+import { createEntry, getTimeline } from "@/usecase/entries";
+import type { createEntryRoute, getTimelineRoute } from "./route";
 
 export const createEntryHandler: AppRouteHandler<
   typeof createEntryRoute
@@ -48,4 +48,25 @@ export const createEntryHandler: AppRouteHandler<
   );
 
   return c.json(result, 201);
+};
+
+export const getTimelineHandler: AppRouteHandler<
+  typeof getTimelineRoute
+> = async (c) => {
+  const { from, to, cursor, limit } = c.req.valid("query");
+  const user = c.get("user");
+  const db = c.get("db");
+
+  const result = await getTimeline(
+    { db },
+    {
+      userId: user.id,
+      from,
+      to,
+      cursor,
+      limit,
+    },
+  );
+
+  return c.json(result);
 };
