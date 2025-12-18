@@ -38,7 +38,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen items-center justify-center p-8">
       <div className="w-full max-w-md space-y-6">
-        <Card>
+        <Card className="p-2">
           <CardHeader className="flex flex-col items-center gap-2">
             <h2 className="font-semibold text-xl">Welcome</h2>
             <p className="text-default-500 text-small">
