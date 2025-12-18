@@ -7,7 +7,7 @@ import { getSupabaseStatus, injectSupabaseConfig } from "./lib/supabase.mjs";
 /**
  * .env.example を .env にコピー
  */
-function copyEnvFiles() {
+const copyEnvFiles = () => {
   for (const target of ENV_TARGETS) {
     const examplePath = join(ROOT_DIR, target, ".env.example");
     const envPath = join(ROOT_DIR, target, ".env");
@@ -19,9 +19,9 @@ function copyEnvFiles() {
       warn(`Skipped ${target} (no .env.example found)`);
     }
   }
-}
+};
 
-async function main() {
+const main = async () => {
   console.log("\n🔄 Updating .env files...\n");
 
   copyEnvFiles();
@@ -33,7 +33,7 @@ async function main() {
 
   console.log("\n✅ .env files updated!");
   printDirenvReloadMessage();
-}
+};
 
 main().catch((err) => {
   error(err.message);

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { error, log, printDirenvReloadMessage, warn } from "./lib/logger.mjs";
 import { ENV_TARGETS, ROOT_DIR } from "./lib/paths.mjs";
 
-function setupEnvFiles() {
+const setupEnvFiles = () => {
   for (const target of ENV_TARGETS) {
     const examplePath = join(ROOT_DIR, target, ".env.example");
     const targetPath = join(ROOT_DIR, target, ".env");
@@ -15,9 +15,9 @@ function setupEnvFiles() {
       warn(`${target}/.env already exists, skipping`);
     }
   }
-}
+};
 
-async function main() {
+const main = async () => {
   console.log("\n🚀 Setting up workspace...\n");
 
   setupEnvFiles();
@@ -28,7 +28,7 @@ async function main() {
   console.log("Next steps:");
   console.log("  1. Run `pnpm db:setup` to setup database");
   console.log("  2. Run `pnpm dev` to start development server\n");
-}
+};
 
 main().catch((err) => {
   error(err.message);

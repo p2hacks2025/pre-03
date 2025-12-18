@@ -12,7 +12,7 @@ import {
  * マイグレーションを実行
  * @param {object} envOverrides - 環境変数オーバーライド
  */
-function runMigration(envOverrides) {
+const runMigration = (envOverrides) => {
   log("Running database migration...");
   try {
     execSync("pnpm db:migrate", {
@@ -30,13 +30,13 @@ function runMigration(envOverrides) {
       throw err;
     }
   }
-}
+};
 
 /**
  * シードを実行
  * @param {object} envOverrides - 環境変数オーバーライド
  */
-function runSeed(envOverrides) {
+const runSeed = (envOverrides) => {
   log("Running database seed...");
   try {
     execSync("pnpm db:seed", {
@@ -48,9 +48,9 @@ function runSeed(envOverrides) {
   } catch (_err) {
     warn("Seed failed or already applied");
   }
-}
+};
 
-async function main() {
+const main = async () => {
   console.log("\n🗄️  Setting up database environment...\n");
 
   ensureSupabaseRunning();
@@ -70,7 +70,7 @@ async function main() {
 
   console.log("\n✅ Database setup completed!");
   printDirenvReloadMessage();
-}
+};
 
 main().catch((err) => {
   error(err.message);

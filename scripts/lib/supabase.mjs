@@ -23,7 +23,7 @@ export const SUPABASE_MAPPINGS = {
  * Supabase status を取得
  * @returns {object|null} status オブジェクト、実行中でなければ null
  */
-export function getSupabaseStatus() {
+export const getSupabaseStatus = () => {
   try {
     const output = execSync("pnpm exec supabase status --output json", {
       encoding: "utf-8",
@@ -34,25 +34,25 @@ export function getSupabaseStatus() {
     warn("Supabase is not running, skipping Supabase config injection");
     return null;
   }
-}
+};
 
 /**
  * Supabase が実行中かどうかを確認
  * @returns {boolean}
  */
-export function isSupabaseRunning() {
+export const isSupabaseRunning = () => {
   try {
     execSync("pnpm exec supabase status", { stdio: "pipe" });
     return true;
   } catch {
     return false;
   }
-}
+};
 
 /**
  * Supabase が実行中でなければ起動
  */
-export function ensureSupabaseRunning() {
+export const ensureSupabaseRunning = () => {
   if (isSupabaseRunning()) {
     log("Supabase is running");
     return;
@@ -61,27 +61,27 @@ export function ensureSupabaseRunning() {
   log("Starting Supabase...");
   execSync("pnpm exec supabase start", { stdio: "inherit" });
   log("Supabase started");
-}
+};
 
 /**
  * execSync 用の環境変数オブジェクトを生成
  * @param {object} status - Supabase status オブジェクト
  * @returns {object} 環境変数オブジェクト
  */
-export function buildEnvOverrides(status) {
+export const buildEnvOverrides = (status) => {
   return {
     DATABASE_URL: status.DB_URL,
     SUPABASE_URL: status.API_URL,
     SUPABASE_SERVICE_ROLE_KEY: status.SERVICE_ROLE_KEY,
   };
-}
+};
 
 /**
  * .env ファイルに Supabase 設定を注入
  * @param {object} status - Supabase status オブジェクト
  * @param {string[]} [targets] - 注入対象ファイルパス（デフォルト: SUPABASE_ENV_TARGETS）
  */
-export function injectSupabaseConfig(status, targets = SUPABASE_ENV_TARGETS) {
+export const injectSupabaseConfig = (status, targets = SUPABASE_ENV_TARGETS) => {
   for (const target of targets) {
     const envPath = join(ROOT_DIR, target);
     try {
@@ -103,4 +103,4 @@ export function injectSupabaseConfig(status, targets = SUPABASE_ENV_TARGETS) {
       warn(`Skipped Supabase config injection for ${target} (file not found)`);
     }
   }
-}
+};
