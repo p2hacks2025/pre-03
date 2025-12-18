@@ -74,7 +74,7 @@ export const TimelineCard = ({
       {/* 右側: コンテンツエリア */}
       <StyledView className="flex-1">
         {/* ヘッダー: ユーザー名と経過時間 */}
-        <StyledView className="mb-0 flex-row items-center justify-between">
+        <StyledView className="flex-row items-center justify-between">
           <StyledText
             className="font-semibold text-base text-white"
             style={{ fontFamily: "DotGothic16_400Regular" }}
