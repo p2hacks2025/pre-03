@@ -47,7 +47,7 @@ export const HealthContent = ({ api, db }: HealthContentProps) => {
         </div>
 
         <Card>
-          <CardBody className="divide-y p-0">
+          <CardBody className="divide-y divide-divider p-0">
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
                 <Server className="h-4 w-4 text-default-500" />
