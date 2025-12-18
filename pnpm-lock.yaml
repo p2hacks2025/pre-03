@@ -2232,9 +2232,6 @@ packages:
   '@expo/config-types@54.0.10':
     resolution: {integrity: sha512-/J16SC2an1LdtCZ67xhSkGXpALYUVUNyZws7v+PVsFZxClYehDSoKLqyRaGkpHlYrCc08bS0RF5E0JV6g50psA==}
 
-  '@expo/config-types@54.0.9':
-    resolution: {integrity: sha512-Llf4jwcrAnrxgE5WCdAOxtMf8FGwS4Sk0SSgI0NnIaSyCnmOCAm80GPFvsK778Oj19Ub4tSyzdqufPyeQPksWw==}
-
   '@expo/config@12.0.12':
     resolution: {integrity: sha512-X2MW86+ulLpMGvdgfvpl2EOBAKUlwvnvoPwdaZeeyWufGopn1nTUeh4C9gMsplDaP1kXv9sLXVhOoUoX6g9PvQ==}
 
@@ -9840,8 +9837,7 @@ snapshots:
 
   '@expo-google-fonts/dotgothic16@0.4.1': {}
 
-  '@expo/cli@54.0.19(expo-router@6.0.19)(expo@54.0.29)(graphql@16.12.0)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))':
-
+  '@expo/cli@54.0.19(expo-router@6.0.20)(expo@54.0.29)(graphql@16.12.0)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))':
     dependencies:
       '@0no-co/graphql.web': 1.2.0(graphql@16.12.0)
       '@expo/code-signing-certificates': 0.0.5
@@ -9941,8 +9937,6 @@ snapshots:
       - supports-color
 
   '@expo/config-types@54.0.10': {}
-
-  '@expo/config-types@54.0.9': {}
 
   '@expo/config@12.0.12':
     dependencies:
@@ -10121,7 +10115,7 @@ snapshots:
     dependencies:
       '@expo/config': 12.0.12
       '@expo/config-plugins': 54.0.4
-      '@expo/config-types': 54.0.9
+      '@expo/config-types': 54.0.10
       '@expo/image-utils': 0.8.8
       '@expo/json-file': 10.0.8
       '@react-native/normalize-colors': 0.81.5
