@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { AuthProvider } from "@/contexts/auth-context";
+import { PopupProvider } from "@/contexts/popup-context";
+import { PopupOverlay } from "@/features/popup";
 import { initializeOneSignal } from "@/lib/onesignal";
 
 export default function RootLayout() {
@@ -16,7 +18,10 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <HeroUINativeProvider>
         <AuthProvider>
-          <Stack screenOptions={{ headerShown: false }} />
+          <PopupProvider>
+            <Stack screenOptions={{ headerShown: false }} />
+            <PopupOverlay />
+          </PopupProvider>
         </AuthProvider>
       </HeroUINativeProvider>
     </GestureHandlerRootView>
