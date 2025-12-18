@@ -292,3 +292,5 @@ $ pnpm build
 | [docs/architecture.md](./docs/architecture.md) | アーキテクチャ詳細 |
 | [docs/development-flow.md](./docs/development-flow.md) | 開発フロー・ブランチ命名規則・コミット規則 |
 | [docs/infra-setup.md](./docs/infra-setup.md) | インフラセットアップ |
+| [docs/er.md](./docs/er.md) | ER図・データベース設計 |
+| [docs/review.md](./docs/review.md) | コードレビューガイドライン |
