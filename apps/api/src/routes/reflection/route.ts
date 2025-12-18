@@ -2,6 +2,8 @@ import { createRoute } from "@hono/zod-openapi";
 import {
   GetReflectionCalendarInputSchema,
   GetReflectionCalendarOutputSchema,
+  GetWeeklyWorldInputSchema,
+  GetWeeklyWorldOutputSchema,
 } from "@packages/schema/reflection";
 import { authMiddleware } from "@/middleware/auth";
 import { dbMiddleware } from "@/middleware/db";
@@ -20,6 +22,25 @@ export const getReflectionCalendarRoute = createRoute({
         "application/json": { schema: GetReflectionCalendarOutputSchema },
       },
       description: "リフレクションカレンダー取得成功",
+    },
+    ...DefaultErrorResponses,
+  },
+  tags: ["Reflection"],
+});
+
+export const getWeeklyWorldRoute = createRoute({
+  method: "get",
+  path: "/weekly-world",
+  middleware: [authMiddleware, dbMiddleware] as const,
+  request: {
+    query: GetWeeklyWorldInputSchema,
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": { schema: GetWeeklyWorldOutputSchema },
+      },
+      description: "週間世界詳細取得成功",
     },
     ...DefaultErrorResponses,
   },
