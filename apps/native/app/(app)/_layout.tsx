@@ -4,11 +4,15 @@ import { View } from "react-native";
 import { withUniwind } from "uniwind";
 
 import { useAuth } from "@/contexts/auth-context";
+import { useDailyPopup } from "@/features/popup";
 
 const StyledView = withUniwind(View);
 
 export default function AppLayout() {
   const { isAuthenticated, isLoading } = useAuth();
+
+  // 日付更新チェック（認証済みユーザーのみ）
+  useDailyPopup();
 
   if (isLoading) {
     return (

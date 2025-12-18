@@ -1,3 +1,4 @@
+import { useFonts } from "expo-font";
 import { LinearGradient } from "expo-linear-gradient";
 import { Text, View } from "react-native";
 import { withUniwind } from "uniwind";
@@ -117,6 +118,14 @@ const INNER_SHADOW_GRADIENTS = [
 ];
 
 export const DiaryCard = ({ date, content }: DiaryCardProps) => {
+  const [fontsLoaded] = useFonts({
+    "ZenKurenaido-Regular": require("../../../../assets/fonts/ZenKurenaido-Regular.ttf"),
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
     <StyledView className="overflow-hidden rounded-md border border-[#A28758]">
       <StyledView
@@ -137,10 +146,18 @@ export const DiaryCard = ({ date, content }: DiaryCardProps) => {
         ))}
 
         <StyledView>
-          <StyledText className="mb-2 text-black">{date}</StyledText>
+          <StyledText
+            className="mb-1 text-black"
+            style={{ fontFamily: "ZenKurenaido-Regular" }}
+          >
+            {date}
+          </StyledText>
         </StyledView>
 
-        <StyledText className="text-black text-em leading-5">
+        <StyledText
+          className="text-black text-em leading-5"
+          style={{ fontFamily: "ZenKurenaido-Regular" }}
+        >
           {content}
         </StyledText>
       </StyledView>

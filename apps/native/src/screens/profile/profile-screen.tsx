@@ -1,9 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { Button, Spinner, useToast } from "heroui-native";
+import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
+import { useAuth } from "@/contexts/auth-context";
 import { formatDateToISO } from "@/features/calendar/lib/date-utils";
 import { EntryList, ProfileHeader } from "@/features/profile";
 
@@ -17,6 +20,30 @@ export const ProfileScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const today = new Date();
+  const { logout } = useAuth();
+  const { toast } = useToast();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      toast.show({
+        variant: "success",
+        label: "ログアウト完了",
+        description: "またのご利用をお待ちしています",
+      });
+    } catch (error) {
+      toast.show({
+        variant: "danger",
+        label: "ログアウト失敗",
+        description:
+          error instanceof Error ? error.message : "ログアウトに失敗しました",
+      });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <StyledScrollView
@@ -47,6 +74,28 @@ export const ProfileScreen = () => {
       </StyledView>
 
       <EntryList />
+
+      <StyledView className="mt-8 px-4">
+        <Button
+          variant="danger"
+          onPress={handleLogout}
+          isDisabled={isLoggingOut}
+          className="w-full"
+        >
+          {isLoggingOut ? (
+            <Spinner size="sm" color="white" />
+          ) : (
+            <>
+              <StyledIonicons
+                name="log-out-outline"
+                size={18}
+                className="text-danger-foreground"
+              />
+              <Button.Label>ログアウト</Button.Label>
+            </>
+          )}
+        </Button>
+      </StyledView>
     </StyledScrollView>
   );
 };

@@ -1,3 +1,7 @@
+import {
+  DotGothic16_400Regular,
+  useFonts,
+} from "@expo-google-fonts/dotgothic16";
 import { Avatar } from "heroui-native";
 import { Image, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
@@ -40,6 +44,13 @@ export const TimelineCard = ({
   avatarUri,
   uploadImageUrl,
 }: TimelineCardProps) => {
+  const [fontsLoaded] = useFonts({
+    DotGothic16_400Regular,
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
   const timeAgo = formatRelativeTime(createdAt);
 
   return (
@@ -63,15 +74,26 @@ export const TimelineCard = ({
       {/* 右側: コンテンツエリア */}
       <StyledView className="flex-1">
         {/* ヘッダー: ユーザー名と経過時間 */}
-        <StyledView className="mb-2 flex-row items-center justify-between">
-          <StyledText className="font-semibold text-base text-white">
+        <StyledView className="flex-row items-center justify-between">
+          <StyledText
+            className="font-semibold text-base text-white"
+            style={{ fontFamily: "DotGothic16_400Regular" }}
+          >
             {username}
           </StyledText>
-          <StyledText className="text-gray-400 text-xs">{timeAgo}</StyledText>
+          <StyledText
+            className="text-gray-400 text-xs"
+            style={{ fontFamily: "DotGothic16_400Regular" }}
+          >
+            {timeAgo}
+          </StyledText>
         </StyledView>
 
         {/* 投稿本文 */}
-        <StyledText className="text-sm text-white leading-5">
+        <StyledText
+          className="text-sm text-white leading-5"
+          style={{ fontFamily: "DotGothic16_400Regular" }}
+        >
           {content}
         </StyledText>
 
