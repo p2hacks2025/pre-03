@@ -51,7 +51,7 @@ export const UserInfo = () => {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="p-2">
         <CardHeader>
           <h2 className="font-semibold text-lg">User Information</h2>
         </CardHeader>
