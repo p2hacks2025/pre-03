@@ -1,7 +1,8 @@
-import { HeroUIProvider } from "@heroui/react";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { AuthProvider } from "@/contexts/auth-context";
+
+import { Providers } from "./providers";
 
 import type { Metadata } from "next";
 
@@ -33,7 +34,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <HeroUIProvider>{children}</HeroUIProvider>
+          <Providers>{children}</Providers>
         </AuthProvider>
       </body>
     </html>

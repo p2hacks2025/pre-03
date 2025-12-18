@@ -1,9 +1,7 @@
+import { Button, Card, CardBody, Chip } from "@heroui/react";
 import { CheckCircle2, Database, Globe, Server, XCircle } from "lucide-react";
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { client } from "@/lib/api";
 import { logger } from "@/lib/logger";
 
@@ -92,48 +90,48 @@ const HealthPage = async () => {
         </div>
 
         <Card>
-          <CardContent className="divide-y p-0">
+          <CardBody className="divide-y p-0">
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
-                <Server className="h-4 w-4 text-muted-foreground" />
+                <Server className="h-4 w-4 text-default-500" />
                 <div>
                   <p className="font-medium text-sm">API Server</p>
-                  <p className="text-muted-foreground text-xs">{api.message}</p>
+                  <p className="text-default-500 text-xs">{api.message}</p>
                 </div>
               </div>
               <StatusIcon ok={api.ok} />
             </div>
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
-                <Globe className="h-4 w-4 text-muted-foreground" />
+                <Globe className="h-4 w-4 text-default-500" />
                 <div>
                   <p className="font-medium text-sm">Environment</p>
-                  <p className="text-muted-foreground text-xs">API runtime</p>
+                  <p className="text-default-500 text-xs">API runtime</p>
                 </div>
               </div>
-              <Badge
-                variant={
-                  api.environment === "production" ? "default" : "secondary"
-                }
+              <Chip
+                color={api.environment === "production" ? "primary" : "default"}
+                variant="flat"
+                size="sm"
               >
                 {api.environment ?? "unknown"}
-              </Badge>
+              </Chip>
             </div>
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
-                <Database className="h-4 w-4 text-muted-foreground" />
+                <Database className="h-4 w-4 text-default-500" />
                 <div>
                   <p className="font-medium text-sm">Database</p>
-                  <p className="text-muted-foreground text-xs">{db.message}</p>
+                  <p className="text-default-500 text-xs">{db.message}</p>
                 </div>
               </div>
               <StatusIcon ok={db.ok} />
             </div>
-          </CardContent>
+          </CardBody>
         </Card>
 
-        <Button asChild variant="ghost" className="w-full">
-          <Link href="/">Back to Home</Link>
+        <Button as={Link} href="/" variant="light" fullWidth>
+          Back to Home
         </Button>
       </div>
     </div>
