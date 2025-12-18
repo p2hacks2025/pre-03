@@ -7,6 +7,8 @@ import { postsSeeder } from "./seeders/posts";
 // Infrastructure seeders（インフラ初期化）
 import { storageSeeder } from "./seeders/storage";
 import { usersSeeder } from "./seeders/users";
+import { weeklyWorldsSeeder } from "./seeders/weekly-worlds";
+import { workerPostsSeeder } from "./seeders/worker-posts";
 
 const parseArgs = (): SeedOptions => {
   const args = process.argv.slice(2);
@@ -53,7 +55,13 @@ const main = async () => {
    * 2. Data seeders（テストユーザーなど）
    * 3. postsSeeder（usersSeederに依存）
    */
-  const seeders = [storageSeeder, usersSeeder, postsSeeder];
+  const seeders = [
+    storageSeeder,
+    usersSeeder,
+    postsSeeder,
+    weeklyWorldsSeeder,
+    workerPostsSeeder,
+  ];
 
   await runSeeders(seeders, {
     db,

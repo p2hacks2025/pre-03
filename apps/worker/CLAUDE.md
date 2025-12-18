@@ -9,7 +9,7 @@ Node.js + tsx によるバッチ処理・定期実行ワーカー。CLI での�
 | ランタイム | Node.js + tsx |
 | スケジューラー | node-cron |
 | データベース | Drizzle ORM（PostgreSQL） |
-| 外部サービス | Supabase |
+| 外部サービス | Supabase, Google Gemini API |
 | 環境変数 | @t3-oss/env-core + dotenv |
 | ロギング | @packages/logger |
 
@@ -65,6 +65,7 @@ src/
 │
 └── lib/                # 共通ユーティリティ
     ├── index.ts        # 統合エクスポート
+    ├── assets.ts       # アセット読み込み（画像・プロンプト）
     ├── context.ts      # WorkerContext 生成
     └── env.ts          # 環境変数パース
 ```
@@ -90,6 +91,7 @@ apps/worker (@repo/worker)
 └─── @packages/logger ──────────┘
 
 外部依存:
+├─── @google/genai ─────────────  Gemini API クライアント
 ├─── @supabase/supabase-js ───── Supabase クライアント
 ├─── node-cron ─────────────────  スケジューラー
 ├─── dotenv ────────────────────  環境変数読み込み
@@ -126,6 +128,7 @@ apps/worker (@repo/worker)
 
 | ファイル | 役割 |
 |---------|------|
+| `assets.ts` | アセット読み込み（ベース画像、ガイド画像、システムプロンプト） |
 | `context.ts` | `WorkerContext` 生成（db, logger, supabase, env） |
 | `env.ts` | 環境変数パース（dotenv + @t3-oss/env-core） |
 | `index.ts` | 統合エクスポート |
@@ -198,11 +201,14 @@ pnpm worker daemon
 
 | パターン | 参考ファイル |
 |---------|-------------|
-| DB 操作タスク | `tasks/health.ts`（`checkDb`） |
+| DB 操作タスク | `tasks/health.ts`（`checkDb`）、`tasks/daily-update.ts` |
 | Supabase 操作タスク | `tasks/health.ts`（`checkSupabase`） |
-| 複数タスクのオーケストレーション | `jobs/health-check.ts` |
+| Storage 操作タスク | `tasks/daily-update.ts`（`uploadGeneratedImage`） |
+| 外部 API 呼び出しタスク | `tasks/daily-update.ts`（`generateImage`） |
+| 複数タスクのオーケストレーション | `jobs/health-check.ts`、`jobs/daily-update.ts` |
 | スケジュール定義 | `daemon.ts`（`schedules` 配列） |
 | Context 拡張 | `lib/context.ts` |
+| アセット読み込み | `lib/assets.ts` |
 
 ---
 
@@ -224,6 +230,7 @@ pnpm worker daemon
 
 | ジョブ名 | 説明 |
 |---------|------|
+| `daily-update` | 1日の終わりに画像を更新（Gemini API で画像生成） |
 | `health-check` | DB・Supabase 接続チェック |
 
 ---
@@ -237,6 +244,8 @@ pnpm worker daemon
 | `DATABASE_URL` | PostgreSQL 接続文字列 |
 | `SUPABASE_URL` | Supabase プロジェクト URL |
 | `SUPABASE_ANON_KEY` | Supabase 匿名キー |
+| `GOOGLE_API_KEY` | Google AI API キー（Gemini 画像生成用） |
+| `DEFAULT_AI_PROFILE_ID` | デフォルトの AI プロファイル UUID |
 
 ### 環境変数の読み込み
 

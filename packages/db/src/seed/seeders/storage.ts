@@ -23,6 +23,12 @@ const STORAGE_BUCKETS: StorageBucket[] = [
     fileSizeLimit: 5 * 1024 * 1024, // 5MB
   },
   {
+    id: "images",
+    public: true,
+    allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
+    fileSizeLimit: 10 * 1024 * 1024, // 10MB
+  },
+  {
     id: "entries",
     public: true,
     allowedMimeTypes: ["image/jpeg", "image/png"],
