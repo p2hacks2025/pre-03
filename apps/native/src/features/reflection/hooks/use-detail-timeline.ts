@@ -16,9 +16,9 @@ export interface TimelineEntry {
    */
   content: string;
   /**
-   * 経過時間（例: "5分前", "2時間前"）
+   * 作成日時（ISO 8601形式）
    */
-  timeAgo: string;
+  createdAt: string;
   /**
    * アバター画像のURI（オプション）
    */
@@ -73,32 +73,32 @@ export const useDetailTimeline = () => {
         id: "1",
         username: "ユーザーネーム",
         content: "なんかピザが食べたくなってきたな、頼んじゃおうかな",
-        timeAgo: "5分前",
+        createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
       },
       {
         id: "2",
         username: "ユーザーネーム",
         content: "今日も一日がんばった!明日も頑張ろう",
-        timeAgo: "1時間前",
+        createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
       },
       {
         id: "3",
         username: "ユーザーネーム",
         content:
           "なんかピザが食べたくなってきたな、頼んじゃおうかなあああああああああああああああああああああああああああああいいいいいいいいいいいいいいいいいいいいいい",
-        timeAgo: "2時間前",
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
       },
       {
         id: "4",
         username: "ユーザーネーム",
         content: "天気がいいから散歩に行ってきた",
-        timeAgo: "5時間前",
+        createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
       },
       {
         id: "5",
         username: "ユーザーネーム",
         content: "朝ごはんはパンケーキにしました",
-        timeAgo: "8時間前",
+        createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
       },
     ],
   };
@@ -110,7 +110,7 @@ export const useDetailTimeline = () => {
     id: entry.id,
     username: entry.username,
     content: entry.content,
-    timeAgo: entry.timeAgo,
+    createdAt: entry.createdAt,
     avatarUri: entry.avatarUri,
   }));
 

@@ -1,51 +1,47 @@
 import { Avatar } from "heroui-native";
-import { Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
+
+import { formatRelativeTime } from "../lib/format-relative-time";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
+const StyledImage = withUniwind(Image);
 
 export interface TimelineCardProps {
-  /**
-   * ユーザー名
-   */
   username: string;
-  /**
-   * 投稿本文
-   */
   content: string;
-  /**
-   * 経過時間（例: "5分前", "2時間前"）
-   */
-  timeAgo: string;
-  /**
-   * アバター画像のURI（オプション）
-   */
+  createdAt: string;
   avatarUri?: string;
+  uploadImageUrl?: string | null;
 }
 
 /**
  * タイムライン用の投稿カードコンポーネント
  *
  * SNS風のタイムライン表示に使用するカードコンポーネント。
- * ユーザーアイコン、ユーザー名、投稿本文、経過時間を表示します。
+ * ユーザーアイコン、ユーザー名、投稿本文、経過時間、添付画像を表示します。
  *
  * @example
  * ```tsx
  * <TimelineCard
  *   username="poyopoyo"
- *   content="poyo~~~~~~~~~~~~~~~~~~~~いろはにほへとチリぬるをあああああああああああああああああああ"
- *   timeAgo="5分前"
- *   avatarUri={require("@/assets/user-icon.png")}
+ *   content="今日はとても良い天気でした"
+ *   createdAt="2025-12-18T10:30:00.000Z"
+ *   avatarUri="https://example.com/avatar.png"
+ *   uploadImageUrl="https://example.com/image.png"
  * />
  * ```
  */
 export const TimelineCard = ({
   username,
   content,
-  timeAgo,
+  createdAt,
   avatarUri,
+  uploadImageUrl,
 }: TimelineCardProps) => {
+  const timeAgo = formatRelativeTime(createdAt);
+
   return (
     <StyledView className="flex-row rounded-md border-4 border-white bg-[#2C2C2E] p-4">
       {/* 左側: アバター */}
@@ -78,6 +74,17 @@ export const TimelineCard = ({
         <StyledText className="text-sm text-white leading-5">
           {content}
         </StyledText>
+
+        {/* 添付画像 */}
+        {uploadImageUrl && (
+          <StyledView className="mt-3 overflow-hidden rounded-lg">
+            <StyledImage
+              source={{ uri: uploadImageUrl }}
+              className="aspect-video w-full"
+              resizeMode="cover"
+            />
+          </StyledView>
+        )}
       </StyledView>
     </StyledView>
   );
