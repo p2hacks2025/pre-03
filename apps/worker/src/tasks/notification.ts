@@ -1,6 +1,4 @@
-import type { WorkerContext } from "@/lib";
-
-const ONESIGNAL_API_URL = "https://api.onesignal.com/notifications";
+import { ONESIGNAL_API_URL, type WorkerContext } from "@/lib";
 
 export type SendNotificationParams = {
   title: string;
