@@ -1,55 +1,50 @@
 import { Avatar, Card } from "heroui-native";
-import { Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
+
+import { formatRelativeTime } from "../lib/format-relative-time";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
+const StyledImage = withUniwind(Image);
 
 export interface TimelineCardProps {
-  /**
-   * ユーザー名
-   */
   username: string;
-  /**
-   * 投稿本文
-   */
   content: string;
-  /**
-   * 経過時間（例: "5分前", "2時間前"）
-   */
-  timeAgo: string;
-  /**
-   * アバター画像のURI（オプション）
-   */
+  createdAt: string;
   avatarUri?: string;
+  uploadImageUrl?: string | null;
 }
 
 /**
  * タイムライン用の投稿カードコンポーネント
  *
  * SNS風のタイムライン表示に使用するカードコンポーネント。
- * ユーザーアイコン、ユーザー名、投稿本文、経過時間を表示します。
+ * ユーザーアイコン、ユーザー名、投稿本文、経過時間、添付画像を表示します。
  *
  * @example
  * ```tsx
  * <TimelineCard
  *   username="poyopoyo"
- *   content="poyo~~~~~~~~~~~~~~~~~~~~いろはにほへとチリぬるをあああああああああああああああああああ"
- *   timeAgo="5分前"
- *   avatarUri={require("@/assets/user-icon.png")}
+ *   content="今日はとても良い天気でした"
+ *   createdAt="2025-12-18T10:30:00.000Z"
+ *   avatarUri="https://example.com/avatar.png"
+ *   uploadImageUrl="https://example.com/image.png"
  * />
  * ```
  */
 export const TimelineCard = ({
   username,
   content,
-  timeAgo,
+  createdAt,
   avatarUri,
+  uploadImageUrl,
 }: TimelineCardProps) => {
+  const timeAgo = formatRelativeTime(createdAt);
+
   return (
     <Card className="w-full">
       <Card.Body className="flex-row gap-3 p-4">
-        {/* 左側: アバター */}
         <StyledView>
           <Avatar size="md" alt={username}>
             {avatarUri ? (
@@ -65,22 +60,25 @@ export const TimelineCard = ({
           </Avatar>
         </StyledView>
 
-        {/* 中央: コンテンツエリア */}
         <StyledView className="flex-1">
-          {/* ヘッダー: ユーザー名と経過時間 */}
           <StyledView className="flex-row items-start justify-between">
             <StyledText className="font-semibold text-base text-foreground">
               {username}
             </StyledText>
-
-            {/* 右上: 経過時間 */}
             <StyledText className="text-muted text-sm">{timeAgo}</StyledText>
           </StyledView>
-
-          {/* 投稿本文 */}
           <StyledText className="mt-2 text-foreground text-sm leading-5">
             {content}
           </StyledText>
+          {uploadImageUrl && (
+            <StyledView className="mt-3 overflow-hidden rounded-lg">
+              <StyledImage
+                source={{ uri: uploadImageUrl }}
+                className="aspect-video w-full"
+                resizeMode="cover"
+              />
+            </StyledView>
+          )}
         </StyledView>
       </Card.Body>
     </Card>
