@@ -7,8 +7,10 @@ export const workerKeys = {
   SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   GOOGLE_API_KEY: z.string().min(1),
+  OPENAI_API_KEY: z.string().min(1),
   ONESIGNAL_APP_ID: z.uuid(),
   ONESIGNAL_REST_API_KEY: z.string().min(1),
+  TARGET_WEEK_START: z.string().date().optional(),
 };
 
 export type WorkerKeys = typeof workerKeys;

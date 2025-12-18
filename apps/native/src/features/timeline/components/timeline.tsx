@@ -34,10 +34,11 @@ export interface TimelineProps {
  * <Timeline
  *   items={[
  *     {
+ *       id: "1",
  *       username: "poyopoyo",
  *       content: "ピザが食べたくなってきた",
- *       timeAgo: "5分前",
- *       avatarUri: require("@/assets/user-icon.png")
+ *       createdAt: "2025-12-18T10:30:00.000Z",
+ *       avatarUri: "https://example.com/avatar.png"
  *     },
  *     ...
  *   ]}

@@ -25,7 +25,7 @@ export const DetailTimeline = () => {
             key={entry.id}
             username={entry.username}
             content={entry.content}
-            timeAgo={entry.timeAgo}
+            createdAt={entry.createdAt}
             avatarUri={entry.avatarUri}
           />
         ))}
