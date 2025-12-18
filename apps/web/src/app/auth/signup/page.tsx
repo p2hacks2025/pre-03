@@ -8,7 +8,7 @@ import { SignupForm } from "./_components/signup-form";
 export default function SignupPage() {
   return (
     <div className="flex min-h-screen items-center justify-center p-8">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md p-2">
         <CardHeader className="flex flex-col items-center gap-2">
           <h2 className="font-semibold text-2xl">Sign Up</h2>
           <p className="text-default-500 text-small">Create a new account</p>
