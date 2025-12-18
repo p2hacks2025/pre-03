@@ -19,8 +19,7 @@ export const aiPosts = pgTable(
       withTimezone: true,
     }).notNull(),
     sourceEndAt: timestamp("source_end_at", { withTimezone: true }).notNull(),
-    scheduledAt: timestamp("scheduled_at", { withTimezone: true }).notNull(),
-    publishedAt: timestamp("published_at", { withTimezone: true }),
+    publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -40,6 +39,4 @@ export const aiPosts = pgTable(
 
 export type AiPost = typeof aiPosts.$inferSelect;
 export type NewAiPost = typeof aiPosts.$inferInsert;
-export type AiPostUpdate = Partial<
-  Pick<NewAiPost, "content" | "imageUrl" | "publishedAt">
->;
+export type AiPostUpdate = Partial<Pick<NewAiPost, "content" | "imageUrl">>;

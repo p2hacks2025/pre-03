@@ -16,7 +16,6 @@ const schedules = [
     cron: "0 3 * * *",
     job: jobs["ai-post-long-term"],
   },
-  { name: "ai-post-publish", cron: "* * * * *", job: jobs["ai-post-publish"] },
 ] as const;
 const ctx = getContext();
 

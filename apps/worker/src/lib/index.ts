@@ -31,7 +31,6 @@ export {
   getUserPostsForWeek,
   getWeeklyWorld,
   hasExistingAiPost,
-  publishDueAiPosts,
   selectFieldId,
   type UserPostsGroupedByUser,
   updateWeeklyWorldImage,

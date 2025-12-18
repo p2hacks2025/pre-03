@@ -8,7 +8,6 @@ import {
   gte,
   isNull,
   lt,
-  lte,
   sql,
   type UserPost,
   type UserProfile,
@@ -332,7 +331,7 @@ export type CreateAiPostParams = {
   content: string;
   sourceStartAt: Date;
   sourceEndAt: Date;
-  scheduledAt: Date;
+  publishedAt: Date;
   imageUrl?: string;
 };
 
@@ -349,27 +348,8 @@ export const createAiPost = async (
       imageUrl: params.imageUrl ?? null,
       sourceStartAt: params.sourceStartAt,
       sourceEndAt: params.sourceEndAt,
-      scheduledAt: params.scheduledAt,
+      publishedAt: params.publishedAt,
     })
     .returning();
   return created;
-};
-
-export const publishDueAiPosts = async (
-  ctx: WorkerContext,
-): Promise<string[]> => {
-  const now = new Date();
-  const published = await ctx.db
-    .update(aiPosts)
-    .set({ publishedAt: now })
-    .where(
-      and(
-        lte(aiPosts.scheduledAt, now),
-        isNull(aiPosts.publishedAt),
-        isNull(aiPosts.deletedAt),
-      ),
-    )
-    .returning({ id: aiPosts.id });
-
-  return published.map((p) => p.id);
 };

@@ -18,7 +18,9 @@ export const AI_POST_CONFIG = {
   LONG_TERM_SCHEDULE_MIN: 60,
   LONG_TERM_SCHEDULE_MAX: 1440,
   MAX_RETRIES: 3,
-  MAX_POST_LENGTH: 140,
+  MAX_POST_LENGTH: 50,
+  POSTS_PER_USER: 3,
+  STANDALONE_POST_COUNT: 2,
 } as const;
 
 export type DiaryGroup = {
@@ -26,35 +28,78 @@ export type DiaryGroup = {
   posts: UserPost[];
 };
 
-export type StandaloneGenerationResult = {
+export type GenerationResult = {
   generated: number;
   errors: string[];
 };
 
+type PostsResponse = {
+  posts: string[];
+};
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const buildPrompt = (template: string, aiProfile: AiProfile): string =>
+const sanitizeUserInput = (input: string): string => {
+  return input
+    .slice(0, 1000) // Limit length
+    .replace(/```/g, "") // Remove code blocks
+    .replace(/\{[^}]*\}/g, "") // Remove template-like patterns
+    .replace(
+      /(ignore|forget|disregard|override|system|prompt|instruction)/gi,
+      "",
+    )
+    .trim();
+};
+
+const buildPrompt = (
+  template: string,
+  aiProfile: AiProfile,
+  postCount: number,
+): string =>
   template
     .replaceAll("{ai_profile_name}", aiProfile.username)
-    .replaceAll("{ai_profile_description}", aiProfile.description);
+    .replaceAll("{ai_profile_description}", aiProfile.description)
+    .replaceAll("{post_count}", String(postCount));
 
-const callOpenAIWithRetry = async (
+const callOpenAIJsonWithRetry = async (
   ctx: WorkerContext,
   messages: OpenAI.ChatCompletionMessageParam[],
   maxRetries = AI_POST_CONFIG.MAX_RETRIES,
-): Promise<string> => {
+): Promise<PostsResponse> => {
   const openai = new OpenAI({ apiKey: ctx.env.OPENAI_API_KEY });
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-4.1-nano",
         messages,
-        max_completion_tokens: 200,
+        response_format: { type: "json_object" },
+        max_completion_tokens: 500,
       });
-      const text = response.choices[0]?.message?.content;
-      if (!text) throw new Error("No text in OpenAI response");
-      return text.slice(0, AI_POST_CONFIG.MAX_POST_LENGTH);
+      const choice = response.choices[0];
+      ctx.logger.debug("OpenAI response", {
+        finishReason: choice?.finish_reason,
+        refusal: choice?.message?.refusal,
+        hasContent: !!choice?.message?.content,
+      });
+      const text = choice?.message?.content;
+      if (!text) {
+        throw new Error(
+          `No text in OpenAI response (finish_reason: ${choice?.finish_reason}, refusal: ${choice?.message?.refusal})`,
+        );
+      }
+
+      const parsed = JSON.parse(text) as PostsResponse;
+      if (!Array.isArray(parsed.posts)) {
+        throw new Error("Invalid response format: posts array not found");
+      }
+
+      // Truncate each post to max length
+      parsed.posts = parsed.posts.map((post) =>
+        post.slice(0, AI_POST_CONFIG.MAX_POST_LENGTH),
+      );
+
+      return parsed;
     } catch (error) {
       const isRateLimit =
         error instanceof OpenAI.RateLimitError ||
@@ -85,75 +130,80 @@ export const groupPostsByUser = (posts: UserPost[]): DiaryGroup[] => {
   }));
 };
 
-export const generateAiPostContent = async (
+export const generateAiPostContents = async (
   ctx: WorkerContext,
   aiProfile: AiProfile,
   diaryContent: string,
-): Promise<string> => {
-  const systemPrompt = buildPrompt(getAiPostGenerationPrompt(), aiProfile);
-  return callOpenAIWithRetry(ctx, [
+  postCount: number = AI_POST_CONFIG.POSTS_PER_USER,
+): Promise<string[]> => {
+  const systemPrompt = buildPrompt(
+    getAiPostGenerationPrompt(),
+    aiProfile,
+    postCount,
+  );
+  const response = await callOpenAIJsonWithRetry(ctx, [
     { role: "system", content: systemPrompt },
-    { role: "user", content: diaryContent },
+    { role: "user", content: sanitizeUserInput(diaryContent) },
   ]);
+  return response.posts;
 };
 
-export const generateStandaloneAiPostContent = async (
+export const generateStandaloneAiPostContents = async (
   ctx: WorkerContext,
   aiProfile: AiProfile,
-): Promise<string> => {
-  const systemPrompt = buildPrompt(getAiPostStandalonePrompt(), aiProfile);
-  return callOpenAIWithRetry(ctx, [
+  postCount: number = AI_POST_CONFIG.STANDALONE_POST_COUNT,
+): Promise<string[]> => {
+  const systemPrompt = buildPrompt(
+    getAiPostStandalonePrompt(),
+    aiProfile,
+    postCount,
+  );
+  const response = await callOpenAIJsonWithRetry(ctx, [
     { role: "system", content: systemPrompt },
-    { role: "user", content: "Please write a post." },
+    { role: "user", content: "Please write posts." },
   ]);
+  return response.posts;
 };
 
 export const generateStandalonePosts = async (
   ctx: WorkerContext,
-  postCount: number,
   scheduleMin: number,
   scheduleMax: number,
-): Promise<StandaloneGenerationResult> => {
-  const result: StandaloneGenerationResult = { generated: 0, errors: [] };
+): Promise<GenerationResult> => {
+  const result: GenerationResult = { generated: 0, errors: [] };
+  const postCount = AI_POST_CONFIG.STANDALONE_POST_COUNT;
   ctx.logger.info("Generating standalone AI posts", { postCount });
 
-  for (let i = 0; i < postCount; i++) {
-    try {
-      const aiProfile = await getRandomAiProfile(ctx);
-      const content = await generateStandaloneAiPostContent(ctx, aiProfile);
-      const now = new Date();
+  try {
+    const aiProfile = await getRandomAiProfile(ctx);
+    const contents = await generateStandaloneAiPostContents(
+      ctx,
+      aiProfile,
+      postCount,
+    );
+    const now = new Date();
+
+    for (const content of contents) {
       await createAiPost(ctx, {
         aiProfileId: aiProfile.id,
         userProfileId: null,
         content,
         sourceStartAt: now,
         sourceEndAt: now,
-        scheduledAt: getRandomScheduledAt(scheduleMin, scheduleMax),
+        publishedAt: getRandomPublishedAt(scheduleMin, scheduleMax),
       });
       result.generated++;
-    } catch (error) {
-      result.errors.push(`Standalone: ${(error as Error).message}`);
-      ctx.logger.error(
-        "Failed to generate standalone post",
-        {},
-        error as Error,
-      );
     }
+  } catch (error) {
+    result.errors.push(`Standalone: ${(error as Error).message}`);
+    ctx.logger.error("Failed to generate standalone posts", {}, error as Error);
   }
+
   return result;
 };
 
-export const getRandomScheduledAt = (min: number, max: number): Date =>
+export const getRandomPublishedAt = (min: number, max: number): Date =>
   new Date(
     Date.now() +
       (Math.floor(Math.random() * (max - min + 1)) + min) * 60 * 1000,
   );
-
-export const determinePostCount = (contentLength: number): number => {
-  if (contentLength <= 100) return 1;
-  if (contentLength <= 300) return Math.random() < 0.5 ? 1 : 2;
-  return Math.random() < 0.5 ? 2 : 3;
-};
-
-export const determineStandalonePostCount = (isLongTerm: boolean): number =>
-  isLongTerm ? Math.floor(Math.random() * 3) + 1 : Math.random() < 0.5 ? 1 : 2;

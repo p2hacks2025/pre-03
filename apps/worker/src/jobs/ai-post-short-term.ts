@@ -7,11 +7,9 @@ import {
 } from "@/lib";
 import {
   AI_POST_CONFIG,
-  determinePostCount,
-  determineStandalonePostCount,
-  generateAiPostContent,
+  generateAiPostContents,
   generateStandalonePosts,
-  getRandomScheduledAt,
+  getRandomPublishedAt,
   groupPostsByUser,
 } from "@/tasks";
 
@@ -37,26 +35,21 @@ export const aiPostShortTerm = async (
   };
 
   try {
+    // Always generate standalone posts
+    const standalone = await generateStandalonePosts(
+      ctx,
+      AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
+      AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
+    );
+    result.standaloneGenerated = standalone.generated;
+    result.errors.push(...standalone.errors);
+
+    // Process user posts if any
     const posts = await getRecentUserPosts(
       ctx,
       AI_POST_CONFIG.SHORT_TERM_MINUTES,
     );
     const groups = groupPostsByUser(posts);
-
-    if (groups.length === 0) {
-      ctx.logger.info("No recent diaries found, generating standalone posts");
-      const postCount = determineStandalonePostCount(false);
-      const standalone = await generateStandalonePosts(
-        ctx,
-        postCount,
-        AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
-        AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
-      );
-      result.standaloneGenerated = standalone.generated;
-      result.errors.push(...standalone.errors);
-      result.success = standalone.errors.length === 0;
-      return result;
-    }
 
     for (const group of groups) {
       try {
@@ -79,21 +72,22 @@ export const aiPostShortTerm = async (
           continue;
         }
 
-        const postCount = determinePostCount(diaryContent.length);
-        for (let i = 0; i < postCount; i++) {
-          const aiProfile = await getRandomAiProfile(ctx);
-          const content = await generateAiPostContent(
-            ctx,
-            aiProfile,
-            diaryContent,
-          );
+        const aiProfile = await getRandomAiProfile(ctx);
+        const contents = await generateAiPostContents(
+          ctx,
+          aiProfile,
+          diaryContent,
+          AI_POST_CONFIG.POSTS_PER_USER,
+        );
+
+        for (const content of contents) {
           await createAiPost(ctx, {
             aiProfileId: aiProfile.id,
             userProfileId: group.userProfileId,
             content,
             sourceStartAt,
             sourceEndAt,
-            scheduledAt: getRandomScheduledAt(
+            publishedAt: getRandomPublishedAt(
               AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
               AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
             ),
@@ -112,6 +106,10 @@ export const aiPostShortTerm = async (
           error as Error,
         );
       }
+    }
+
+    if (standalone.errors.length > 0) {
+      result.success = false;
     }
 
     ctx.logger.info("ai-post-short-term job completed", {

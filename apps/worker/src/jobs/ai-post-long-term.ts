@@ -6,10 +6,9 @@ import {
 } from "@/lib";
 import {
   AI_POST_CONFIG,
-  determineStandalonePostCount,
-  generateAiPostContent,
+  generateAiPostContents,
   generateStandalonePosts,
-  getRandomScheduledAt,
+  getRandomPublishedAt,
 } from "@/tasks";
 
 export type AiPostLongTermJobResult = {
@@ -32,51 +31,47 @@ export const aiPostLongTerm = async (
   };
 
   try {
+    // Always generate standalone posts
+    const standalone = await generateStandalonePosts(
+      ctx,
+      AI_POST_CONFIG.LONG_TERM_SCHEDULE_MIN,
+      AI_POST_CONFIG.LONG_TERM_SCHEDULE_MAX,
+    );
+    result.standaloneGenerated = standalone.generated;
+    result.errors.push(...standalone.errors);
+
+    // Process historical diaries
     const diaries = await getRandomHistoricalPosts(
       ctx,
       AI_POST_CONFIG.LONG_TERM_FETCH_COUNT,
       AI_POST_CONFIG.LONG_TERM_EXCLUDE_DAYS,
     );
 
-    if (diaries.length === 0) {
-      ctx.logger.info(
-        "No historical diaries found, generating standalone posts",
-      );
-      const postCount = determineStandalonePostCount(true);
-      const standalone = await generateStandalonePosts(
-        ctx,
-        postCount,
-        AI_POST_CONFIG.LONG_TERM_SCHEDULE_MIN,
-        AI_POST_CONFIG.LONG_TERM_SCHEDULE_MAX,
-      );
-      result.standaloneGenerated = standalone.generated;
-      result.errors.push(...standalone.errors);
-      result.success = standalone.errors.length === 0;
-      return result;
-    }
-
     for (const diary of diaries) {
       try {
         const aiProfile = await getRandomAiProfile(ctx);
-        const content = await generateAiPostContent(
+        const contents = await generateAiPostContents(
           ctx,
           aiProfile,
           diary.content,
+          AI_POST_CONFIG.POSTS_PER_USER,
         );
         const sourceDate = new Date(diary.createdAt);
 
-        await createAiPost(ctx, {
-          aiProfileId: aiProfile.id,
-          userProfileId: diary.userProfileId,
-          content,
-          sourceStartAt: sourceDate,
-          sourceEndAt: sourceDate,
-          scheduledAt: getRandomScheduledAt(
-            AI_POST_CONFIG.LONG_TERM_SCHEDULE_MIN,
-            AI_POST_CONFIG.LONG_TERM_SCHEDULE_MAX,
-          ),
-        });
-        result.generatedPosts++;
+        for (const content of contents) {
+          await createAiPost(ctx, {
+            aiProfileId: aiProfile.id,
+            userProfileId: diary.userProfileId,
+            content,
+            sourceStartAt: sourceDate,
+            sourceEndAt: sourceDate,
+            publishedAt: getRandomPublishedAt(
+              AI_POST_CONFIG.LONG_TERM_SCHEDULE_MIN,
+              AI_POST_CONFIG.LONG_TERM_SCHEDULE_MAX,
+            ),
+          });
+          result.generatedPosts++;
+        }
       } catch (error) {
         result.errors.push(`Diary ${diary.id}: ${(error as Error).message}`);
         result.success = false;
@@ -86,6 +81,10 @@ export const aiPostLongTerm = async (
           error as Error,
         );
       }
+    }
+
+    if (standalone.errors.length > 0) {
+      result.success = false;
     }
 
     ctx.logger.info("ai-post-long-term job completed", {
