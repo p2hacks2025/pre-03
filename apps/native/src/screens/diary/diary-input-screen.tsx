@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { CreateEntryOutput } from "@packages/schema/entry";
-import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { Button, Spinner, useToast } from "heroui-native";
@@ -98,25 +98,35 @@ export const DiaryInputScreen = () => {
   };
 
   const handlePickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: false,
-      quality: 1, // manipulateAsync で圧縮するため、ここでは圧縮しない
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      const asset = result.assets[0];
-
-      // 常に JPEG に変換（HEIC 対策 + 統一フォーマット）
-      const manipulated = await manipulateAsync(asset.uri, [], {
-        compress: 0.8,
-        format: SaveFormat.JPEG,
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: false,
+        quality: 1,
       });
 
-      setSelectedImage({
-        uri: manipulated.uri,
-        width: asset.width,
-        height: asset.height,
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+
+        // 常に JPEG に変換（HEIC 対策 + 統一フォーマット）
+        const context = ImageManipulator.manipulate(asset.uri);
+        const renderedImage = await context.renderAsync();
+        const manipulated = await renderedImage.saveAsync({
+          compress: 0.8,
+          format: SaveFormat.JPEG,
+        });
+
+        setSelectedImage({
+          uri: manipulated.uri,
+          width: asset.width,
+          height: asset.height,
+        });
+      }
+    } catch (error) {
+      toast.show({
+        variant: "danger",
+        label: "画像の読み込みに失敗しました",
+        description: error instanceof Error ? error.message : undefined,
       });
     }
   };
