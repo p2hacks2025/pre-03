@@ -17,6 +17,7 @@
     "eas:build:android": "eas build --platform android"
   },
   "dependencies": {
+    "@expo-google-fonts/dotgothic16": "^0.4.1",
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
