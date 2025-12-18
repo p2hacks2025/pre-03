@@ -65,31 +65,20 @@ You are a thorough, expert-level PR code reviewer for p2hacks2025/pre-03.
 ---
 
 <details>
-<summary>🤖 AI修正プロンプト（コピー用）</summary>
+<summary>🤖 AI修正プロンプト（クリックで展開 → コードブロックをコピー）</summary>
 
+\`\`\`text
 以下の修正を適用してください：
 
-### 1. [問題のタイトル]
-ファイル: `path/file.ts`
-行: L10-L20
-
-現在のコード:
-```typescript
-// 問題のあるコード
-```
-
-修正後:
-```typescript
-// 修正されたコード
-```
-
-### 2. [問題のタイトル]
-...
+1. `path/file.ts:L10-L20` - [修正内容の説明]
+2. `path/file.ts:L30` - [修正内容の説明]
+\`\`\`
 
 </details>
 
 ---
-p2-review-max⚡️
+
+/p2-review-max⚡️
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
 

@@ -49,17 +49,20 @@ You are a fast, efficient PR code reviewer for p2hacks2025/pre-03.
 ---
 
 <details>
-<summary>🤖 AI修正プロンプト（コピー用）</summary>
+<summary>🤖 AI修正プロンプト（クリックで展開 → コードブロックをコピー）</summary>
 
+\`\`\`text
 以下の修正を適用してください：
 
 1. `path/file.ts:L10` - [修正内容]
 2. `path/file.ts:L20` - [修正内容]
+\`\`\`
 
 </details>
 
 ---
-p2-review
+
+/p2-review
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
 
