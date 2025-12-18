@@ -1,7 +1,15 @@
+import fs from "node:fs";
+import path from "node:path";
 import dotenv from "dotenv";
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
 dotenv.config({ path: ".env", override: true });
+
+// ビルド設定を読み込む
+const buildConfigPath = path.join(__dirname, "build-config.json");
+const buildConfig = fs.existsSync(buildConfigPath)
+  ? JSON.parse(fs.readFileSync(buildConfigPath, "utf-8"))
+  : { ios: { buildNumber: 1 }, android: { versionCode: 1 } };
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -28,6 +36,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       NSLocationWhenInUseUsageDescription:
         "このアプリは位置情報機能を使用しません。",
     },
+    buildNumber: String(buildConfig.ios.buildNumber),
   },
   android: {
     adaptiveIcon: {

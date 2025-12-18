@@ -1,0 +1,8 @@
+{
+  "ios": {
+    "buildNumber": 14
+  },
+  "android": {
+    "versionCode": 1
+  }
+}
