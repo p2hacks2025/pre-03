@@ -2210,8 +2210,8 @@ packages:
   '@expo-google-fonts/dotgothic16@0.4.1':
     resolution: {integrity: sha512-ioNx6IGd+vFbFxWpNxtrOoiE8vecqIOQPsH72V3wyidMpf2AvQ3dUJEBgYoqOtcW7u54zJw39wXciP9yAA40EA==}
 
-  '@expo/cli@54.0.19':
-    resolution: {integrity: sha512-Za+Ena29uYkq2c1Lbh+r3VrooR/mW7c9dahoH4WvL1T9ttbfAeu7sJmCuWZo88bZ4bFsOpE5fYne71DK11iSrQ==}
+  '@expo/cli@54.0.20':
+    resolution: {integrity: sha512-cwsXmhftvS0p9NNYOhXGnicBAZl9puWwRt19Qq5eQ6njLnaj8WvcR+kDZyADtgZxBsZiyVlrKXvnjt43HXywQA==}
     hasBin: true
     peerDependencies:
       expo: '*'
@@ -9778,7 +9778,7 @@ snapshots:
 
   '@expo-google-fonts/dotgothic16@0.4.1': {}
 
-  '@expo/cli@54.0.19(expo-router@6.0.20)(expo@54.0.29)(graphql@16.12.0)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))':
+  '@expo/cli@54.0.20(expo-router@6.0.21)(expo@54.0.30)(graphql@16.12.0)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))':
     dependencies:
       '@0no-co/graphql.web': 1.2.0(graphql@16.12.0)
       '@expo/code-signing-certificates': 0.0.5
