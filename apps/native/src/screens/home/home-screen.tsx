@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { Entry } from "@packages/schema/entry";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { Spinner } from "heroui-native";
 import { useCallback, useRef } from "react";
 import {
@@ -39,6 +39,13 @@ export const HomeScreen = () => {
     refresh,
     fetchMore,
   } = useTimeline();
+
+  // 画面にフォーカスが戻った時にリフレッシュ
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
 
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, HEADER_HEIGHT],
