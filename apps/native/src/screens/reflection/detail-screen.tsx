@@ -1,61 +1,72 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button } from "heroui-native";
-import { useMemo, useState } from "react";
-import { Text, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useState } from "react";
+import { Image, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
-import { DetailTabs } from "@/features/reflection/components";
+import {
+  DetailDiary,
+  DetailTabs,
+  DetailTimeline,
+} from "@/features/reflection/components";
+import { useDetailDiary } from "@/features/reflection/hooks";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
+const StyledPressable = withUniwind(Pressable);
 
 type TabType = "diary" | "timeline";
 
 export const ReflectionDetailScreen = () => {
-  const { week } = useLocalSearchParams<{ week: string }>();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabType>("diary");
-
-  const weekRange = useMemo(() => {
-    if (!week) return "";
-    const startDate = new Date(week);
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 6);
-
-    return `${startDate.getMonth() + 1}/${startDate.getDate()} - ${endDate.getMonth() + 1}/${endDate.getDate()}`;
-  }, [week]);
+  const { data, handlePrevWorld, handleNextWorld } = useDetailDiary();
 
   return (
     <StyledView
-      className="flex-1 bg-background"
-      style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+      className="flex-1 bg-[#4ECCDD]"
+      style={{ paddingTop: insets.top, paddingBottom: 0 }}
     >
-      <StyledView className="px-4 py-4">
-        <StyledText className="mb-4 font-bold text-foreground text-xl">
-          {weekRange} の振り返り
+      <StyledView className="items-center justify-center px-6 py-6">
+        <StyledText className="text-white text-xl">
+          {data.startDate}~{data.endDate}
         </StyledText>
+      </StyledView>
+
+      <StyledView className="relative h-60 items-center justify-center">
+        <StyledPressable
+          className="absolute left-4 z-10"
+          onPress={handlePrevWorld}
+        >
+          <StyledView className="h-12 w-12 items-center justify-center">
+            <View style={{ transform: [{ rotate: "270deg" }] }}>
+              <Ionicons name="triangle" size={24} color="#DF6800" />
+            </View>
+          </StyledView>
+        </StyledPressable>
+
+        <Image
+          source={require("../../../assets/world-example.png")}
+          style={{ width: 300, height: 300 }}
+          resizeMode="contain"
+        />
+
+        <StyledPressable
+          className="absolute right-4 z-10"
+          onPress={handleNextWorld}
+        >
+          <StyledView className="h-12 w-12 items-center justify-center">
+            <View style={{ transform: [{ rotate: "90deg" }] }}>
+              <Ionicons name="triangle" size={24} color="#DF6800" />
+            </View>
+          </StyledView>
+        </StyledPressable>
       </StyledView>
 
       <DetailTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <StyledView className="flex-1 items-center justify-center px-4">
-        {activeTab === "diary" ? (
-          <StyledText className="text-foreground">
-            日記コンテンツ: {week}
-          </StyledText>
-        ) : (
-          <StyledText className="text-foreground">
-            タイムラインコンテンツ: {week}
-          </StyledText>
-        )}
-      </StyledView>
-
-      <StyledView className="px-4 pb-4">
-        <Button variant="secondary" onPress={() => router.back()}>
-          <Button.Label>戻る</Button.Label>
-        </Button>
+      <StyledView className="flex-1">
+        {activeTab === "diary" ? <DetailDiary /> : <DetailTimeline />}
       </StyledView>
     </StyledView>
   );
