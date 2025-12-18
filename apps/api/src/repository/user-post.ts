@@ -12,7 +12,7 @@ import {
   type UserPost,
   userPosts,
 } from "@packages/db";
-import { getJSTMonthRangeInUTC } from "@/shared/date";
+import { jstToUTC } from "@/shared/date";
 
 export const createUserPost = async (
   db: DbClient,
@@ -95,10 +95,9 @@ export const getEntryDatesByMonth = async (
 ): Promise<EntryDateResult[]> => {
   const { profileId, year, month } = options;
 
-  const { start: monthStart, end: monthEnd } = getJSTMonthRangeInUTC(
-    year,
-    month,
-  );
+  // JST基準の月範囲をUTCで取得（個別に変換）
+  const monthStart = jstToUTC(year, month, 1); // JST月初 0:00 → UTC
+  const monthEnd = jstToUTC(year, month + 1, 1); // JST翌月初 0:00 → UTC
 
   const result = await db
     .selectDistinct({

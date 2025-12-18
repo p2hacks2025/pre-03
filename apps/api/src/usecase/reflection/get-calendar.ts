@@ -6,6 +6,7 @@ import type {
 import { getEntryDatesByMonth } from "@/repository/user-post";
 import { getUserProfileByUserId } from "@/repository/user-profile";
 import { getWeeklyWorldsByDateRange } from "@/repository/weekly-world";
+import { formatDateString } from "@/shared/date";
 import { AppError } from "@/shared/error/app-error";
 
 type GetReflectionCalendarDeps = { db: DbClient };
@@ -48,26 +49,6 @@ const getWeekStartDatesForMonth = (year: number, month: number): Date[] => {
     current.setUTCDate(current.getUTCDate() + 7);
   }
   return weekStarts;
-};
-
-/**
- * 日付をYYYY-MM-DD形式の文字列に変換（UTCベース）
- * PostgreSQLのDATE型は文字列として返されることがあるため、両方に対応
- */
-const formatDateToISODate = (date: Date | string): string => {
-  if (typeof date === "string") {
-    // すでにYYYY-MM-DD形式の場合はそのまま返す
-    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return date;
-    }
-    // ISO形式の場合は日付部分のみ抽出
-    return date.split("T")[0];
-  }
-  // UTCメソッドを使用してタイムゾーンズレ防止
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 };
 
 export const getReflectionCalendar = async (
@@ -117,13 +98,13 @@ export const getReflectionCalendar = async (
   // Map変換でO(1)ルックアップ
   const worldsMap = new Map(
     result.weeklyWorlds.map((w) => [
-      formatDateToISODate(w.weekStartDate),
+      formatDateString(w.weekStartDate),
       w.weeklyWorldImageUrl,
     ]),
   );
 
   const weeks: CalendarWeek[] = weekStartDates.map((date) => {
-    const dateStr = formatDateToISODate(date);
+    const dateStr = formatDateString(date);
     return {
       weekStartDate: dateStr,
       weeklyWorldImageUrl: worldsMap.get(dateStr) ?? null,
@@ -131,7 +112,7 @@ export const getReflectionCalendar = async (
   });
 
   const entryDates = result.entryDateResults
-    .map((r) => formatDateToISODate(r.date))
+    .map((r) => formatDateString(r.date))
     .sort();
 
   return { year, month, weeks, entryDates };
