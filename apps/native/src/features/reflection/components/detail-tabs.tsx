@@ -14,16 +14,18 @@ interface DetailTabsProps {
 
 export const DetailTabs = ({ activeTab, onTabChange }: DetailTabsProps) => {
   return (
-    <StyledView className="flex-row border-divider border-b">
+    <StyledView className="flex-row">
       <StyledPressable
         className={`flex-1 items-center py-3 ${
-          activeTab === "diary" ? "border-primary border-b-2" : ""
+          activeTab === "diary"
+            ? "border-[#1100FF] border-b-2"
+            : "border-white border-b-2"
         }`}
         onPress={() => onTabChange("diary")}
       >
         <StyledText
-          className={`font-medium ${
-            activeTab === "diary" ? "text-primary" : "text-muted"
+          className={`font-bold text-xl ${
+            activeTab === "diary" ? "text-[#1100FF]" : "text-white"
           }`}
         >
           日記
@@ -31,16 +33,18 @@ export const DetailTabs = ({ activeTab, onTabChange }: DetailTabsProps) => {
       </StyledPressable>
       <StyledPressable
         className={`flex-1 items-center py-3 ${
-          activeTab === "timeline" ? "border-primary border-b-2" : ""
+          activeTab === "timeline"
+            ? "border-[#1100FF] border-b-2"
+            : "border-white border-b-2"
         }`}
         onPress={() => onTabChange("timeline")}
       >
         <StyledText
-          className={`font-medium ${
-            activeTab === "timeline" ? "text-primary" : "text-muted"
+          className={`font-bold text-xl ${
+            activeTab === "timeline" ? "text-[#1100FF]" : "text-white"
           }`}
         >
-          タイムライン
+          住人の様子
         </StyledText>
       </StyledPressable>
     </StyledView>

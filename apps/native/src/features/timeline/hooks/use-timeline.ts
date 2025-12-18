@@ -1,5 +1,6 @@
 import type { Entry } from "@packages/schema/entry";
 import { useCallback, useEffect, useState } from "react";
+
 import { useAuth } from "@/contexts/auth-context";
 import { createAuthenticatedClient } from "@/lib/api";
 import { logger } from "@/lib/logger";
