@@ -190,7 +190,9 @@ DB 操作を抽象化。Drizzle ORM を使用。
 
 ### 基本方針
 
-**DB は UTC 基準で保存されているため、API 側での日付操作もすべて UTC ベースで行う。**
+- **DB**: UTC（`timestamp with time zone`）で保存
+- **APIレスポンス**: JST（日本標準時）基準で返却
+- **共通ユーティリティ**: `@/shared/date.ts` に集約
 
 ### よくある間違いと正しい書き方
 
@@ -254,21 +256,25 @@ const formatDateToISODate = (date: Date | string): string => {
 };
 ```
 
-### Repository での日付範囲クエリ
+### Repository での日付範囲クエリ（JSTベース）
 
 ```typescript
-// ✅ 正しい: UTC で範囲を作成
+import { getJSTMonthRangeInUTC } from "@/shared/date";
+
 export const getEntryDatesByMonth = async (
   db: DbClient,
   options: { profileId: string; year: number; month: number },
 ): Promise<EntryDateResult[]> => {
   const { profileId, year, month } = options;
 
-  // UTC で日付範囲を作成（タイムゾーンズレ防止）
-  const monthStart = new Date(Date.UTC(year, month - 1, 1));
-  const monthEnd = new Date(Date.UTC(year, month, 1)); // 翌月1日
+  // JST基準の月範囲をUTCで取得
+  const { start: monthStart, end: monthEnd } = getJSTMonthRangeInUTC(year, month);
 
-  return db.select()
+  return db
+    .selectDistinct({
+      // timestamptz(UTC)をJSTに変換してからDATE抽出
+      date: sql<string>`DATE(${userPosts.createdAt} AT TIME ZONE 'Asia/Tokyo')`.as("date"),
+    })
     .from(userPosts)
     .where(
       and(
@@ -279,6 +285,18 @@ export const getEntryDatesByMonth = async (
     );
 };
 ```
+
+### PostgreSQL での JST 変換
+
+```sql
+-- ✅ 正しい: timestamptz を直接 JST に変換
+DATE(created_at AT TIME ZONE 'Asia/Tokyo')
+
+-- ❌ 間違い: AT TIME ZONE を2回使うと逆効果
+DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')
+```
+
+**重要**: `timestamp with time zone` カラムの場合、`AT TIME ZONE 'Asia/Tokyo'` だけでJSTに変換できる。`AT TIME ZONE 'UTC'` を付けると逆効果になる。
 
 ### Usecase での週計算
 
@@ -322,8 +340,9 @@ const getWeekStartDatesForMonth = (year: number, month: number): Date[] => {
 
 | ファイル | 内容 |
 |---------|------|
+| `shared/date.ts` | JST変換ユーティリティ（月範囲取得など） |
 | `usecase/reflection/get-calendar.ts` | UTC ベースの週計算・日付フォーマット |
-| `repository/user-post.ts` | UTC ベースの日付範囲クエリ |
+| `repository/user-post.ts` | JST ベースの日付範囲クエリ・DATE抽出 |
 
 ---
 

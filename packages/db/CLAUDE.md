@@ -328,6 +328,20 @@ const formatDate = (date: DateOrString): string => {
 };
 ```
 
+### PostgreSQL AT TIME ZONE の挙動
+
+`timestamp with time zone`（timestamptz）カラムの場合、`AT TIME ZONE` の使い方に注意：
+
+```sql
+-- ✅ 正しい: timestamptz を直接 JST に変換
+DATE(created_at AT TIME ZONE 'Asia/Tokyo')
+
+-- ❌ 間違い: AT TIME ZONE を2回使うと逆効果（-9時間になる）
+DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')
+```
+
+**理由**: `timestamptz` に `AT TIME ZONE 'UTC'` を適用すると、UTCの `timestamp`（タイムゾーンなし）に変換される。その後 `AT TIME ZONE 'Asia/Tokyo'` を適用すると、「このtimestampはJSTである」と解釈されてしまう。
+
 ---
 
 ## Supabase との連携

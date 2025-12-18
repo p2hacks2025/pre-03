@@ -12,6 +12,7 @@ import {
   type UserPost,
   userPosts,
 } from "@packages/db";
+import { getJSTMonthRangeInUTC } from "@/shared/date";
 
 export const createUserPost = async (
   db: DbClient,
@@ -86,7 +87,7 @@ export type EntryDateResult = { date: Date | string };
 
 /**
  * 指定月に日記を投稿した日のリストを取得（DISTINCTで重複排除）
- * UTCベースで日付範囲を指定（DBはUTCで保存されているため）
+ * JST基準で日付を返却
  */
 export const getEntryDatesByMonth = async (
   db: DbClient,
@@ -94,13 +95,16 @@ export const getEntryDatesByMonth = async (
 ): Promise<EntryDateResult[]> => {
   const { profileId, year, month } = options;
 
-  // UTCで日付範囲を作成（タイムゾーンズレ防止）
-  const monthStart = new Date(Date.UTC(year, month - 1, 1));
-  const monthEnd = new Date(Date.UTC(year, month, 1)); // 翌月1日
+  const { start: monthStart, end: monthEnd } = getJSTMonthRangeInUTC(
+    year,
+    month,
+  );
 
   const result = await db
     .selectDistinct({
-      date: sql<Date>`DATE(${userPosts.createdAt})`.as("date"),
+      date: sql<string>`DATE(${userPosts.createdAt} AT TIME ZONE 'Asia/Tokyo')`.as(
+        "date",
+      ),
     })
     .from(userPosts)
     .where(
@@ -111,7 +115,7 @@ export const getEntryDatesByMonth = async (
         isNull(userPosts.deletedAt),
       ),
     )
-    .orderBy(sql`DATE(${userPosts.createdAt})`);
+    .orderBy(sql`DATE(${userPosts.createdAt} AT TIME ZONE 'Asia/Tokyo')`);
 
   return result;
 };
