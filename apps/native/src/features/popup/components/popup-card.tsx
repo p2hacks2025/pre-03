@@ -1,4 +1,3 @@
-import type { ImageSourcePropType } from "react-native";
 import { Image, Pressable, Text, View } from "react-native";
 import Animated, { FadeInUp, FadeOutDown } from "react-native-reanimated";
 import { withUniwind } from "uniwind";
