@@ -1,41 +1,36 @@
 import { copyFileSync, existsSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+import { error, log, printDirenvReloadMessage, warn } from "./lib/logger.mjs";
+import { ENV_TARGETS, ROOT_DIR } from "./lib/paths.mjs";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT_DIR = join(__dirname, "..");
+const setupEnvFiles = () => {
+  for (const target of ENV_TARGETS) {
+    const examplePath = join(ROOT_DIR, target, ".env.example");
+    const targetPath = join(ROOT_DIR, target, ".env");
 
-function setupEnvFiles() {
-  const envPaths = [
-    { example: "apps/api/.env.example", target: "apps/api/.env" },
-    { example: "apps/web/.env.example", target: "apps/web/.env" },
-    { example: "apps/native/.env.example", target: "apps/native/.env" },
-    { example: "apps/worker/.env.example", target: "apps/worker/.env" },
-  ];
-
-  for (const { example, target } of envPaths) {
-    const targetPath = join(ROOT_DIR, target);
     if (!existsSync(targetPath)) {
-      copyFileSync(join(ROOT_DIR, example), targetPath);
-      console.log(`✓ Created ${target}`);
+      copyFileSync(examplePath, targetPath);
+      log(`Created ${target}/.env`);
     } else {
-      console.warn(`⚠ ${target} already exists, skipping`);
+      warn(`${target}/.env already exists, skipping`);
     }
   }
-}
+};
 
-async function main() {
+const main = async () => {
   console.log("\n🚀 Setting up workspace...\n");
 
   setupEnvFiles();
 
-  console.log("\n✅ Workspace setup completed!\n");
+  console.log("\n✅ Workspace setup completed!");
+  printDirenvReloadMessage();
+
   console.log("Next steps:");
   console.log("  1. Run `pnpm db:setup` to setup database");
   console.log("  2. Run `pnpm dev` to start development server\n");
-}
+};
 
 main().catch((err) => {
-  console.error(`✗ ${err.message}`);
+  error(err.message);
   process.exit(1);
 });

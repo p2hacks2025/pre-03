@@ -26,3 +26,26 @@ pre-push:
   commands:
     typecheck:
       run: pnpm typecheck
+
+# git pull後にlockfileが更新されていればpnpm install
+post-merge:
+  commands:
+    install-deps:
+      run: |
+        if git diff-tree -r --name-only ORIG_HEAD HEAD | grep -q "pnpm-lock.yaml"; then
+          echo "pnpm-lock.yaml が更新されました。依存関係をインストールします..."
+          pnpm install
+        fi
+
+# ブランチ切り替え時にlockfileが変更されていればpnpm install
+post-checkout:
+  commands:
+    install-deps:
+      run: |
+        # $3 = 1 はブランチ切り替え、0 はファイルチェックアウト
+        if [ "$3" = "1" ]; then
+          if git diff --name-only "$1" "$2" | grep -q "pnpm-lock.yaml"; then
+            echo "pnpm-lock.yaml が変更されています。依存関係をインストールします..."
+            pnpm install
+          fi
+        fi
