@@ -1,127 +1,268 @@
-import { useCallback, useMemo, useState } from "react";
-import {
-  generatePastWeeks,
-  getWeekStart,
-  groupWeeksByMonth,
-} from "../lib/date-utils";
-import type { CalendarWeekData, MonthGroup, WeekInfo } from "../types";
+import type { CalendarWeek } from "@packages/schema/reflection";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-/**
- * モックデータ（将来的にはAPIから取得）
- */
-const MOCK_WEEK_DATA: CalendarWeekData[] = [
-  {
-    weekId: "2025-12-16",
-    month: 11,
-    startDate: "2025-12-16",
-    endDate: "2025-12-22",
-    imageUrl: null,
-  },
-  {
-    weekId: "2025-12-09",
-    month: 11,
-    startDate: "2025-12-09",
-    endDate: "2025-12-15",
-    imageUrl: "https://picsum.photos/seed/week1/400/300",
-  },
-  {
-    weekId: "2025-12-02",
-    month: 11,
-    startDate: "2025-12-02",
-    endDate: "2025-12-08",
-    imageUrl: "https://picsum.photos/seed/week2/400/300",
-  },
-  {
-    weekId: "2025-11-25",
-    month: 10,
-    startDate: "2025-11-25",
-    endDate: "2025-12-01",
-    imageUrl: null,
-  },
-  {
-    weekId: "2025-11-18",
-    month: 10,
-    startDate: "2025-11-18",
-    endDate: "2025-11-24",
-    imageUrl: "https://picsum.photos/seed/week3/400/300",
-  },
-];
+import { useAuth } from "@/contexts/auth-context";
+import { createAuthenticatedClient } from "@/lib/api";
+import { logger } from "@/lib/logger";
 
-/** weekId から画像URLを取得 */
-const getImageUrlForWeek = (weekId: string): string | null => {
-  const weekData = MOCK_WEEK_DATA.find((w) => w.weekId === weekId);
-  return weekData?.imageUrl ?? null;
-};
+import { createWeekInfo, parseISODate } from "../lib/date-utils";
+import type { MonthGroup, WeekInfo } from "../types";
 
-interface UseCalendarOptions {
-  initialWeekCount?: number;
-  loadMoreCount?: number;
-}
-
-interface UseCalendarReturn {
-  weeks: WeekInfo[];
+interface CalendarState {
   monthGroups: MonthGroup[];
-  isLoadingMore: boolean;
-  loadMore: () => void;
+  isLoading: boolean;
+  isFetchingMore: boolean;
+  error: string | null;
   hasMore: boolean;
 }
 
-export const useCalendar = (
-  options: UseCalendarOptions = {},
-): UseCalendarReturn => {
-  const { initialWeekCount = 12, loadMoreCount = 8 } = options;
+interface UseCalendarReturn {
+  monthGroups: MonthGroup[];
+  isLoading: boolean;
+  isLoadingMore: boolean;
+  error: string | null;
+  loadMore: () => void;
+  hasMore: boolean;
+  refresh: () => void;
+}
 
-  const [weeks, setWeeks] = useState<WeekInfo[]>(() => {
-    const today = new Date();
-    const currentWeekStart = getWeekStart(today);
-    return generatePastWeeks(
-      currentWeekStart,
-      initialWeekCount,
-      getImageUrlForWeek,
-    );
+/**
+ * 前月を計算
+ */
+const getPreviousMonth = (
+  year: number,
+  month: number,
+): { year: number; month: number } => {
+  if (month === 1) {
+    return { year: year - 1, month: 12 };
+  }
+  return { year, month: month - 1 };
+};
+
+/**
+ * 2年前より古いかチェック
+ */
+const isOlderThanTwoYears = (year: number, month: number): boolean => {
+  const targetDate = new Date(year, month - 1, 1);
+  const twoYearsAgo = new Date();
+  twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+  return targetDate < twoYearsAgo;
+};
+
+/**
+ * 月IDを生成
+ */
+const getMonthId = (year: number, month: number): string => {
+  return `${year}-${String(month).padStart(2, "0")}`;
+};
+
+/**
+ * APIレスポンスをWeekInfo[]に変換
+ */
+const convertApiWeeksToWeekInfo = (apiWeeks: CalendarWeek[]): WeekInfo[] => {
+  return apiWeeks.map((apiWeek) => {
+    const weekStartDate = parseISODate(apiWeek.weekStartDate);
+    return createWeekInfo(weekStartDate, apiWeek.weeklyWorldImageUrl);
+  });
+};
+
+/**
+ * カレンダーデータを取得するカスタムフック
+ *
+ * @example
+ * ```tsx
+ * const { monthGroups, isLoading, isLoadingMore, error, loadMore, hasMore, refresh } = useCalendar();
+ *
+ * return (
+ *   <FlatList
+ *     data={monthGroups}
+ *     renderItem={({ item }) => <Calendar month={item} />}
+ *     onEndReached={() => hasMore && !isLoadingMore && loadMore()}
+ *     onEndReachedThreshold={0.5}
+ *   />
+ * );
+ * ```
+ */
+export const useCalendar = (): UseCalendarReturn => {
+  const { accessToken } = useAuth();
+  const [state, setState] = useState<CalendarState>({
+    monthGroups: [],
+    isLoading: true,
+    isFetchingMore: false,
+    error: null,
+    hasMore: true,
   });
 
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  // 次に取得する月
+  const nextMonth = useRef<{ year: number; month: number } | null>(null);
+  // 取得済み月（重複防止）
+  const fetchedMonths = useRef(new Set<string>());
 
-  const monthGroups = useMemo(() => groupWeeksByMonth(weeks), [weeks]);
+  /**
+   * 指定月のカレンダーデータを取得
+   */
+  const fetchMonth = useCallback(
+    async (year: number, month: number, isInitial: boolean) => {
+      if (!accessToken) {
+        setState({
+          monthGroups: [],
+          isLoading: false,
+          isFetchingMore: false,
+          error: "認証が必要です",
+          hasMore: false,
+        });
+        return;
+      }
 
+      const monthId = getMonthId(year, month);
+
+      if (fetchedMonths.current.has(monthId)) {
+        logger.debug("Month already fetched, skipping", { monthId });
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          isFetchingMore: false,
+        }));
+        return;
+      }
+
+      if (isInitial) {
+        setState((prev) => ({ ...prev, isLoading: true, error: null }));
+      } else {
+        setState((prev) => ({ ...prev, isFetchingMore: true }));
+      }
+
+      logger.debug("Fetching calendar", { year, month });
+
+      try {
+        const authClient = createAuthenticatedClient(accessToken);
+        const res = await authClient.reflection.calendar.$get({
+          query: { year, month },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const newWeeks = convertApiWeeksToWeekInfo(data.weeks);
+
+          fetchedMonths.current.add(monthId);
+
+          const newMonthGroup: MonthGroup = {
+            monthId,
+            month,
+            year,
+            weeks: newWeeks,
+            entryDates: data.entryDates,
+          };
+
+          const prevMonth = getPreviousMonth(year, month);
+          nextMonth.current = prevMonth;
+
+          const hasMoreData = !isOlderThanTwoYears(
+            prevMonth.year,
+            prevMonth.month,
+          );
+
+          logger.info("Calendar fetched", {
+            year,
+            month,
+            weeksCount: newWeeks.length,
+            hasMore: hasMoreData,
+          });
+
+          setState((prev) => ({
+            monthGroups: isInitial
+              ? [newMonthGroup]
+              : [...prev.monthGroups, newMonthGroup],
+            isLoading: false,
+            isFetchingMore: false,
+            error: null,
+            hasMore: hasMoreData,
+          }));
+        } else {
+          logger.warn("Calendar fetch failed", { status: res.status });
+          setState((prev) => ({
+            ...prev,
+            isLoading: false,
+            isFetchingMore: false,
+            error: `取得に失敗しました (${res.status})`,
+          }));
+        }
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        logger.error("Calendar fetch error", {}, err);
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          isFetchingMore: false,
+          error: "通信エラーが発生しました",
+        }));
+      }
+    },
+    [accessToken],
+  );
+
+  /**
+   * 初回ロード
+   */
+  useEffect(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    // リセット
+    fetchedMonths.current.clear();
+    nextMonth.current = null;
+
+    fetchMonth(currentYear, currentMonth, true);
+  }, [fetchMonth]);
+
+  /**
+   * 追加読み込み（前月を取得）
+   */
   const loadMore = useCallback(() => {
-    if (isLoadingMore || !hasMore) return;
+    if (state.isFetchingMore || !state.hasMore || !nextMonth.current) {
+      return;
+    }
 
-    setIsLoadingMore(true);
+    let { year, month } = nextMonth.current;
 
-    // 非同期処理（UIブロッキング回避）
-    setTimeout(() => {
-      setWeeks((prevWeeks) => {
-        const lastWeek = prevWeeks[prevWeeks.length - 1];
-        if (!lastWeek) {
-          setIsLoadingMore(false);
-          return prevWeeks;
-        }
+    while (fetchedMonths.current.has(getMonthId(year, month))) {
+      if (isOlderThanTwoYears(year, month)) {
+        setState((prev) => ({ ...prev, hasMore: false }));
+        return;
+      }
+      const prev = getPreviousMonth(year, month);
+      year = prev.year;
+      month = prev.month;
+    }
 
-        const lastWeekStart = new Date(lastWeek.startDate);
-        lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+    nextMonth.current = { year, month };
+    fetchMonth(year, month, false);
+  }, [state.isFetchingMore, state.hasMore, fetchMonth]);
 
-        const newWeeks = generatePastWeeks(
-          lastWeekStart,
-          loadMoreCount,
-          getImageUrlForWeek,
-        );
+  /**
+   * リフレッシュ（データを再取得）
+   */
+  const refresh = useCallback(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
 
-        const twoYearsAgo = new Date();
-        twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+    // リセット
+    fetchedMonths.current.clear();
+    nextMonth.current = null;
+    setState((prev) => ({ ...prev, monthGroups: [] }));
 
-        if (lastWeekStart < twoYearsAgo) {
-          setHasMore(false);
-        }
+    fetchMonth(currentYear, currentMonth, true);
+  }, [fetchMonth]);
 
-        return [...prevWeeks, ...newWeeks];
-      });
-
-      setIsLoadingMore(false);
-    }, 0);
-  }, [isLoadingMore, hasMore, loadMoreCount]);
-
-  return { weeks, monthGroups, isLoadingMore, loadMore, hasMore };
+  return {
+    monthGroups: state.monthGroups,
+    isLoading: state.isLoading,
+    isLoadingMore: state.isFetchingMore,
+    error: state.error,
+    loadMore,
+    hasMore: state.hasMore,
+    refresh,
+  };
 };

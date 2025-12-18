@@ -1,8 +1,9 @@
-import { Spinner } from "heroui-native";
+import { Button, Spinner } from "heroui-native";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
   FlatList,
   type ListRenderItem,
+  Text,
   View,
   type ViewToken,
 } from "react-native";
@@ -18,26 +19,33 @@ import {
 } from "@/features/calendar";
 
 const StyledView = withUniwind(View);
+const StyledText = withUniwind(Text);
 
 export const CalendarScreen = () => {
   const insets = useSafeAreaInsets();
 
-  const { monthGroups, isLoadingMore, loadMore, hasMore } = useCalendar({
-    initialWeekCount: 12,
-    loadMoreCount: 8,
-  });
+  const {
+    monthGroups,
+    isLoading,
+    isLoadingMore,
+    error,
+    loadMore,
+    hasMore,
+    refresh,
+  } = useCalendar();
 
   const [currentYear, setCurrentYear] = useState<number>(() =>
     new Date().getFullYear(),
   );
-  const [currentMonth, setCurrentMonth] = useState<number>(() =>
-    new Date().getMonth(),
+  const [currentMonth, setCurrentMonth] = useState<number>(
+    () => new Date().getMonth() + 1, // 1-12
   );
 
   const yearSeparatorMonthIds = useMemo(() => {
     const ids = new Set<string>();
     for (const group of monthGroups) {
-      if (group.month === 0) {
+      if (group.month === 1) {
+        // 1月
         ids.add(group.monthId);
       }
     }
@@ -91,6 +99,27 @@ export const CalendarScreen = () => {
   }, [hasMore, isLoadingMore, loadMore]);
 
   const stickyHeaderHeight = 56;
+
+  // 初回ローディング
+  if (isLoading) {
+    return (
+      <StyledView className="flex-1 items-center justify-center bg-background">
+        <Spinner size="lg" />
+      </StyledView>
+    );
+  }
+
+  // エラー表示
+  if (error) {
+    return (
+      <StyledView className="flex-1 items-center justify-center bg-background px-4">
+        <StyledText className="mb-4 text-center text-danger">
+          {error}
+        </StyledText>
+        <Button onPress={refresh}>再読み込み</Button>
+      </StyledView>
+    );
+  }
 
   return (
     <StyledView className="flex-1 bg-background">
