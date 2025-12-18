@@ -256,6 +256,94 @@ PRコメントで `/db` コマンドを実行することで、リモート環�
 
 ---
 
+## タイムゾーンの扱い（重要）
+
+### 基本方針
+
+**すべての日時データはUTC基準で保存・管理する。**
+
+| 項目 | 方針 |
+|------|------|
+| TIMESTAMP 型 | UTC で保存 |
+| DATE 型 | UTC 日付として保存 |
+| アプリケーション側 | UTC で Date オブジェクトを作成・操作 |
+
+### なぜ UTC 基準か
+
+1. **タイムゾーン間の一貫性**: サーバー、DB、クライアント間でのズレを防止
+2. **日付境界の明確化**: ローカルタイムだと日付の境界が曖昧になる
+3. **Supabase/PostgreSQL との整合性**: Supabase はデフォルトで UTC を使用
+
+### スキーマ定義時の注意
+
+```typescript
+// TIMESTAMP 型（UTC で保存される）
+createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+
+// DATE 型（UTC 日付として扱う）
+weekStartDate: date({ mode: "date" }).notNull(),
+```
+
+**`mode: "date"`** を指定すると、Drizzle は Date オブジェクトとして扱う。ただし、PostgreSQL から返される値が文字列（`YYYY-MM-DD`）の場合もあるため、アプリケーション側で両方に対応する必要がある。
+
+### シーダーでの日付作成
+
+```typescript
+// ✅ 正しい: UTC で日付を作成
+const weekStartDate = new Date(Date.UTC(2025, 11, 1)); // 2025-12-01 UTC
+
+// ❌ 間違い: ローカルタイムで作成（タイムゾーンズレの原因）
+const weekStartDate = new Date(2025, 11, 1); // JST だと UTC では 2025-11-30 15:00:00
+```
+
+### クエリ時の注意
+
+日付範囲でフィルタリングする場合も UTC で範囲を指定：
+
+```typescript
+// ✅ 正しい: UTC で範囲指定
+const monthStart = new Date(Date.UTC(year, month - 1, 1));
+const monthEnd = new Date(Date.UTC(year, month, 1));
+
+// ❌ 間違い: ローカルタイムで範囲指定
+const monthStart = new Date(year, month - 1, 1);
+```
+
+### PostgreSQL DATE 型の戻り値
+
+Drizzle 経由で DATE 型を取得すると、**文字列（`YYYY-MM-DD`）として返される場合がある**。アプリケーション側で型ガードを実装すること：
+
+```typescript
+type DateOrString = Date | string;
+
+const formatDate = (date: DateOrString): string => {
+  if (typeof date === "string") {
+    return date; // すでに YYYY-MM-DD 形式
+  }
+  // Date オブジェクトの場合は UTC メソッドを使用
+  const y = date.getUTCFullYear();
+  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(date.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+```
+
+### PostgreSQL AT TIME ZONE の挙動
+
+`timestamp with time zone`（timestamptz）カラムの場合、`AT TIME ZONE` の使い方に注意：
+
+```sql
+-- ✅ 正しい: timestamptz を直接 JST に変換
+DATE(created_at AT TIME ZONE 'Asia/Tokyo')
+
+-- ❌ 間違い: AT TIME ZONE を2回使うと逆効果（-9時間になる）
+DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')
+```
+
+**理由**: `timestamptz` に `AT TIME ZONE 'UTC'` を適用すると、UTCの `timestamp`（タイムゾーンなし）に変換される。その後 `AT TIME ZONE 'Asia/Tokyo'` を適用すると、「このtimestampはJSTである」と解釈されてしまう。
+
+---
+
 ## Supabase との連携
 
 ### auth.users テーブル
