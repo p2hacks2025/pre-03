@@ -5,7 +5,9 @@ import {
   isNull,
   lt,
   type UserPost,
+  type UserProfile,
   userPosts,
+  userProfiles,
   type WeeklyWorld,
   weeklyWorlds,
   worldBuildLogs,
@@ -178,4 +180,72 @@ export const uploadGeneratedImage = async (
   } = ctx.supabase.storage.from("images").getPublicUrl(path);
 
   return publicUrl;
+};
+
+export const getAllUserProfiles = async (
+  ctx: WorkerContext,
+): Promise<UserProfile[]> => {
+  return ctx.db
+    .select()
+    .from(userProfiles)
+    .where(isNull(userProfiles.deletedAt));
+};
+
+export const getUserPostsForWeek = async (
+  ctx: WorkerContext,
+  userProfileId: string,
+  weekStartDate: Date,
+): Promise<UserPost[]> => {
+  const weekStart = new Date(weekStartDate.getTime() - JST_OFFSET);
+  const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  return ctx.db
+    .select()
+    .from(userPosts)
+    .where(
+      and(
+        eq(userPosts.userProfileId, userProfileId),
+        gte(userPosts.createdAt, weekStart),
+        lt(userPosts.createdAt, weekEnd),
+        isNull(userPosts.deletedAt),
+      ),
+    );
+};
+
+export const createWeeklyWorld = async (
+  ctx: WorkerContext,
+  userProfileId: string,
+  weekStartDate: Date,
+  imageUrl: string,
+): Promise<WeeklyWorld> => {
+  const [created] = await ctx.db
+    .insert(weeklyWorlds)
+    .values({
+      userProfileId,
+      weekStartDate,
+      weeklyWorldImageUrl: imageUrl,
+    })
+    .returning();
+
+  return created;
+};
+
+export const findWeeklyWorld = async (
+  ctx: WorkerContext,
+  userProfileId: string,
+  weekStartDate: Date,
+): Promise<WeeklyWorld | null> => {
+  const existing = await ctx.db
+    .select()
+    .from(weeklyWorlds)
+    .where(
+      and(
+        eq(weeklyWorlds.userProfileId, userProfileId),
+        eq(weeklyWorlds.weekStartDate, weekStartDate),
+        isNull(weeklyWorlds.deletedAt),
+      ),
+    )
+    .limit(1);
+
+  return existing[0] ?? null;
 };

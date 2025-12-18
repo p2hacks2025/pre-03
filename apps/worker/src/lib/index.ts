@@ -1,4 +1,10 @@
-export { getGuideImageBase64, getSystemPrompt } from "./assets";
+export {
+  getBaseImageBase64,
+  getBaseImageBuffer,
+  getGuideImageBase64,
+  getImageGenerationPrompt,
+  getWeeklySummaryPrompt,
+} from "./assets";
 export {
   ASSETS_DIR,
   FIELD_ID_MAX,
@@ -11,7 +17,11 @@ export { getContext, type WorkerContext } from "./context";
 export { type Env, env } from "./env";
 export {
   createOrUpdateWorldBuildLog,
+  createWeeklyWorld,
+  findWeeklyWorld,
+  getAllUserProfiles,
   getUserPostsByDate,
+  getUserPostsForWeek,
   getWeeklyWorld,
   selectFieldId,
   type UserPostsGroupedByUser,
