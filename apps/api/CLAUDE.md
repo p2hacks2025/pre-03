@@ -186,6 +186,147 @@ DB 操作を抽象化。Drizzle ORM を使用。
 
 ---
 
+## タイムゾーンの扱い（重要）
+
+### 基本方針
+
+**DB は UTC 基準で保存されているため、API 側での日付操作もすべて UTC ベースで行う。**
+
+### よくある間違いと正しい書き方
+
+#### 1. Date オブジェクトの作成
+
+```typescript
+// ❌ 間違い: ローカルタイムで作成
+const date = new Date(2025, 11, 1); // JST 2025-12-01 00:00 = UTC 2025-11-30 15:00
+
+// ✅ 正しい: UTC で作成
+const date = new Date(Date.UTC(2025, 11, 1)); // UTC 2025-12-01 00:00
+```
+
+#### 2. Date オブジェクトからの値取得
+
+```typescript
+// ❌ 間違い: ローカルタイムのメソッド
+date.getFullYear();  // ローカルタイムの年
+date.getMonth();     // ローカルタイムの月
+date.getDate();      // ローカルタイムの日
+date.getDay();       // ローカルタイムの曜日
+
+// ✅ 正しい: UTC メソッド
+date.getUTCFullYear();  // UTC の年
+date.getUTCMonth();     // UTC の月
+date.getUTCDate();      // UTC の日
+date.getUTCDay();       // UTC の曜日
+```
+
+#### 3. Date オブジェクトの変更
+
+```typescript
+// ❌ 間違い: ローカルタイムで変更
+date.setDate(date.getDate() + 7);
+
+// ✅ 正しい: UTC で変更
+date.setUTCDate(date.getUTCDate() + 7);
+```
+
+### 日付を YYYY-MM-DD 形式に変換
+
+```typescript
+/**
+ * UTC ベースで日付を YYYY-MM-DD 形式に変換
+ * PostgreSQL の DATE 型が文字列で返される場合にも対応
+ */
+const formatDateToISODate = (date: Date | string): string => {
+  if (typeof date === "string") {
+    // すでに YYYY-MM-DD 形式の場合はそのまま返す
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return date;
+    }
+    // ISO 形式の場合は日付部分のみ抽出
+    return date.split("T")[0];
+  }
+  // UTC メソッドを使用してタイムゾーンズレ防止
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+```
+
+### Repository での日付範囲クエリ
+
+```typescript
+// ✅ 正しい: UTC で範囲を作成
+export const getEntryDatesByMonth = async (
+  db: DbClient,
+  options: { profileId: string; year: number; month: number },
+): Promise<EntryDateResult[]> => {
+  const { profileId, year, month } = options;
+
+  // UTC で日付範囲を作成（タイムゾーンズレ防止）
+  const monthStart = new Date(Date.UTC(year, month - 1, 1));
+  const monthEnd = new Date(Date.UTC(year, month, 1)); // 翌月1日
+
+  return db.select()
+    .from(userPosts)
+    .where(
+      and(
+        eq(userPosts.userProfileId, profileId),
+        gte(userPosts.createdAt, monthStart),
+        lt(userPosts.createdAt, monthEnd),
+      ),
+    );
+};
+```
+
+### Usecase での週計算
+
+```typescript
+// ✅ 正しい: UTC ベースで週の計算
+const getWeekStartDatesForMonth = (year: number, month: number): Date[] => {
+  // UTC で日付を作成
+  const firstDayOfMonth = new Date(Date.UTC(year, month - 1, 1));
+
+  const firstMonday = new Date(firstDayOfMonth);
+  const firstDayOfWeek = firstMonday.getUTCDay(); // UTC の曜日
+  if (firstDayOfWeek !== 1) {
+    const daysUntilMonday = firstDayOfWeek === 0 ? 1 : 8 - firstDayOfWeek;
+    firstMonday.setUTCDate(firstMonday.getUTCDate() + daysUntilMonday);
+  }
+
+  const weekStarts: Date[] = [];
+  const current = new Date(firstMonday);
+  while (current.getUTCMonth() === month - 1) { // UTC の月で比較
+    weekStarts.push(new Date(current));
+    current.setUTCDate(current.getUTCDate() + 7);
+  }
+  return weekStarts;
+};
+```
+
+### チェックリスト
+
+新しく日付を扱うコードを書く際は、以下を確認：
+
+- [ ] `new Date(year, month, day)` → `new Date(Date.UTC(year, month, day))`
+- [ ] `getFullYear()` → `getUTCFullYear()`
+- [ ] `getMonth()` → `getUTCMonth()`
+- [ ] `getDate()` → `getUTCDate()`
+- [ ] `getDay()` → `getUTCDay()`
+- [ ] `setDate()` → `setUTCDate()`
+- [ ] `setMonth()` → `setUTCMonth()`
+- [ ] PostgreSQL DATE 型が文字列で返される可能性を考慮
+
+### 参考実装
+
+| ファイル | 内容 |
+|---------|------|
+| `usecase/reflection/get-calendar.ts` | UTC ベースの週計算・日付フォーマット |
+| `repository/user-post.ts` | UTC ベースの日付範囲クエリ |
+
+---
+
 ## 参考にするべきファイル
 
 ### 新規 API エンドポイント追加時
