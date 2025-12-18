@@ -81,7 +81,10 @@ export const buildEnvOverrides = (status) => {
  * @param {object} status - Supabase status オブジェクト
  * @param {string[]} [targets] - 注入対象ファイルパス（デフォルト: SUPABASE_ENV_TARGETS）
  */
-export const injectSupabaseConfig = (status, targets = SUPABASE_ENV_TARGETS) => {
+export const injectSupabaseConfig = (
+  status,
+  targets = SUPABASE_ENV_TARGETS,
+) => {
   for (const target of targets) {
     const envPath = join(ROOT_DIR, target);
     try {
