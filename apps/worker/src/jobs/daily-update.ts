@@ -25,7 +25,16 @@ export type DailyUpdateResult = {
 export const dailyUpdate = async (
   ctx: WorkerContext,
 ): Promise<DailyUpdateResult> => {
-  const targetDate = getJstYesterday();
+  const targetDateStr = process.env.TARGET_DATE;
+  const targetDate = targetDateStr
+    ? (() => {
+        const date = new Date(targetDateStr);
+        if (Number.isNaN(date.getTime())) {
+          throw new Error(`Invalid TARGET_DATE format: ${targetDateStr}`);
+        }
+        return date;
+      })()
+    : getJstYesterday();
   const weekStartDate = getWeekStartDate(targetDate);
 
   ctx.logger.info("Starting daily-update", {
