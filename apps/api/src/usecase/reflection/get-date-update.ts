@@ -1,7 +1,7 @@
 import type { DbClient } from "@packages/db";
 import type { GetDateUpdateOutput } from "@packages/schema/reflection";
 import { getUserProfileByUserId } from "@/repository/user-profile";
-import { getWeeklyWorldByWeekStart } from "@/repository/weekly-world";
+import { getWeeklyWorldByDate } from "@/repository/weekly-world";
 import { getLatestBuildLogByProfileId } from "@/repository/world-build-log";
 import {
   formatDateString,
@@ -49,7 +49,10 @@ export const getDateUpdate = async (
   // 並列でデータ取得
   const [latestBuildLog, previousWeekWorld] = await Promise.all([
     getLatestBuildLogByProfileId(db, profile.id),
-    getWeeklyWorldByWeekStart(db, profile.id, previousWeekStart),
+    getWeeklyWorldByDate(db, {
+      profileId: profile.id,
+      weekStartDate: previousWeekStart,
+    }),
   ]);
 
   // デイリー更新判定

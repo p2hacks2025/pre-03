@@ -38,18 +38,20 @@ export const getWeeklyWorldsByDateRange = async (
     );
 };
 
+export type GetWeeklyWorldByDateOptions = {
+  profileId: string;
+  weekStartDate: Date;
+};
+
 /**
- * 特定の週開始日のweeklyWorldを取得
- * @param db - DBクライアント
- * @param profileId - ユーザープロフィールID
- * @param weekStartDate - 週開始日（UTC）
- * @returns WeeklyWorld または null
+ * 特定の週開始日でweeklyWorldを1件取得
  */
-export const getWeeklyWorldByWeekStart = async (
+export const getWeeklyWorldByDate = async (
   db: DbClient,
-  profileId: string,
-  weekStartDate: Date,
+  options: GetWeeklyWorldByDateOptions,
 ): Promise<WeeklyWorld | null> => {
+  const { profileId, weekStartDate } = options;
+
   const result = await db
     .select()
     .from(weeklyWorlds)
