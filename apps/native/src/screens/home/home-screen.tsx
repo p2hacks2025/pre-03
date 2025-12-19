@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { Entry } from "@packages/schema/entry";
+import type { TimelineEntry } from "@packages/schema/entry";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Spinner } from "heroui-native";
 import { useCallback, useRef } from "react";
 import {
   Animated,
+  FlatList,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -13,8 +14,11 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
-import { useAuth } from "@/contexts/auth-context";
-import { TimelineCard, useTimeline } from "@/features/timeline";
+import {
+  AiTimelineItem,
+  UserTimelineItem,
+  useTimeline,
+} from "@/features/timeline";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
@@ -23,13 +27,15 @@ const StyledIonicons = withUniwind(Ionicons);
 const StyledAnimatedView = withUniwind(Animated.View);
 const StyledAnimatedText = withUniwind(Animated.Text);
 
-const HEADER_HEIGHT = 70;
+const AnimatedFlatList = Animated.createAnimatedComponent(
+  FlatList<TimelineEntry>,
+);
+
+const HEADER_HEIGHT = 60;
 
 export const HomeScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const { profile } = useAuth();
   const {
     entries,
     isLoading,
@@ -40,24 +46,26 @@ export const HomeScreen = () => {
     fetchMore,
   } = useTimeline();
 
-  // 画面にフォーカスが戻った時にリフレッシュ
-  useFocusEffect(
-    useCallback(() => {
-      refresh();
-    }, [refresh]),
-  );
+  // スクロール位置を追跡
+  const scrollY = useRef(new Animated.Value(0)).current;
 
+  // 「新世界の声」の透明度を計算（スクロール50pxで完全に透明）
+  const titleOpacity = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+
+  // ヘッダーの上方向への移動を計算（スクロールに合わせて押し上げ）
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, HEADER_HEIGHT],
-    outputRange: [0, -HEADER_HEIGHT],
+    outputRange: [0, -HEADER_HEIGHT + 30],
     extrapolate: "clamp",
   });
 
-  const headerTextOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT / 2, HEADER_HEIGHT],
-    outputRange: [1, 0.5, 0],
-    extrapolate: "clamp",
-  });
+  // 今日の日付を取得してフォーマット
+  const today = new Date();
+  const formattedDate = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
 
   const handleEndReached = useCallback(() => {
     if (hasMore && !isFetchingMore) {
@@ -66,18 +74,26 @@ export const HomeScreen = () => {
   }, [hasMore, isFetchingMore, fetchMore]);
 
   const renderItem = useCallback(
-    ({ item }: { item: Entry }) => (
+    ({ item }: { item: TimelineEntry }) => (
       <StyledView className="px-4 pb-3">
-        <TimelineCard
-          username={profile?.displayName ?? "名無し"}
-          avatarUri={profile?.avatarUrl ?? undefined}
-          content={item.content}
-          createdAt={item.createdAt}
-          uploadImageUrl={item.uploadImageUrl}
-        />
+        {item.type === "ai" ? (
+          <AiTimelineItem
+            content={item.content}
+            createdAt={item.createdAt}
+            uploadImageUrl={item.uploadImageUrl}
+            author={item.author}
+          />
+        ) : (
+          <UserTimelineItem
+            content={item.content}
+            createdAt={item.createdAt}
+            uploadImageUrl={item.uploadImageUrl}
+            author={item.author}
+          />
+        )}
       </StyledView>
     ),
-    [profile],
+    [],
   );
 
   const renderListHeader = useCallback(() => {
@@ -120,7 +136,17 @@ export const HomeScreen = () => {
     );
   }, [isFetchingMore]);
 
-  const keyExtractor = useCallback((item: Entry) => item.id, []);
+  const keyExtractor = useCallback(
+    (item: TimelineEntry) => `${item.type}-${item.id}`,
+    [],
+  );
+
+  // 画面フォーカス時に自動リフレッシュ
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
 
   // 初回ローディング表示
   if (isLoading && entries.length === 0) {
@@ -134,16 +160,11 @@ export const HomeScreen = () => {
 
   return (
     <StyledView className="flex-1 bg-background">
-      <Animated.FlatList
+      <AnimatedFlatList
         data={entries}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         contentContainerStyle={{ paddingTop: HEADER_HEIGHT + insets.top }}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true },
-        )}
-        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={isLoading && entries.length > 0}
@@ -151,6 +172,11 @@ export const HomeScreen = () => {
             progressViewOffset={HEADER_HEIGHT + insets.top}
           />
         }
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true },
+        )}
+        scrollEventThrottle={16}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
         ListHeaderComponent={renderListHeader}
@@ -159,19 +185,22 @@ export const HomeScreen = () => {
       />
 
       <StyledAnimatedView
-        className="absolute top-0 right-0 left-0 border-border border-b bg-blue-500 px-4"
+        className="absolute top-0 right-0 left-0 items-center border-border border-b bg-white px-4"
         style={{
-          paddingTop: insets.top + 22,
+          paddingTop: insets.top + 0,
           paddingBottom: 12,
           transform: [{ translateY: headerTranslateY }],
         }}
       >
         <StyledAnimatedText
-          className="font-bold text-foreground text-xl"
-          style={{ opacity: headerTextOpacity }}
+          className="font-bold text-2xl text-foreground"
+          style={{ opacity: titleOpacity }}
         >
-          タイムライン
+          新世界の声
         </StyledAnimatedText>
+        <StyledText className="font-bold text-foreground text-sm">
+          {formattedDate}
+        </StyledText>
       </StyledAnimatedView>
 
       <StyledView
@@ -179,7 +208,7 @@ export const HomeScreen = () => {
         style={{ paddingBottom: insets.bottom - 20 }}
       >
         <StyledTouchableOpacity
-          className="size-14 items-center justify-center rounded-full bg-blue-500 shadow-lg"
+          className="size-14 items-center justify-center rounded-full bg-[#D6B575] shadow-lg"
           onPress={() => router.push("/(app)/diary/new")}
         >
           <StyledIonicons

@@ -31,6 +31,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier: "net.uiro.noval-ios",
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
+      NSCameraUsageDescription:
+        "日記に写真を添付するためにカメラへのアクセスが必要です。",
       NSPhotoLibraryUsageDescription:
         "日記に写真を添付するためにフォトライブラリへのアクセスが必要です。",
       NSLocationWhenInUseUsageDescription:
@@ -56,6 +58,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         photosPermission:
           "日記に写真を添付するためにフォトライブラリへのアクセスが必要です。",
+        cameraPermission:
+          "日記に写真を添付するためにカメラへのアクセスが必要です。",
+      },
+    ],
+    [
+      "expo-media-library",
+      {
+        photosPermission:
+          "最近の写真を表示するためにフォトライブラリへのアクセスが必要です。",
+        isAccessMediaLocationEnabled: false,
       },
     ],
     [

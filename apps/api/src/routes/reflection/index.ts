@@ -1,8 +1,16 @@
 import { createRouter } from "@/config/router";
-import { getReflectionCalendarHandler } from "./handlers";
-import { getReflectionCalendarRoute } from "./route";
-
-export const reflectionRouter = createRouter().openapi(
-  getReflectionCalendarRoute,
+import {
+  getDateUpdateHandler,
   getReflectionCalendarHandler,
-);
+  getWeeklyWorldHandler,
+} from "./handlers";
+import {
+  getDateUpdateRoute,
+  getReflectionCalendarRoute,
+  getWeeklyWorldRoute,
+} from "./route";
+
+export const reflectionRouter = createRouter()
+  .openapi(getReflectionCalendarRoute, getReflectionCalendarHandler)
+  .openapi(getDateUpdateRoute, getDateUpdateHandler)
+  .openapi(getWeeklyWorldRoute, getWeeklyWorldHandler);

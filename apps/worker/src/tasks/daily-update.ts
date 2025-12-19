@@ -1,8 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 import {
+  createOrUpdateWorldBuildLog,
   getGuideImageBase64,
   getImageGenerationPrompt,
+  getUserPostsByDate,
+  getWeeklyWorld,
   JST_OFFSET,
+  selectFieldId,
+  type UserPostsGroupedByUser,
+  updateWeeklyWorldImage,
+  uploadGeneratedImage,
   type WorkerContext,
 } from "@/lib";
 import { removeWhiteBackground } from "./utils";
@@ -85,4 +92,56 @@ export const fetchImageAsBase64 = async (url: string): Promise<string> => {
   }
   const buffer = await response.arrayBuffer();
   return Buffer.from(buffer).toString("base64");
+};
+
+export const fetchUserPostsByDate = async (
+  ctx: WorkerContext,
+  targetDate: Date,
+): Promise<UserPostsGroupedByUser[]> => {
+  return getUserPostsByDate(ctx, targetDate);
+};
+
+export const processUserDailyUpdate = async (
+  ctx: WorkerContext,
+  group: UserPostsGroupedByUser,
+  targetDate: Date,
+  weekStartDate: Date,
+): Promise<void> => {
+  const weeklyWorld = await getWeeklyWorld(
+    ctx,
+    group.userProfileId,
+    weekStartDate,
+  );
+
+  const { fieldId, isOverwrite } = await selectFieldId(ctx, weeklyWorld.id);
+  ctx.logger.info("Selected fieldId", { fieldId, isOverwrite });
+
+  const diaryContent = group.posts.map((p) => p.content).join("\n\n");
+  const currentImageBase64 = await fetchImageAsBase64(
+    weeklyWorld.weeklyWorldImageUrl,
+  );
+
+  const imageBuffer = await generateImage(
+    ctx,
+    currentImageBase64,
+    fieldId,
+    diaryContent,
+  );
+
+  const newImageUrl = await uploadGeneratedImage(
+    ctx,
+    group.userProfileId,
+    weekStartDate,
+    imageBuffer,
+  );
+
+  await updateWeeklyWorldImage(ctx, weeklyWorld.id, newImageUrl);
+
+  await createOrUpdateWorldBuildLog(
+    ctx,
+    weeklyWorld.id,
+    fieldId,
+    targetDate,
+    isOverwrite,
+  );
 };

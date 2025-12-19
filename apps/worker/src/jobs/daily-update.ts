@@ -1,17 +1,9 @@
+import type { WorkerContext } from "@/lib";
 import {
-  createOrUpdateWorldBuildLog,
-  getUserPostsByDate,
-  getWeeklyWorld,
-  selectFieldId,
-  updateWeeklyWorldImage,
-  uploadGeneratedImage,
-  type WorkerContext,
-} from "@/lib";
-import {
-  fetchImageAsBase64,
-  generateImage,
+  fetchUserPostsByDate,
   getJstYesterday,
   getWeekStartDate,
+  processUserDailyUpdate,
 } from "@/tasks";
 
 export type DailyUpdateResult = {
@@ -50,7 +42,7 @@ export const dailyUpdate = async (
     errors: [],
   };
 
-  const userPostsGroups = await getUserPostsByDate(ctx, targetDate);
+  const userPostsGroups = await fetchUserPostsByDate(ctx, targetDate);
 
   if (userPostsGroups.length === 0) {
     ctx.logger.info("No posts yesterday, skipping");
@@ -59,44 +51,7 @@ export const dailyUpdate = async (
 
   for (const group of userPostsGroups) {
     try {
-      const weeklyWorld = await getWeeklyWorld(
-        ctx,
-        group.userProfileId,
-        weekStartDate,
-      );
-
-      const { fieldId, isOverwrite } = await selectFieldId(ctx, weeklyWorld.id);
-      ctx.logger.info("Selected fieldId", { fieldId, isOverwrite });
-
-      const diaryContent = group.posts.map((p) => p.content).join("\n\n");
-      const currentImageBase64 = await fetchImageAsBase64(
-        weeklyWorld.weeklyWorldImageUrl,
-      );
-
-      const imageBuffer = await generateImage(
-        ctx,
-        currentImageBase64,
-        fieldId,
-        diaryContent,
-      );
-
-      const newImageUrl = await uploadGeneratedImage(
-        ctx,
-        group.userProfileId,
-        weekStartDate,
-        imageBuffer,
-      );
-
-      await updateWeeklyWorldImage(ctx, weeklyWorld.id, newImageUrl);
-
-      await createOrUpdateWorldBuildLog(
-        ctx,
-        weeklyWorld.id,
-        fieldId,
-        targetDate,
-        isOverwrite,
-      );
-
+      await processUserDailyUpdate(ctx, group, targetDate, weekStartDate);
       result.processedUsers++;
     } catch (error) {
       const errorMessage =
