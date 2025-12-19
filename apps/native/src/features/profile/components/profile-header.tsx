@@ -5,7 +5,7 @@ import { withUniwind } from "uniwind";
 
 import { useAuth } from "@/contexts/auth-context";
 
-import { useProfileEdit, useProfileStats } from "../hooks";
+import { useProfileAvatar, useProfileEdit, useProfileStats } from "../hooks";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
@@ -16,6 +16,7 @@ const StyledTextInput = withUniwind(TextInput);
 export const ProfileHeader = () => {
   const { profile } = useAuth();
   const { streakDays } = useProfileStats();
+  const { isUploading, pickImage } = useProfileAvatar();
   const {
     isEditing,
     isSaving,
@@ -33,12 +34,30 @@ export const ProfileHeader = () => {
 
   return (
     <StyledView className="flex-row items-center gap-4 px-4 py-4">
-      <Avatar size="lg" alt={profile.displayName}>
-        {profile.avatarUrl ? (
-          <Avatar.Image source={{ uri: profile.avatarUrl }} />
-        ) : null}
-        <Avatar.Fallback>{displayNameInitials}</Avatar.Fallback>
-      </Avatar>
+      <StyledPressable
+        className="relative active:opacity-70"
+        onPress={pickImage}
+        disabled={isUploading}
+      >
+        <Avatar size="lg" alt={profile.displayName}>
+          {isUploading ? (
+            <Avatar.Fallback>
+              <Spinner size="sm" />
+            </Avatar.Fallback>
+          ) : (
+            <>
+              {profile.avatarUrl ? (
+                <Avatar.Image source={{ uri: profile.avatarUrl }} />
+              ) : null}
+              <Avatar.Fallback>{displayNameInitials}</Avatar.Fallback>
+            </>
+          )}
+        </Avatar>
+        {/* カメラアイコンオーバーレイ */}
+        <StyledView className="absolute right-0 bottom-0 items-center justify-center rounded-full bg-primary p-1">
+          <StyledIonicons name="camera" size={14} className="text-white" />
+        </StyledView>
+      </StyledPressable>
 
       <StyledView className="flex-1">
         <StyledView
