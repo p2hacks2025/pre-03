@@ -51,7 +51,7 @@ export const getUserPostsByProfileId = async (
   if (to) {
     // toは日付の終わりまで含めるため、翌日の0時未満とする
     const toEnd = new Date(to);
-    toEnd.setDate(toEnd.getDate() + 1);
+    toEnd.setUTCDate(toEnd.getUTCDate() + 1);
     conditions.push(lt(userPosts.createdAt, toEnd));
   }
 
@@ -64,9 +64,8 @@ export const getUserPostsByProfileId = async (
         lt(userPosts.id, cursor.id),
       ),
     );
-    if (cursorCondition) {
-      conditions.push(cursorCondition);
-    }
+    // biome-ignore lint/style/noNonNullAssertion: or() は常にSQLオブジェクトを返す
+    conditions.push(cursorCondition!);
   }
 
   return db
@@ -109,7 +108,7 @@ export const getUserPostsForTimeline = async (
   }
   if (to) {
     const toEnd = new Date(to);
-    toEnd.setDate(toEnd.getDate() + 1);
+    toEnd.setUTCDate(toEnd.getUTCDate() + 1);
     conditions.push(lt(userPosts.createdAt, toEnd));
   }
 
@@ -122,9 +121,8 @@ export const getUserPostsForTimeline = async (
         lt(userPosts.id, cursor.id),
       ),
     );
-    if (cursorCondition) {
-      conditions.push(cursorCondition);
-    }
+    // biome-ignore lint/style/noNonNullAssertion: or() は常にSQLオブジェクトを返す
+    conditions.push(cursorCondition!);
   }
 
   const results = await db

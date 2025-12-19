@@ -55,9 +55,8 @@ export const getAiPostsForTimeline = async (
     lte(aiPosts.publishedAt, now), // 公開済みのみ
   ];
 
-  if (userOrStandaloneCondition) {
-    conditions.push(userOrStandaloneCondition);
-  }
+  // biome-ignore lint/style/noNonNullAssertion: or() は常にSQLオブジェクトを返す
+  conditions.push(userOrStandaloneCondition!);
 
   // 日付範囲フィルタ（publishedAtベース）
   if (from) {
@@ -65,20 +64,20 @@ export const getAiPostsForTimeline = async (
   }
   if (to) {
     const toEnd = new Date(to);
-    toEnd.setDate(toEnd.getDate() + 1);
+    toEnd.setUTCDate(toEnd.getUTCDate() + 1);
     conditions.push(lt(aiPosts.publishedAt, toEnd));
   }
 
   // カーソルベースのページネーション（新しい順）
-  // NOTE: AIポストはpublishedAtでソートするが、カーソルは統一のためcreatedAtとして受け取る
+  // NOTE: カーソルのcreatedAtフィールドには、タイムライン上の表示日時（displayAt）が格納される
+  //       ユーザーポストの場合はcreatedAt、AIポストの場合はpublishedAtの値となる
   if (cursor) {
     const cursorCondition = or(
       lt(aiPosts.publishedAt, cursor.createdAt),
       and(eq(aiPosts.publishedAt, cursor.createdAt), lt(aiPosts.id, cursor.id)),
     );
-    if (cursorCondition) {
-      conditions.push(cursorCondition);
-    }
+    // biome-ignore lint/style/noNonNullAssertion: or() は常にSQLオブジェクトを返す
+    conditions.push(cursorCondition!);
   }
 
   const results = await db
