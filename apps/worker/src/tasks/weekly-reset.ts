@@ -1,12 +1,25 @@
-import type { UserPost } from "@packages/db";
+import type { UserPost, UserProfile } from "@packages/db";
 import OpenAI from "openai";
 import {
+  createOrUpdateWorldBuildLog,
+  createWeeklyWorld,
   FIELD_ID_MAX,
   FIELD_ID_MIN,
+  findWeeklyWorld,
+  getAllUserProfiles,
+  getBaseImageBase64,
+  getBaseImageBuffer,
+  getUserPostsForWeek,
   getWeeklySummaryPrompt,
+  uploadGeneratedImage,
   type WorkerContext,
 } from "@/lib";
-import { getJstToday, getWeekStartDate } from "./daily-update";
+import {
+  fetchImageAsBase64,
+  generateImage,
+  getJstToday,
+  getWeekStartDate,
+} from "./daily-update";
 
 export const getTargetWeekStart = (ctx: WorkerContext): Date => {
   if (ctx.env.TARGET_WEEK_START) {
@@ -62,4 +75,104 @@ export const selectRandomFieldIds = (count: number): number[] => {
   }
 
   return allFieldIds.slice(0, count);
+};
+
+export const fetchAllUserProfiles = async (
+  ctx: WorkerContext,
+): Promise<UserProfile[]> => {
+  return getAllUserProfiles(ctx);
+};
+
+export const fetchUserPostsForWeek = async (
+  ctx: WorkerContext,
+  userProfileId: string,
+  weekStartDate: Date,
+): Promise<UserPost[]> => {
+  return getUserPostsForWeek(ctx, userProfileId, weekStartDate);
+};
+
+export const findWeeklyWorldForUser = async (
+  ctx: WorkerContext,
+  userProfileId: string,
+  weekStartDate: Date,
+) => {
+  return findWeeklyWorld(ctx, userProfileId, weekStartDate);
+};
+
+export const processUserWeeklyResetWithPosts = async (
+  ctx: WorkerContext,
+  profile: UserProfile,
+  posts: UserPost[],
+  newWeekStart: Date,
+): Promise<string> => {
+  const summary = await summarizePostsWithLLM(ctx, posts);
+  const fieldIds = selectRandomFieldIds(2);
+
+  let currentImageBase64 = getBaseImageBase64();
+
+  const firstImageBuffer = await generateImage(
+    ctx,
+    currentImageBase64,
+    fieldIds[0],
+    summary,
+  );
+
+  const firstImageUrl = await uploadGeneratedImage(
+    ctx,
+    profile.id,
+    newWeekStart,
+    firstImageBuffer,
+  );
+  currentImageBase64 = await fetchImageAsBase64(firstImageUrl);
+
+  const secondImageBuffer = await generateImage(
+    ctx,
+    currentImageBase64,
+    fieldIds[1],
+    summary,
+  );
+
+  const initialImageUrl = await uploadGeneratedImage(
+    ctx,
+    profile.id,
+    newWeekStart,
+    secondImageBuffer,
+  );
+
+  const newWeeklyWorld = await createWeeklyWorld(
+    ctx,
+    profile.id,
+    newWeekStart,
+    initialImageUrl,
+  );
+
+  const today = new Date();
+  for (const fieldId of fieldIds) {
+    await createOrUpdateWorldBuildLog(
+      ctx,
+      newWeeklyWorld.id,
+      fieldId,
+      today,
+      false,
+    );
+  }
+
+  return initialImageUrl;
+};
+
+export const processUserWeeklyResetWithoutPosts = async (
+  ctx: WorkerContext,
+  profile: UserProfile,
+  newWeekStart: Date,
+): Promise<string> => {
+  const initialImageUrl = await uploadGeneratedImage(
+    ctx,
+    profile.id,
+    newWeekStart,
+    getBaseImageBuffer(),
+  );
+
+  await createWeeklyWorld(ctx, profile.id, newWeekStart, initialImageUrl);
+
+  return initialImageUrl;
 };
