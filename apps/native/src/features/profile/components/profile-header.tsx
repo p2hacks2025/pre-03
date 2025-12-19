@@ -81,7 +81,7 @@ export const ProfileHeader = () => {
           </StyledPressable>
         </StyledView>
 
-        <StyledText className="mt-2 px-2 text-muted">
+        <StyledText className="mt-2 px-2 text-foreground">
           {streakDays}日連続!
         </StyledText>
       </StyledView>
