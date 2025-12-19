@@ -73,12 +73,21 @@ export const useTimeline = () => {
       if (res.ok) {
         const data = await res.json();
 
+        // 重複を排除
+        const seen = new Set<string>();
+        const uniqueEntries = data.entries.filter((e) => {
+          const key = `${e.type}-${e.id}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
         logger.info("Timeline fetched", {
-          count: data.entries.length,
+          count: uniqueEntries.length,
           hasMore: data.hasMore,
         });
         setState({
-          entries: data.entries,
+          entries: uniqueEntries,
           isLoading: false,
           isFetchingMore: false,
           error: null,
@@ -130,13 +139,22 @@ export const useTimeline = () => {
           count: data.entries.length,
           hasMore: data.hasMore,
         });
-        setState((prev) => ({
-          ...prev,
-          entries: [...prev.entries, ...data.entries],
-          isFetchingMore: false,
-          nextCursor: data.nextCursor,
-          hasMore: data.hasMore,
-        }));
+        setState((prev) => {
+          // 重複を排除してマージ
+          const existingKeys = new Set(
+            prev.entries.map((e) => `${e.type}-${e.id}`),
+          );
+          const newEntries = data.entries.filter(
+            (e) => !existingKeys.has(`${e.type}-${e.id}`),
+          );
+          return {
+            ...prev,
+            entries: [...prev.entries, ...newEntries],
+            isFetchingMore: false,
+            nextCursor: data.nextCursor,
+            hasMore: data.hasMore,
+          };
+        });
       } else {
         logger.warn("Fetch more failed", { status: res.status });
         setState((prev) => ({

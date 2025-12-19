@@ -85,7 +85,7 @@ export const StickyYearHeader = ({ year }: StickyYearHeaderProps) => {
             ],
           }}
         >
-          <StyledText className="text-center font-bold text-foreground text-xl">
+          <StyledText className="text-center font-bold text-2xl text-foreground">
             {prevValue}年
           </StyledText>
         </StyledAnimatedView>
@@ -94,7 +94,7 @@ export const StickyYearHeader = ({ year }: StickyYearHeaderProps) => {
         className="absolute h-10 w-full justify-center"
         style={{ transform: [{ translateY: offsetAnim }] }}
       >
-        <StyledText className="text-center font-bold text-foreground text-xl">
+        <StyledText className="text-center font-bold text-2xl text-foreground">
           {year}年
         </StyledText>
       </StyledAnimatedView>

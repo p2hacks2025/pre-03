@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
+import { HEADER_HEIGHT, Header } from "@/components";
 import {
   Calendar,
   type MonthGroup,
@@ -18,6 +19,9 @@ import {
   StickyYearHeader,
   useCalendar,
 } from "@/features/calendar";
+
+/** 年月表示エリアの高さ */
+const DATE_DISPLAY_HEIGHT = 40;
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
@@ -103,7 +107,7 @@ export const CalendarScreen = () => {
     }
   }, [hasMore, isLoadingMore, loadMore]);
 
-  const stickyHeaderHeight = 56;
+  const totalHeaderHeight = HEADER_HEIGHT + DATE_DISPLAY_HEIGHT;
 
   // フォントローディング
   if (!fontsLoaded) {
@@ -133,23 +137,20 @@ export const CalendarScreen = () => {
 
   return (
     <StyledView className="flex-1 bg-background">
+      {/* ヘッダー（タイトルのみ） */}
+      <Header title="今までの世界" backgroundColor="bg-background" />
+
+      {/* 年月表示（ヘッダーの下） */}
       <StyledView
-        className="absolute top-0 right-0 left-0 z-10 bg-background px-4"
+        className="absolute right-0 left-0 z-10 flex-row items-center bg-background px-4 pb-4"
         style={{
-          paddingTop: insets.top,
-          height: insets.top + stickyHeaderHeight,
+          top: insets.top + HEADER_HEIGHT,
+          height: DATE_DISPLAY_HEIGHT,
         }}
       >
-        <StyledView className="flex-1 justify-center">
-          <StyledText className="text-center font-bold text-2xl text-foreground">
-            今までの世界
-          </StyledText>
-          <StyledView className="flex-row items-center">
-            <StickyMonthHeader month={currentMonth} />
-            <StickyYearHeader year={currentYear} />
-            <StyledView className="w-16" />
-          </StyledView>
-        </StyledView>
+        <StickyMonthHeader month={currentMonth} />
+        <StickyYearHeader year={currentYear} />
+        <StyledView className="w-16" />
       </StyledView>
 
       <FlatList
@@ -161,7 +162,7 @@ export const CalendarScreen = () => {
           paddingHorizontal: 16,
           paddingTop: insets.bottom + 16,
         }}
-        style={{ paddingTop: stickyHeaderHeight }}
+        style={{ paddingTop: totalHeaderHeight }}
         removeClippedSubviews={true}
         maxToRenderPerBatch={5}
         windowSize={5}
