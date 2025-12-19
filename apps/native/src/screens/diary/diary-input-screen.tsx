@@ -10,16 +10,19 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  Text,
   TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 import { useAuth } from "@/contexts/auth-context";
+import { PhotoGrid } from "@/features/diary";
 import { createAuthenticatedClient } from "@/lib/api";
 import { postMultipartWithAuth } from "@/lib/multipart";
 
 const StyledView = withUniwind(View);
+const StyledText = withUniwind(Text);
 const StyledTextInput = withUniwind(TextInput);
 const StyledImage = withUniwind(Image);
 const StyledPressable = withUniwind(Pressable);
@@ -66,7 +69,7 @@ export const DiaryInputScreen = () => {
 
       if (selectedImage) {
         // React Native 特有の FormData 形式
-        // 画像は handlePickImage で JPEG に統一済み
+        // 画像は processAndSetImage で JPEG に統一済み
         formData.append("file", {
           uri: selectedImage.uri,
           type: "image/jpeg",
@@ -97,9 +100,41 @@ export const DiaryInputScreen = () => {
     }
   };
 
-  const handlePickImage = async () => {
+  const processAndSetImage = async (
+    uri: string,
+    width: number,
+    height: number,
+  ) => {
+    // 常に JPEG に変換（HEIC 対策 + 統一フォーマット）
+    const context = ImageManipulator.manipulate(uri);
+    const renderedImage = await context.renderAsync();
+    const manipulated = await renderedImage.saveAsync({
+      compress: 0.8,
+      format: SaveFormat.JPEG,
+    });
+
+    setSelectedImage({
+      uri: manipulated.uri,
+      width,
+      height,
+    });
+  };
+
+  const handleLaunchCamera = async () => {
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
+      const cameraPermission =
+        await ImagePicker.requestCameraPermissionsAsync();
+
+      if (!cameraPermission.granted) {
+        toast.show({
+          variant: "warning",
+          label: "カメラへのアクセスが必要です",
+          description: "設定からカメラへのアクセスを許可してください",
+        });
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ["images"],
         allowsEditing: false,
         quality: 1,
@@ -107,21 +142,24 @@ export const DiaryInputScreen = () => {
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
-
-        // 常に JPEG に変換（HEIC 対策 + 統一フォーマット）
-        const context = ImageManipulator.manipulate(asset.uri);
-        const renderedImage = await context.renderAsync();
-        const manipulated = await renderedImage.saveAsync({
-          compress: 0.8,
-          format: SaveFormat.JPEG,
-        });
-
-        setSelectedImage({
-          uri: manipulated.uri,
-          width: asset.width,
-          height: asset.height,
-        });
+        await processAndSetImage(asset.uri, asset.width, asset.height);
       }
+    } catch (error) {
+      toast.show({
+        variant: "danger",
+        label: "カメラの起動に失敗しました",
+        description: error instanceof Error ? error.message : undefined,
+      });
+    }
+  };
+
+  const handleSelectRecentPhoto = async (
+    uri: string,
+    width: number,
+    height: number,
+  ) => {
+    try {
+      await processAndSetImage(uri, width, height);
     } catch (error) {
       toast.show({
         variant: "danger",
@@ -147,8 +185,15 @@ export const DiaryInputScreen = () => {
         className="flex-1"
         style={{ paddingTop: 5, paddingBottom: insets.bottom }}
       >
+        {/* タイトル */}
+        <StyledView className="px-4 pt-2">
+          <StyledText className="font-bold text-2xl text-foreground">
+            日記の入力
+          </StyledText>
+        </StyledView>
+
         {/* ヘッダー */}
-        <StyledView className="flex-row items-center justify-between border-divider/50 border-b px-4 py-3">
+        <StyledView className="flex-row items-center justify-between px-4 py-3">
           <Pressable onPress={handleClose} disabled={isSubmitting}>
             <StyledIonicons
               name="close"
@@ -159,14 +204,14 @@ export const DiaryInputScreen = () => {
 
           <Button
             size="sm"
-            variant="primary"
+            className="bg-amber-600"
             isDisabled={!canPost}
             onPress={handlePost}
           >
             {isSubmitting ? (
               <Spinner size="sm" color="white" />
             ) : (
-              <Button.Label>投稿</Button.Label>
+              <Button.Label>書き記す</Button.Label>
             )}
           </Button>
         </StyledView>
@@ -175,7 +220,7 @@ export const DiaryInputScreen = () => {
         <StyledView className="flex-1 px-4 pt-4">
           <StyledTextInput
             className="flex-1 text-foreground text-lg"
-            placeholder="今日は何を食べましたか？"
+            placeholder="出来事を世界に刻みましょう"
             placeholderTextColor="#9ca3af"
             multiline
             textAlignVertical="top"
@@ -206,21 +251,13 @@ export const DiaryInputScreen = () => {
           </StyledView>
         )}
 
-        {/* ツールバー */}
-        <StyledView className="flex-row items-center border-divider/50 border-t px-4 py-3">
-          <StyledPressable
-            className="items-center justify-center rounded-full p-2 active:bg-accent/10"
-            onPress={handlePickImage}
-            disabled={selectedImage !== null || isSubmitting}
-          >
-            <StyledIonicons
-              name="image-outline"
-              size={24}
-              className={
-                selectedImage || isSubmitting ? "text-muted" : "text-accent"
-              }
-            />
-          </StyledPressable>
+        {/* 写真グリッド */}
+        <StyledView className="border-divider/50 border-t py-3">
+          <PhotoGrid
+            onCameraPress={handleLaunchCamera}
+            onPhotoSelect={handleSelectRecentPhoto}
+            isDisabled={selectedImage !== null || isSubmitting}
+          />
         </StyledView>
       </StyledView>
     </StyledKeyboardAvoidingView>
