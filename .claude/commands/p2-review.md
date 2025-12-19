@@ -1,23 +1,23 @@
 ---
-allowed-tools: Task, Bash(gh pr view:*), Bash(gh pr diff:*)
-argument-hint: [pr-number]
-description: PRをレビューしてGitHubにコメントを投稿
+allowed-tools: Task, Bash(gh pr diff:*)
+description: PRをレビューしGitHubにコメント投稿
 model: haiku
 ---
 
-PR #$1 をレビューしてください。
+Review the diff of the current branch.
 
-## 手順
+## Steps
 
-1. `gh pr diff $1` で差分を確認
-2. 以下の判定で適切なエージェントを Task で起動：
+1. Check the diff with `gh pr diff` (if no PR exists, use `git diff main...HEAD`)
 
-**→ `p2-review-agent-max`** を使う場合：
-- DBスキーマ変更（packages/db/src/schema）
-- 認証・認可ロジックの変更
-- 500行を超えるような大規模な変更
+2. Launch the appropriate agent using Task based on the following criteria:
 
-**→ `p2-review-agent-smart`** を使う場合：
-- 上記以外すべて
+**Use `p2-review-agent-max`** when:
+- DB schema changes (packages/db/src/schema)
+- Authentication/authorization logic changes
+- Large-scale changes exceeding 500 lines
 
-1. レビュー完了後、結果の要約を報告
+**Use `p2-review-agent-smart`** when:
+- All other cases
+
+3. After the review is complete, report a summary of the results

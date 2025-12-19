@@ -1,10 +1,9 @@
 ---
 allowed-tools: Task
-argument-hint: [pr-number]
-description: PRを詳細にレビューしてGitHubにコメントを投稿（複雑な変更向け）
+description: PRを詳細にレビューしGitHubにコメント投稿（高度な思考）
 model: haiku
 ---
 
-Task ツールで `p2-review-agent-max` を起動し、PR #$1 を詳細にレビューしてください。
+Use the Task tool to launch `p2-review-agent-max` and review the current branch.
 
-レビュー完了後、結果の要約を報告してください。
+After the review is complete, report a summary of the results.
