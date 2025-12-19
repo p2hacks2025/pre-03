@@ -11,6 +11,7 @@ import {
   sql,
   type UserPost,
   userPosts,
+  userProfiles,
 } from "@packages/db";
 import { jstToUTC } from "@/shared/date";
 
@@ -74,6 +75,83 @@ export const getUserPostsByProfileId = async (
     .where(and(...conditions))
     .orderBy(desc(userPosts.createdAt), desc(userPosts.id))
     .limit(limit);
+};
+
+export type UserPostWithProfile = {
+  id: string;
+  content: string;
+  uploadImageUrl: string | null;
+  createdAt: Date;
+  userProfile: {
+    username: string;
+    avatarUrl: string | null;
+  };
+};
+
+/**
+ * タイムライン用にユーザーポストを取得（author情報付き）
+ */
+export const getUserPostsForTimeline = async (
+  db: DbClient,
+  options: GetUserPostsOptions,
+): Promise<UserPostWithProfile[]> => {
+  const { profileId, from, to, cursor, limit } = options;
+
+  // 条件を動的に構築
+  const conditions: ReturnType<typeof eq>[] = [
+    eq(userPosts.userProfileId, profileId),
+    isNull(userPosts.deletedAt),
+  ];
+
+  // 日付範囲フィルタ
+  if (from) {
+    conditions.push(gte(userPosts.createdAt, from));
+  }
+  if (to) {
+    const toEnd = new Date(to);
+    toEnd.setDate(toEnd.getDate() + 1);
+    conditions.push(lt(userPosts.createdAt, toEnd));
+  }
+
+  // カーソルベースのページネーション（新しい順）
+  if (cursor) {
+    const cursorCondition = or(
+      lt(userPosts.createdAt, cursor.createdAt),
+      and(
+        eq(userPosts.createdAt, cursor.createdAt),
+        lt(userPosts.id, cursor.id),
+      ),
+    );
+    if (cursorCondition) {
+      conditions.push(cursorCondition);
+    }
+  }
+
+  const results = await db
+    .select({
+      id: userPosts.id,
+      content: userPosts.content,
+      uploadImageUrl: userPosts.uploadImageUrl,
+      createdAt: userPosts.createdAt,
+      userProfileUsername: userProfiles.username,
+      userProfileAvatarUrl: userProfiles.avatarUrl,
+    })
+    .from(userPosts)
+    .innerJoin(userProfiles, eq(userPosts.userProfileId, userProfiles.id))
+    .where(and(...conditions))
+    .orderBy(desc(userPosts.createdAt), desc(userPosts.id))
+    .limit(limit);
+
+  return results.map((r) => ({
+    id: r.id,
+    content: r.content,
+    uploadImageUrl: r.uploadImageUrl,
+    createdAt: r.createdAt,
+    userProfile: {
+      username: r.userProfileUsername,
+      avatarUrl: r.userProfileAvatarUrl,
+    },
+  }));
 };
 
 export type GetEntryDatesByMonthOptions = {
