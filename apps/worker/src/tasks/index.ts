@@ -17,6 +17,7 @@ export {
   fetchImageAsBase64,
   fetchUserPostsByDate,
   generateImage,
+  generateSceneDescription,
   getJstToday,
   getJstYesterday,
   getWeekStartDate,
@@ -38,5 +39,4 @@ export {
   processUserWeeklyResetWithoutPosts,
   processUserWeeklyResetWithPosts,
   selectRandomFieldIds,
-  summarizePostsWithLLM,
 } from "./weekly-reset";

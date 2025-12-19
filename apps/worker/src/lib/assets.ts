@@ -46,3 +46,10 @@ export const getAiPostStandalonePrompt = (): string => {
     "utf-8",
   );
 };
+
+export const getSceneDescriptionPrompt = (): string => {
+  return readFileSync(
+    resolve(ASSETS_DIR, "prompts/scene_description.md"),
+    "utf-8",
+  );
+};

@@ -5,6 +5,7 @@ export {
   getBaseImageBuffer,
   getGuideImageBase64,
   getImageGenerationPrompt,
+  getSceneDescriptionPrompt,
   getWeeklySummaryPrompt,
 } from "./assets";
 export {
@@ -36,3 +37,4 @@ export {
   updateWeeklyWorldImage,
   uploadGeneratedImage,
 } from "./infra/index";
+export { LLM_CONFIG, type LLMConfigKey } from "./llm-config";
