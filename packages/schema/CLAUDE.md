@@ -30,6 +30,9 @@ packages/schema/
 │   ├── auth.ts           # 認証関連スキーマ（User, Profile, Session, Login, Signup等）
 │   ├── user.ts           # ユーザー関連スキーマ（GetMe, UploadAvatar, UpdateProfile）
 │   ├── health.ts         # ヘルスチェックスキーマ
+│   ├── entry.ts          # 投稿エントリースキーマ
+│   ├── notification.ts   # 通知スキーマ
+│   ├── reflection.ts     # 振り返りスキーマ（カレンダー、週詳細等）
 │   └── common/
 │       └── error.ts      # 共通エラーレスポンス
 ├── README.md             # 概要・命名規則ガイドライン
@@ -148,6 +151,27 @@ export type User = z.infer<typeof UserSchema>;
 |------|----------|
 | ベースモデル | `HealthSchema` |
 | Output | `GetHealthOutputSchema`, `GetDbHealthOutputSchema` |
+
+### src/entry.ts
+
+投稿エントリー関連のスキーマ定義。
+
+| 種類 | スキーマ |
+|------|----------|
+| Create | `CreateEntryInputSchema`, `CreateEntryOutputSchema` |
+
+### src/notification.ts
+
+通知関連のスキーマ定義。
+
+### src/reflection.ts
+
+振り返り関連のスキーマ定義（カレンダー、週詳細など）。
+
+| 種類 | スキーマ |
+|------|----------|
+| Calendar | `GetCalendarOutputSchema` |
+| Week Detail | `GetWeekDetailOutputSchema` |
 
 ### src/common/error.ts
 

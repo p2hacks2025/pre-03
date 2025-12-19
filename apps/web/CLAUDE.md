@@ -89,8 +89,7 @@ src/
 │       └── page.tsx              # Server Component（async）
 │
 ├── components/
-│   ├── ui/                       # shadcn/ui コンポーネント
-│   └── common/                   # 複数ページ共有コンポーネント
+│   └── ui/                       # shadcn/ui コンポーネント
 │
 ├── contexts/
 │   └── auth-context.tsx          # 認証状態管理（React Context）
@@ -193,7 +192,6 @@ pnpm dlx shadcn@latest add dialog
 | フォルダ | 役割 |
 |---------|------|
 | `ui/` | shadcn/ui コンポーネント |
-| `common/` | 複数ページで使用する独自コンポーネント |
 
 ### contexts/（状態管理層）
 

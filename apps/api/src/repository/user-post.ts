@@ -1,5 +1,6 @@
 import {
   and,
+  asc,
   type DbClient,
   desc,
   eq,
@@ -8,9 +9,11 @@ import {
   lt,
   type NewUserPost,
   or,
+  sql,
   type UserPost,
   userPosts,
 } from "@packages/db";
+import { jstToUTC } from "@/shared/date";
 
 export const createUserPost = async (
   db: DbClient,
@@ -72,4 +75,86 @@ export const getUserPostsByProfileId = async (
     .where(and(...conditions))
     .orderBy(desc(userPosts.createdAt), desc(userPosts.id))
     .limit(limit);
+};
+
+export type GetEntryDatesByMonthOptions = {
+  profileId: string;
+  year: number;
+  month: number;
+};
+
+// PostgreSQLのDATE型は文字列として返される場合がある
+export type EntryDateResult = { date: Date | string };
+
+/**
+ * 指定月に日記を投稿した日のリストを取得（DISTINCTで重複排除）
+ * JST基準で日付を返却
+ */
+export const getEntryDatesByMonth = async (
+  db: DbClient,
+  options: GetEntryDatesByMonthOptions,
+): Promise<EntryDateResult[]> => {
+  const { profileId, year, month } = options;
+
+  // JST基準の月範囲をUTCで取得（個別に変換）
+  const monthStart = jstToUTC(year, month, 1); // JST月初 0:00 → UTC
+  const monthEnd = jstToUTC(year, month + 1, 1); // JST翌月初 0:00 → UTC
+
+  const result = await db
+    .selectDistinct({
+      date: sql<string>`DATE(${userPosts.createdAt} AT TIME ZONE 'Asia/Tokyo')`.as(
+        "date",
+      ),
+    })
+    .from(userPosts)
+    .where(
+      and(
+        eq(userPosts.userProfileId, profileId),
+        gte(userPosts.createdAt, monthStart),
+        lt(userPosts.createdAt, monthEnd),
+        isNull(userPosts.deletedAt),
+      ),
+    )
+    .orderBy(sql`DATE(${userPosts.createdAt} AT TIME ZONE 'Asia/Tokyo')`);
+
+  return result;
+};
+
+export type GetUserPostsByWeekOptions = {
+  profileId: string;
+  weekStartDate: Date;
+};
+
+/**
+ * 指定週の日記を取得（JST基準で月曜〜日曜）
+ * 週の範囲: weekStartDate 00:00 JST 〜 weekStartDate+7日 00:00 JST
+ */
+export const getUserPostsByWeek = async (
+  db: DbClient,
+  options: GetUserPostsByWeekOptions,
+): Promise<UserPost[]> => {
+  const { profileId, weekStartDate } = options;
+
+  // 週の範囲をJST基準で計算してUTCに変換
+  const year = weekStartDate.getUTCFullYear();
+  const month = weekStartDate.getUTCMonth() + 1;
+  const day = weekStartDate.getUTCDate();
+
+  // JST月曜0時〜JST翌月曜0時をUTCに変換
+  const weekStart = jstToUTC(year, month, day);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setUTCDate(weekEnd.getUTCDate() + 7);
+
+  return db
+    .select()
+    .from(userPosts)
+    .where(
+      and(
+        eq(userPosts.userProfileId, profileId),
+        gte(userPosts.createdAt, weekStart),
+        lt(userPosts.createdAt, weekEnd),
+        isNull(userPosts.deletedAt),
+      ),
+    )
+    .orderBy(asc(userPosts.createdAt));
 };

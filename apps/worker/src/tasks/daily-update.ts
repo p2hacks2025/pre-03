@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import {
   getGuideImageBase64,
-  getSystemPrompt,
+  getImageGenerationPrompt,
   JST_OFFSET,
   type WorkerContext,
 } from "@/lib";
@@ -44,7 +44,7 @@ export const generateImage = async (
   diaryContent: string,
 ): Promise<Buffer> => {
   const ai = new GoogleGenAI({ apiKey: ctx.env.GOOGLE_API_KEY });
-  const systemPrompt = getSystemPrompt();
+  const prompt = getImageGenerationPrompt();
   const guideImageBase64 = getGuideImageBase64(fieldId);
 
   const response = await ai.models.generateContent({
@@ -55,14 +55,14 @@ export const generateImage = async (
         parts: [
           { inlineData: { mimeType: "image/png", data: currentImageBase64 } },
           { inlineData: { mimeType: "image/png", data: guideImageBase64 } },
-          { text: `${systemPrompt}\n\n---\n\nDiary:\n${diaryContent}` },
+          { text: `${prompt}\n\n---\n\nDiary:\n${diaryContent}` },
         ],
       },
     ],
     config: {
       responseModalities: ["IMAGE"],
       imageConfig: { aspectRatio: "1:1", imageSize: "2K" },
-      systemInstruction: systemPrompt,
+      systemInstruction: prompt,
       temperature: 0.1,
       seed: 1234,
       candidateCount: 1,

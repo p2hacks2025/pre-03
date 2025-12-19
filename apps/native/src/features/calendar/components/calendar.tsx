@@ -25,19 +25,18 @@ export const Calendar = ({
   monthGroup,
   showYearSeparator = false,
 }: CalendarProps) => {
-  const reversedWeeks = [...monthGroup.weeks].reverse();
-
   return (
     <StyledView className="mb-4">
       {showYearSeparator && <YearHeader year={monthGroup.year} />}
 
       <StyledView>
-        {reversedWeeks.map((week, index) => (
+        {monthGroup.weeks.map((week, index) => (
           <WeekRow
             key={week.weekId}
             week={week}
             showMonthIndicator={index === 0}
             month={monthGroup.month}
+            entryDates={monthGroup.entryDates}
           />
         ))}
       </StyledView>
