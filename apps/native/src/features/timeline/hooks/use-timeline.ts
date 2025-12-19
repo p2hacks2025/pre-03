@@ -1,5 +1,5 @@
 import type { TimelineEntry } from "@packages/schema/entry";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { useAuth } from "@/contexts/auth-context";
 import { createAuthenticatedClient } from "@/lib/api";
@@ -48,6 +48,10 @@ export const useTimeline = () => {
     hasMore: false,
   });
 
+  // 二重呼び出し防止用のref
+  const isFetchingRef = useRef(false);
+  const isFetchingMoreRef = useRef(false);
+
   const fetchTimeline = useCallback(async () => {
     if (!accessToken) {
       setState({
@@ -61,6 +65,13 @@ export const useTimeline = () => {
       return;
     }
 
+    // 既にフェッチ中なら何もしない
+    if (isFetchingRef.current) {
+      logger.debug("fetchTimeline skipped: already fetching");
+      return;
+    }
+    isFetchingRef.current = true;
+
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     logger.debug("Fetching timeline");
 
@@ -73,12 +84,21 @@ export const useTimeline = () => {
       if (res.ok) {
         const data = await res.json();
 
+        // 重複を排除
+        const seen = new Set<string>();
+        const uniqueEntries = data.entries.filter((e) => {
+          const key = `${e.type}-${e.id}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
         logger.info("Timeline fetched", {
-          count: data.entries.length,
+          count: uniqueEntries.length,
           hasMore: data.hasMore,
         });
         setState({
-          entries: data.entries,
+          entries: uniqueEntries,
           isLoading: false,
           isFetchingMore: false,
           error: null,
@@ -101,6 +121,8 @@ export const useTimeline = () => {
         isLoading: false,
         error: "通信エラーが発生しました",
       }));
+    } finally {
+      isFetchingRef.current = false;
     }
   }, [accessToken]);
 
@@ -113,6 +135,13 @@ export const useTimeline = () => {
     ) {
       return;
     }
+
+    // 既にフェッチ中なら何もしない（refresh との競合防止）
+    if (isFetchingRef.current || isFetchingMoreRef.current) {
+      logger.debug("fetchMore skipped: fetch in progress");
+      return;
+    }
+    isFetchingMoreRef.current = true;
 
     setState((prev) => ({ ...prev, isFetchingMore: true }));
     logger.debug("Fetching more timeline", { cursor: state.nextCursor });
@@ -130,13 +159,24 @@ export const useTimeline = () => {
           count: data.entries.length,
           hasMore: data.hasMore,
         });
-        setState((prev) => ({
-          ...prev,
-          entries: [...prev.entries, ...data.entries],
-          isFetchingMore: false,
-          nextCursor: data.nextCursor,
-          hasMore: data.hasMore,
-        }));
+        setState((prev) => {
+          // 重複排除: 既存のIDセットを作成
+          const existingIds = new Set(
+            prev.entries.map((e) => `${e.type}-${e.id}`),
+          );
+          // 新しいエントリから重複を除外
+          const newEntries = data.entries.filter(
+            (e: TimelineEntry) => !existingIds.has(`${e.type}-${e.id}`),
+          );
+
+          return {
+            ...prev,
+            entries: [...prev.entries, ...newEntries],
+            isFetchingMore: false,
+            nextCursor: data.nextCursor,
+            hasMore: data.hasMore,
+          };
+        });
       } else {
         logger.warn("Fetch more failed", { status: res.status });
         setState((prev) => ({
@@ -151,12 +191,12 @@ export const useTimeline = () => {
         ...prev,
         isFetchingMore: false,
       }));
+    } finally {
+      isFetchingMoreRef.current = false;
     }
   }, [accessToken, state.nextCursor, state.isFetchingMore, state.hasMore]);
 
-  useEffect(() => {
-    fetchTimeline();
-  }, [fetchTimeline]);
+  // useEffect は削除 - useFocusEffect に統一（home-screen.tsx で呼び出し）
 
   return {
     entries: state.entries,

@@ -1,30 +1,33 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Button, Spinner, useToast } from "heroui-native";
+import { Spinner, useToast } from "heroui-native";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
+import { HEADER_HEIGHT, Header } from "@/components";
 import { useAuth } from "@/contexts/auth-context";
-import { formatDateToISO } from "@/features/calendar/lib/date-utils";
 import { EntryList, ProfileHeader } from "@/features/profile";
 
 const StyledView = withUniwind(View);
-const StyledText = withUniwind(Text);
 const StyledScrollView = withUniwind(ScrollView);
 const StyledPressable = withUniwind(Pressable);
 const StyledIonicons = withUniwind(Ionicons);
 
+// カラー定義
+const COLORS = {
+  headerBackground: "#C4A86C",
+};
+
 export const ProfileScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const today = new Date();
   const { logout } = useAuth();
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = async () => {
+  const executeLogout = async () => {
     setIsLoggingOut(true);
     try {
       await logout();
@@ -45,57 +48,74 @@ export const ProfileScreen = () => {
     }
   };
 
-  return (
-    <StyledScrollView
-      className="flex-1 bg-background"
-      contentContainerStyle={{
-        paddingTop: insets.top + 16,
-        paddingBottom: insets.bottom + 16,
-      }}
+  const handleLogout = () => {
+    Alert.alert("ログアウト", "ログアウトしますか？", [
+      {
+        text: "キャンセル",
+        style: "cancel",
+      },
+      {
+        text: "ログアウト",
+        style: "destructive",
+        onPress: executeLogout,
+      },
+    ]);
+  };
+
+  const leftContent = (
+    <StyledPressable
+      className="rounded-full p-2 active:opacity-70"
+      onPress={() => router.push("/(app)/health")}
     >
-      <StyledView className="mb-4 flex-row items-center justify-between px-4">
-        <StyledText className="text-foreground text-lg">
-          {formatDateToISO(today)}
-        </StyledText>
-        <StyledPressable
-          className="rounded-full p-2 active:opacity-70"
-          onPress={() => router.push("/(app)/health")}
-        >
-          <StyledIonicons
-            name="pulse-outline"
-            size={24}
-            className="text-muted"
-          />
-        </StyledPressable>
-      </StyledView>
+      <StyledIonicons
+        name="pulse-outline"
+        size={24}
+        className="text-foreground"
+      />
+    </StyledPressable>
+  );
 
-      <StyledView className="bg-muted/5 pb-4">
-        <ProfileHeader />
-      </StyledView>
+  const rightContent = (
+    <StyledPressable
+      className="rounded-full p-2 active:opacity-70"
+      onPress={handleLogout}
+      disabled={isLoggingOut}
+    >
+      {isLoggingOut ? (
+        <Spinner size="sm" />
+      ) : (
+        <StyledIonicons
+          name="log-out-outline"
+          size={24}
+          className="text-red-600"
+        />
+      )}
+    </StyledPressable>
+  );
 
-      <EntryList />
+  return (
+    <StyledView className="flex-1 bg-background">
+      <Header
+        title="プロフィール"
+        leftContent={leftContent}
+        rightContent={rightContent}
+      />
 
-      <StyledView className="mt-8 px-4">
-        <Button
-          variant="danger"
-          onPress={handleLogout}
-          isDisabled={isLoggingOut}
-          className="w-full"
-        >
-          {isLoggingOut ? (
-            <Spinner size="sm" color="white" />
-          ) : (
-            <>
-              <StyledIonicons
-                name="log-out-outline"
-                size={18}
-                className="text-danger-foreground"
-              />
-              <Button.Label>ログアウト</Button.Label>
-            </>
-          )}
-        </Button>
-      </StyledView>
-    </StyledScrollView>
+      <StyledScrollView
+        className="flex-1"
+        contentContainerStyle={{
+          paddingTop: insets.top + HEADER_HEIGHT,
+          paddingBottom: insets.bottom + 16,
+        }}
+      >
+        {/* プロフィール情報（ゴールド背景） */}
+        <StyledView style={{ backgroundColor: COLORS.headerBackground }}>
+          <ProfileHeader />
+        </StyledView>
+
+        {/* エントリー一覧 */}
+        <EntryList />
+      </StyledScrollView>
+    </StyledView>
   );
 };

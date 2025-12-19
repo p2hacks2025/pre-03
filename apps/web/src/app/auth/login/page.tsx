@@ -1,31 +1,23 @@
 "use client";
 
+import { Card, CardBody, CardFooter, CardHeader } from "@heroui/react";
 import Link from "next/link";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 import { LoginForm } from "./_components/login-form";
 
 export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center p-8">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
+      <Card className="w-full max-w-md p-2">
+        <CardHeader className="flex flex-col items-center gap-2">
+          <h2 className="font-semibold text-2xl">Login</h2>
+          <p className="text-default-500 text-small">Sign in to your account</p>
         </CardHeader>
-        <CardContent>
+        <CardBody>
           <LoginForm />
-        </CardContent>
+        </CardBody>
         <CardFooter className="justify-center">
-          <p className="text-muted-foreground text-sm">
+          <p className="text-default-500 text-sm">
             Don&apos;t have an account?{" "}
             <Link href="/auth/signup" className="text-primary hover:underline">
               Sign up

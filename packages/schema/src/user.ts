@@ -60,3 +60,11 @@ export const UpdateProfileInputSchema = z
   .openapi("UpdateProfileInput");
 
 export type UpdateProfileInput = z.infer<typeof UpdateProfileInputSchema>;
+
+export const UpdateProfileOutputSchema = z
+  .object({
+    profile: ProfileSchema,
+  })
+  .openapi("UpdateProfileOutput");
+
+export type UpdateProfileOutput = z.infer<typeof UpdateProfileOutputSchema>;

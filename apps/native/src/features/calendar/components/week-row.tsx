@@ -22,7 +22,7 @@ const getTextColorClass = (day: DayInfo): string => {
 
 const MonthIndicator = ({ month }: { month: number }) => {
   return (
-    <StyledView className="items-center justify-center pr-2">
+    <StyledView className="w-16 items-start justify-center">
       <StyledText className="font-bold text-2xl text-foreground">
         {month}月
       </StyledText>
@@ -48,15 +48,15 @@ const WeekDatesRow = ({
       {showMonthIndicator && month !== undefined ? (
         <MonthIndicator month={month} />
       ) : (
-        <StyledView className="w-12" />
+        <StyledView className="w-16" />
       )}
-      <StyledView className="flex-1 flex-row justify-between px-2">
+      <StyledView className="flex-1 flex-row justify-between px-4">
         {days.map((day) => {
           const hasEntry = entryDates.includes(day.dateString);
           return (
             <StyledView key={day.dateString} className="w-8 items-center">
               <StyledView
-                className={`h-8 w-8 items-center justify-center rounded-full ${hasEntry ? "border-[3px]" : ""}`}
+                className={`h-9 w-9 items-center justify-center rounded-full ${hasEntry ? "border-[2px]" : ""}`}
                 style={hasEntry ? { borderColor: "#4ECCDD" } : undefined}
               >
                 <StyledText
@@ -77,9 +77,11 @@ const WeekContent = ({ imageUrl }: { imageUrl: string | null }) => {
   if (imageUrl === null) {
     return (
       <StyledView className="mt-2 h-48 items-center justify-center overflow-hidden rounded-lg bg-surface-secondary">
-        <StyledText className="text-center text-foreground/60">
-          世界がありません
-        </StyledText>
+        <StyledImage
+          source={require("../../../../assets/world-example.png")}
+          className="h-full w-full"
+          resizeMode="contain"
+        />
       </StyledView>
     );
   }
@@ -122,7 +124,7 @@ export const WeekRow = ({
           month={month}
           entryDates={entryDates}
         />
-        <StyledView className="ml-12">
+        <StyledView className="ml-16">
           <WeekContent imageUrl={week.imageUrl} />
         </StyledView>
       </StyledView>
