@@ -1,4 +1,5 @@
 import { useFonts } from "expo-font";
+import { LinearGradient } from "expo-linear-gradient";
 import { Button, Spinner } from "heroui-native";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
@@ -11,6 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
+import { HEADER_HEIGHT, Header } from "@/components";
 import {
   Calendar,
   type MonthGroup,
@@ -18,6 +20,9 @@ import {
   StickyYearHeader,
   useCalendar,
 } from "@/features/calendar";
+
+/** 年月表示エリアの高さ */
+const DATE_DISPLAY_HEIGHT = 40;
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
@@ -73,7 +78,7 @@ export const CalendarScreen = () => {
   ).current;
 
   const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 10,
+    itemVisiblePercentThreshold: 22,
   }).current;
 
   const renderItem: ListRenderItem<MonthGroup> = useCallback(
@@ -103,7 +108,7 @@ export const CalendarScreen = () => {
     }
   }, [hasMore, isLoadingMore, loadMore]);
 
-  const stickyHeaderHeight = 56;
+  const totalHeaderHeight = HEADER_HEIGHT + DATE_DISPLAY_HEIGHT;
 
   // フォントローディング
   if (!fontsLoaded) {
@@ -133,23 +138,36 @@ export const CalendarScreen = () => {
 
   return (
     <StyledView className="flex-1 bg-background">
+      {/* ヘッダー（タイトルのみ） */}
+      <Header title="今までの世界" backgroundColor="bg-background" />
+
+      {/* 年月表示（ヘッダーの下） */}
       <StyledView
-        className="absolute top-0 right-0 left-0 z-10 bg-background px-4"
+        className="absolute right-0 left-0 z-10 bg-background px-4 pb-3"
         style={{
-          paddingTop: insets.top,
-          height: insets.top + stickyHeaderHeight,
+          top: insets.top + HEADER_HEIGHT,
+          height: DATE_DISPLAY_HEIGHT,
         }}
       >
-        <StyledView className="flex-1 justify-center">
-          <StyledText className="text-center font-bold text-2xl text-foreground">
-            今までの世界
-          </StyledText>
-          <StyledView className="flex-row items-center">
-            <StickyMonthHeader month={currentMonth} />
-            <StickyYearHeader year={currentYear} />
-            <StyledView className="w-16" />
-          </StyledView>
+        <StyledView className="flex-1 flex-row items-center">
+          <StickyMonthHeader month={currentMonth} />
+          <StickyYearHeader year={currentYear} />
+          <StyledView className="w-16" />
         </StyledView>
+        {/* 下向きの影 */}
+        <LinearGradient
+          colors={["rgba(0, 0, 0, 0.08)", "transparent"]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={{
+            position: "absolute",
+            bottom: -8,
+            left: 0,
+            right: 0,
+            height: 8,
+          }}
+          pointerEvents="none"
+        />
       </StyledView>
 
       <FlatList
@@ -161,7 +179,7 @@ export const CalendarScreen = () => {
           paddingHorizontal: 16,
           paddingTop: insets.bottom + 16,
         }}
-        style={{ paddingTop: stickyHeaderHeight }}
+        style={{ paddingTop: totalHeaderHeight }}
         removeClippedSubviews={true}
         maxToRenderPerBatch={5}
         windowSize={5}

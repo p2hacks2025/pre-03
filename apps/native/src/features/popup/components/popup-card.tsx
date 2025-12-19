@@ -44,7 +44,10 @@ export const PopupCard = ({
       className="w-full max-w-sm"
     >
       <StyledView className="overflow-hidden rounded-3xl bg-[#C4A574] p-4 shadow-xl">
-        <StyledText className="mb-2 text-center font-bold text-white text-xl">
+        <StyledText
+          className="mb-2 text-center font-bold text-white text-xl"
+          style={{ fontFamily: "Madoufmg" }}
+        >
           {title}
         </StyledText>
 
