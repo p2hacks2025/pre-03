@@ -256,7 +256,7 @@ export const DiaryInputScreen = () => {
           <PhotoGrid
             onCameraPress={handleLaunchCamera}
             onPhotoSelect={handleSelectRecentPhoto}
-            isDisabled={selectedImage !== null || isSubmitting}
+            isDisabled={isSubmitting}
           />
         </StyledView>
       </StyledView>

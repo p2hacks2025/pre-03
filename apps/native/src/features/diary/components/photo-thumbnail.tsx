@@ -1,8 +1,11 @@
-import { Image, Pressable } from "react-native";
+import { Image } from "expo-image";
+import { Pressable } from "react-native";
 import { withUniwind } from "uniwind";
 
 const StyledPressable = withUniwind(Pressable);
-const StyledImage = withUniwind(Image);
+const StyledImage = withUniwind(
+  Image as React.ComponentType<React.ComponentProps<typeof Image>>,
+);
 
 interface PhotoThumbnailProps {
   uri: string;
@@ -21,11 +24,7 @@ export const PhotoThumbnail = ({
       onPress={onPress}
       disabled={isDisabled}
     >
-      <StyledImage
-        source={{ uri }}
-        className="h-full w-full"
-        resizeMode="cover"
-      />
+      <StyledImage source={uri} className="h-full w-full" contentFit="cover" />
     </StyledPressable>
   );
 };
