@@ -74,3 +74,156 @@ export const GetReflectionCalendarOutputSchema = z
 export type GetReflectionCalendarOutput = z.infer<
   typeof GetReflectionCalendarOutputSchema
 >;
+
+/**
+ * AIプロフィール（週間世界詳細用）
+ */
+export const AiProfileSummarySchema = z
+  .object({
+    id: z.uuid().openapi({
+      description: "AIプロフィールID",
+      example: "550e8400-e29b-41d4-a716-446655440000",
+    }),
+    username: z.string().openapi({
+      description: "AI名",
+      example: "ゆめみ",
+    }),
+    avatarUrl: z.url().nullable().openapi({
+      description: "AIアバター画像URL",
+      example:
+        "https://xxx.supabase.co/storage/v1/object/public/avatars/ai/yumemi.png",
+    }),
+    description: z.string().openapi({
+      description: "AIの説明",
+      example: "あなたの日記を見守るAI",
+    }),
+  })
+  .openapi("AiProfileSummary");
+
+export type AiProfileSummary = z.infer<typeof AiProfileSummarySchema>;
+
+/**
+ * AI投稿（プロフィール付き）
+ */
+export const AiPostWithProfileSchema = z
+  .object({
+    id: z.uuid().openapi({
+      description: "AI投稿ID",
+      example: "550e8400-e29b-41d4-a716-446655440001",
+    }),
+    content: z.string().openapi({
+      description: "AI投稿内容",
+      example: "素敵な一週間でしたね！",
+    }),
+    imageUrl: z.url().nullable().openapi({
+      description: "AI投稿画像URL",
+      example:
+        "https://xxx.supabase.co/storage/v1/object/public/ai-posts/xxx.png",
+    }),
+    sourceStartAt: z.iso.datetime().openapi({
+      description: "ソース期間開始（UTC）",
+      example: "2025-12-01T00:00:00.000Z",
+    }),
+    sourceEndAt: z.iso.datetime().openapi({
+      description: "ソース期間終了（UTC）",
+      example: "2025-12-08T00:00:00.000Z",
+    }),
+    createdAt: z.iso.datetime().openapi({
+      description: "作成日時（UTC）",
+      example: "2025-12-07T15:00:00.000Z",
+    }),
+    aiProfile: AiProfileSummarySchema.openapi({
+      description: "AIプロフィール情報",
+    }),
+  })
+  .openapi("AiPostWithProfile");
+
+export type AiPostWithProfile = z.infer<typeof AiPostWithProfileSchema>;
+
+/**
+ * ユーザー投稿（週間世界詳細用）
+ */
+export const UserPostSummarySchema = z
+  .object({
+    id: z.uuid().openapi({
+      description: "投稿ID",
+      example: "550e8400-e29b-41d4-a716-446655440002",
+    }),
+    content: z.string().openapi({
+      description: "投稿内容",
+      example: "今日は良い天気でした。",
+    }),
+    uploadImageUrl: z.url().nullable().openapi({
+      description: "添付画像URL",
+      example:
+        "https://xxx.supabase.co/storage/v1/object/public/entries/xxx.png",
+    }),
+    createdAt: z.iso.datetime().openapi({
+      description: "作成日時（UTC）",
+      example: "2025-12-01T09:00:00.000Z",
+    }),
+  })
+  .openapi("UserPostSummary");
+
+export type UserPostSummary = z.infer<typeof UserPostSummarySchema>;
+
+/**
+ * 週間世界詳細
+ */
+export const WeeklyWorldDetailSchema = z
+  .object({
+    id: z.uuid().openapi({
+      description: "週間世界ID",
+      example: "550e8400-e29b-41d4-a716-446655440003",
+    }),
+    weekStartDate: z.iso.date().openapi({
+      description: "週の開始日（月曜日、YYYY-MM-DD形式）",
+      example: "2025-12-01",
+    }),
+    weeklyWorldImageUrl: z.url().openapi({
+      description: "週のワールド画像URL",
+      example:
+        "https://xxx.supabase.co/storage/v1/object/public/worlds/xxx.png",
+    }),
+    createdAt: z.iso.datetime().openapi({
+      description: "作成日時（UTC）",
+      example: "2025-12-07T15:00:00.000Z",
+    }),
+    updatedAt: z.iso.datetime().openapi({
+      description: "更新日時（UTC）",
+      example: "2025-12-07T15:00:00.000Z",
+    }),
+  })
+  .openapi("WeeklyWorldDetail");
+
+export type WeeklyWorldDetail = z.infer<typeof WeeklyWorldDetailSchema>;
+
+/**
+ * GET /reflection/weekly-world - 週間世界詳細取得
+ */
+export const GetWeeklyWorldInputSchema = z
+  .object({
+    weekStartDate: z.iso.date().openapi({
+      description: "週の開始日（月曜日、YYYY-MM-DD形式）",
+      example: "2025-12-01",
+    }),
+  })
+  .openapi("GetWeeklyWorldInput");
+
+export type GetWeeklyWorldInput = z.infer<typeof GetWeeklyWorldInputSchema>;
+
+export const GetWeeklyWorldOutputSchema = z
+  .object({
+    weeklyWorld: WeeklyWorldDetailSchema.openapi({
+      description: "週間世界情報",
+    }),
+    userPosts: z.array(UserPostSummarySchema).openapi({
+      description: "その週のユーザー日記一覧（作成日時昇順）",
+    }),
+    aiPosts: z.array(AiPostWithProfileSchema).openapi({
+      description: "その週のAI投稿一覧（作成日時昇順）",
+    }),
+  })
+  .openapi("GetWeeklyWorldOutput");
+
+export type GetWeeklyWorldOutput = z.infer<typeof GetWeeklyWorldOutputSchema>;

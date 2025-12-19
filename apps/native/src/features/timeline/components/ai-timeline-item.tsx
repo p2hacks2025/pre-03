@@ -5,43 +5,35 @@ import { Image, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
 import { formatRelativeTime } from "../lib/format-relative-time";
+import type { AiTimelineItemProps } from "./types";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
 const StyledImage = withUniwind(Image);
 
-export interface TimelineCardProps {
-  username: string;
-  content: string;
-  createdAt: string;
-  avatarUri?: string;
-  uploadImageUrl?: string | null;
-}
+export type { AiTimelineItemProps };
 
 /**
- * タイムライン用の投稿カードコンポーネント
+ * AI投稿用タイムラインアイテムコンポーネント
  *
- * SNS風のタイムライン表示に使用するカードコンポーネント。
- * ユーザーアイコン、ユーザー名、投稿本文、経過時間、添付画像を表示します。
+ * SNS風のデザインで、アバター表示と相対時間表示に対応。
  *
  * @example
  * ```tsx
- * <TimelineCard
- *   username="poyopoyo"
- *   content="今日はとても良い天気でした"
+ * <AiTimelineItem
+ *   content="AIが生成したコンテンツです。"
  *   createdAt="2025-12-18T10:30:00.000Z"
- *   avatarUri="https://example.com/avatar.png"
  *   uploadImageUrl="https://example.com/image.png"
+ *   author={{ username: "AIアシスタント", avatarUrl: "https://example.com/avatar.png" }}
  * />
  * ```
  */
-export const TimelineCard = ({
-  username,
+export const AiTimelineItem = ({
   content,
   createdAt,
-  avatarUri,
   uploadImageUrl,
-}: TimelineCardProps) => {
+  author,
+}: AiTimelineItemProps) => {
   const [fontsLoaded] = useFonts({
     DotGothic16_400Regular,
     Madoufmg: require("../../../../assets/fonts/madoufmg.ttf"),
@@ -50,22 +42,19 @@ export const TimelineCard = ({
   if (!fontsLoaded) {
     return null;
   }
+
   const timeAgo = formatRelativeTime(createdAt);
 
   return (
     <StyledView className="flex-row rounded-md border-4 border-white bg-[#2C2C2E] p-4">
       {/* 左側: アバター */}
       <StyledView className="mr-3">
-        <Avatar size="md" alt={username}>
-          {avatarUri ? (
-            <Avatar.Image
-              source={
-                typeof avatarUri === "string" ? { uri: avatarUri } : avatarUri
-              }
-            />
+        <Avatar size="md" alt={author.username}>
+          {author.avatarUrl ? (
+            <Avatar.Image source={{ uri: author.avatarUrl }} />
           ) : null}
           <Avatar.Fallback>
-            {username.slice(0, 2).toUpperCase()}
+            {author.username.slice(0, 2).toUpperCase()}
           </Avatar.Fallback>
         </Avatar>
       </StyledView>
@@ -78,7 +67,7 @@ export const TimelineCard = ({
             className="font-semibold text-base text-white"
             style={{ fontFamily: "Madoufmg" }}
           >
-            {username}
+            {author.username}
           </StyledText>
           <StyledText
             className="text-gray-400 text-xs"
