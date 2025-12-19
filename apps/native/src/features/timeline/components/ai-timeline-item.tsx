@@ -1,9 +1,8 @@
-import { DotGothic16_400Regular } from "@expo-google-fonts/dotgothic16";
-import { useFonts } from "expo-font";
 import { Avatar } from "heroui-native";
 import { Image, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
+import { FONT_FAMILY } from "@/lib/fonts";
 import { formatRelativeTime } from "../lib/format-relative-time";
 import type { AiTimelineItemProps } from "./types";
 
@@ -34,15 +33,6 @@ export const AiTimelineItem = ({
   uploadImageUrl,
   author,
 }: AiTimelineItemProps) => {
-  const [fontsLoaded] = useFonts({
-    DotGothic16_400Regular,
-    Madoufmg: require("../../../../assets/fonts/madoufmg.ttf"),
-  });
-
-  if (!fontsLoaded) {
-    return null;
-  }
-
   const timeAgo = formatRelativeTime(createdAt);
 
   return (
@@ -65,13 +55,13 @@ export const AiTimelineItem = ({
         <StyledView className="flex-row items-center justify-between">
           <StyledText
             className="font-semibold text-base text-white"
-            style={{ fontFamily: "Madoufmg" }}
+            style={{ fontFamily: FONT_FAMILY.MADOUFMG }}
           >
             {author.username}
           </StyledText>
           <StyledText
             className="text-gray-400 text-xs"
-            style={{ fontFamily: "DotGothic16_400Regular" }}
+            style={{ fontFamily: FONT_FAMILY.DOT_GOTHIC }}
           >
             {timeAgo}
           </StyledText>
@@ -80,7 +70,7 @@ export const AiTimelineItem = ({
         {/* 投稿本文 */}
         <StyledText
           className="text-sm text-white leading-5"
-          style={{ fontFamily: "DotGothic16_400Regular" }}
+          style={{ fontFamily: FONT_FAMILY.DOT_GOTHIC }}
         >
           {content}
         </StyledText>

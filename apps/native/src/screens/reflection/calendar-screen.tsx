@@ -1,4 +1,3 @@
-import { useFonts } from "expo-font";
 import { LinearGradient } from "expo-linear-gradient";
 import { Button, Spinner } from "heroui-native";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -29,10 +28,6 @@ const StyledText = withUniwind(Text);
 
 export const CalendarScreen = () => {
   const insets = useSafeAreaInsets();
-
-  const [fontsLoaded] = useFonts({
-    Madoufmg: require("../../../assets/fonts/madoufmg.ttf"),
-  });
 
   const {
     monthGroups,
@@ -109,11 +104,6 @@ export const CalendarScreen = () => {
   }, [hasMore, isLoadingMore, loadMore]);
 
   const totalHeaderHeight = HEADER_HEIGHT + DATE_DISPLAY_HEIGHT;
-
-  // フォントローディング
-  if (!fontsLoaded) {
-    return null;
-  }
 
   // 初回ローディング
   if (isLoading) {
