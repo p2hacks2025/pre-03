@@ -26,9 +26,7 @@
     "db:studio": "turbo run db:studio",
     "db:seed": "pnpm -F '@packages/db' db:seed",
     "db:setup": "node scripts/db-setup.mjs",
-    "env:update": "node scripts/env-update.mjs",
-    "branch:setup": "./scripts/worktree-setup.sh",
-    "branch:remove": "./scripts/worktree-remove.sh"
+    "env:update": "node scripts/env-update.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.8",
