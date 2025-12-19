@@ -3,6 +3,7 @@ packages:
   - packages/*
 
 onlyBuiltDependencies:
+  - '@heroui/shared-utils'
   - esbuild
   - lefthook
   - msw
