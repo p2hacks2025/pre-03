@@ -1,7 +1,5 @@
-import {
-  DotGothic16_400Regular,
-  useFonts,
-} from "@expo-google-fonts/dotgothic16";
+import { DotGothic16_400Regular } from "@expo-google-fonts/dotgothic16";
+import { useFonts } from "expo-font";
 import { Avatar } from "heroui-native";
 import { Image, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
@@ -46,6 +44,7 @@ export const TimelineCard = ({
 }: TimelineCardProps) => {
   const [fontsLoaded] = useFonts({
     DotGothic16_400Regular,
+    Madoufmg: require("../../../../assets/fonts/madoufmg.ttf"),
   });
 
   if (!fontsLoaded) {
@@ -77,7 +76,7 @@ export const TimelineCard = ({
         <StyledView className="flex-row items-center justify-between">
           <StyledText
             className="font-semibold text-base text-white"
-            style={{ fontFamily: "DotGothic16_400Regular" }}
+            style={{ fontFamily: "Madoufmg" }}
           >
             {username}
           </StyledText>

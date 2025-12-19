@@ -1,3 +1,4 @@
+import { useFonts } from "expo-font";
 import { Button, Spinner } from "heroui-native";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
@@ -23,6 +24,10 @@ const StyledText = withUniwind(Text);
 
 export const CalendarScreen = () => {
   const insets = useSafeAreaInsets();
+
+  const [fontsLoaded] = useFonts({
+    Madoufmg: require("../../../assets/fonts/madoufmg.ttf"),
+  });
 
   const {
     monthGroups,
@@ -100,6 +105,11 @@ export const CalendarScreen = () => {
 
   const stickyHeaderHeight = 56;
 
+  // フォントローディング
+  if (!fontsLoaded) {
+    return null;
+  }
+
   // 初回ローディング
   if (isLoading) {
     return (
@@ -130,10 +140,15 @@ export const CalendarScreen = () => {
           height: insets.top + stickyHeaderHeight,
         }}
       >
-        <StyledView className="flex-1 flex-row items-center">
-          <StickyMonthHeader month={currentMonth} />
-          <StickyYearHeader year={currentYear} />
-          <StyledView className="w-12" />
+        <StyledView className="flex-1 justify-center">
+          <StyledText className="text-center font-bold text-2xl text-foreground">
+            今までの世界
+          </StyledText>
+          <StyledView className="flex-row items-center">
+            <StickyMonthHeader month={currentMonth} />
+            <StickyYearHeader year={currentYear} />
+            <StyledView className="w-16" />
+          </StyledView>
         </StyledView>
       </StyledView>
 
