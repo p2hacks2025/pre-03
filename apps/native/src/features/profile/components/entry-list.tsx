@@ -24,7 +24,8 @@ export const EntryList = () => {
 
   return (
     <StyledView className="flex-1">
-      <StyledView className="flex-row items-center border-divider/30 border-b px-4 py-3">
+      {/* ソートバー */}
+      <StyledView className="px-4 py-3">
         <StyledPressable
           className="flex-row items-center active:opacity-70"
           onPress={toggleSortOrder}
@@ -40,7 +41,8 @@ export const EntryList = () => {
         </StyledPressable>
       </StyledView>
 
-      <StyledView>
+      {/* カードリスト */}
+      <StyledView className="pt-1">
         {entries.map((entry) => (
           <EntryCard key={entry.id} entry={entry} />
         ))}

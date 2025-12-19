@@ -43,7 +43,7 @@ export const ProfileHeader = () => {
       <StyledView className="flex-1">
         <StyledView
           className="flex-row items-center pb-2"
-          style={{ borderBottomWidth: 1, borderBottomColor: "#e5e5e5" }}
+          style={{ borderBottomWidth: 1, borderBottomColor: "#A08850" }}
         >
           {isEditing ? (
             <StyledTextInput
