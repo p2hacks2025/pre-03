@@ -1,6 +1,7 @@
 ---
 allowed-tools: Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*), Bash(git push:*), Bash(git commit:*), Bash(gh pr create:*), Bash(git branch:*), Bash(git diff:*), Bash(git log:*)
 description: コミット、プッシュ、ブランチからPR作成（resolve自動指定）
+model: sonnet
 ---
 
 ## Context
