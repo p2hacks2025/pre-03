@@ -53,6 +53,9 @@ export const getDateUpdate = async (
   ]);
 
   // デイリー更新判定
+  // 注意: createDate は Worker 側で JST 基準の日付として DATE 型に保存されている
+  // （例: JST 2025-12-19 の投稿 → DB には "2025-12-19" が保存）
+  // そのため追加の JST 変換は不要で、formatDateString で直接比較可能
   let daily: GetDateUpdateOutput["daily"] = null;
   if (latestBuildLog) {
     const buildLogDateString = formatDateString(
