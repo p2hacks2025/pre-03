@@ -1,15 +1,15 @@
 ---
-allowed-tools: Task, Bash(gh pr view:*), Bash(gh pr diff:*)
-argument-hint: [pr-number]
+allowed-tools: Task, Bash(gh pr diff:*)
 description: PRをレビューしてGitHubにコメントを投稿
 model: haiku
 ---
 
-PR #$1 をレビューしてください。
+現在のブランチの差分をレビューしてください。
 
 ## 手順
 
-1. `gh pr diff $1` で差分を確認
+1. `gh pr diff` で差分を確認（PRがなければ `git diff main...HEAD`）
+
 2. 以下の判定で適切なエージェントを Task で起動：
 
 **→ `p2-review-agent-max`** を使う場合：
@@ -20,4 +20,4 @@ PR #$1 をレビューしてください。
 **→ `p2-review-agent-smart`** を使う場合：
 - 上記以外すべて
 
-1. レビュー完了後、結果の要約を報告
+3. レビュー完了後、結果の要約を報告
