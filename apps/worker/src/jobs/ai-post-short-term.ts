@@ -1,16 +1,10 @@
-import {
-  createAiPost,
-  getRandomAiProfile,
-  getRecentUserPosts,
-  hasExistingAiPost,
-  type WorkerContext,
-} from "@/lib";
+import type { WorkerContext } from "@/lib";
 import {
   AI_POST_CONFIG,
-  generateAiPostContents,
+  fetchRecentUserPosts,
   generateStandalonePosts,
-  getRandomPublishedAt,
   groupPostsByUser,
+  processUserAiPosts,
   shouldExecuteWithChance,
 } from "@/tasks";
 
@@ -61,7 +55,7 @@ export const aiPostShortTerm = async (
     result.errors.push(...standalone.errors);
 
     // Process user posts if any
-    const posts = await getRecentUserPosts(
+    const posts = await fetchRecentUserPosts(
       ctx,
       AI_POST_CONFIG.SHORT_TERM_MINUTES,
     );
@@ -69,48 +63,16 @@ export const aiPostShortTerm = async (
 
     for (const group of groups) {
       try {
-        const diaryContent = group.posts.map((p) => p.content).join("\n\n");
-        const sorted = [...group.posts].sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-        );
-        const sourceStartAt = new Date(sorted[0].createdAt);
-        const sourceEndAt = new Date(sorted[sorted.length - 1].createdAt);
-
-        if (
-          await hasExistingAiPost(
-            ctx,
-            group.userProfileId,
-            sourceStartAt,
-            sourceEndAt,
-          )
-        ) {
-          continue;
-        }
-
-        const aiProfile = await getRandomAiProfile(ctx);
-        const contents = await generateAiPostContents(
+        const { generated } = await processUserAiPosts(
           ctx,
-          aiProfile,
-          diaryContent,
-          AI_POST_CONFIG.POSTS_PER_USER,
+          group,
+          AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
+          AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
         );
-
-        for (const content of contents) {
-          await createAiPost(ctx, {
-            aiProfileId: aiProfile.id,
-            userProfileId: group.userProfileId,
-            content,
-            sourceStartAt,
-            sourceEndAt,
-            publishedAt: getRandomPublishedAt(
-              AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
-              AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
-            ),
-          });
-          result.generatedPosts++;
+        result.generatedPosts += generated;
+        if (generated > 0) {
+          result.processedUsers++;
         }
-        result.processedUsers++;
       } catch (error) {
         result.errors.push(
           `User ${group.userProfileId}: ${(error as Error).message}`,
