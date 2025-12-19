@@ -1,5 +1,6 @@
 import {
   and,
+  asc,
   type DbClient,
   desc,
   eq,
@@ -193,4 +194,43 @@ export const getEntryDatesByMonth = async (
     .orderBy(sql`DATE(${userPosts.createdAt} AT TIME ZONE 'Asia/Tokyo')`);
 
   return result;
+};
+
+export type GetUserPostsByWeekOptions = {
+  profileId: string;
+  weekStartDate: Date;
+};
+
+/**
+ * 指定週の日記を取得（JST基準で月曜〜日曜）
+ * 週の範囲: weekStartDate 00:00 JST 〜 weekStartDate+7日 00:00 JST
+ */
+export const getUserPostsByWeek = async (
+  db: DbClient,
+  options: GetUserPostsByWeekOptions,
+): Promise<UserPost[]> => {
+  const { profileId, weekStartDate } = options;
+
+  // 週の範囲をJST基準で計算してUTCに変換
+  const year = weekStartDate.getUTCFullYear();
+  const month = weekStartDate.getUTCMonth() + 1;
+  const day = weekStartDate.getUTCDate();
+
+  // JST月曜0時〜JST翌月曜0時をUTCに変換
+  const weekStart = jstToUTC(year, month, day);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setUTCDate(weekEnd.getUTCDate() + 7);
+
+  return db
+    .select()
+    .from(userPosts)
+    .where(
+      and(
+        eq(userPosts.userProfileId, profileId),
+        gte(userPosts.createdAt, weekStart),
+        lt(userPosts.createdAt, weekEnd),
+        isNull(userPosts.deletedAt),
+      ),
+    )
+    .orderBy(asc(userPosts.createdAt));
 };
