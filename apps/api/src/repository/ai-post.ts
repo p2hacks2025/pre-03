@@ -55,6 +55,7 @@ export const getAiPostsByWeek = async (
       imageUrl: aiPosts.imageUrl,
       sourceStartAt: aiPosts.sourceStartAt,
       sourceEndAt: aiPosts.sourceEndAt,
+      publishedAt: aiPosts.publishedAt,
       createdAt: aiPosts.createdAt,
       updatedAt: aiPosts.updatedAt,
       deletedAt: aiPosts.deletedAt,
