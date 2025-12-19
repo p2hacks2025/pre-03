@@ -1,6 +1,8 @@
 import { createRoute } from "@hono/zod-openapi";
 import {
   GetMeOutputSchema,
+  UpdateProfileInputSchema,
+  UpdateProfileOutputSchema,
   UploadAvatarInputSchema,
   UploadAvatarOutputSchema,
 } from "@packages/schema/user";
@@ -47,6 +49,33 @@ export const uploadAvatarRoute = createRoute({
         },
       },
       description: "アバターアップロード成功",
+    },
+    ...DefaultErrorResponses,
+  },
+  tags: ["User"],
+});
+
+export const updateProfileRoute = createRoute({
+  method: "post",
+  path: "/profile/update",
+  middleware: [authMiddleware, dbMiddleware] as const,
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: UpdateProfileInputSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: UpdateProfileOutputSchema,
+        },
+      },
+      description: "プロフィール更新成功",
     },
     ...DefaultErrorResponses,
   },
