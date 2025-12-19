@@ -34,19 +34,16 @@ export const AiTimelineItem = ({
 }: AiTimelineItemProps) => {
   const timeAgo = formatRelativeTime(createdAt);
 
-  // author が undefined の場合のフォールバック
-  const safeAuthor = author ?? { username: "AI", avatarUrl: null };
-
   return (
     <StyledView className="flex-row rounded-md border-4 border-white bg-[#2C2C2E] p-4">
       {/* 左側: アバター */}
       <StyledView className="mr-3">
-        <Avatar size="md" alt={safeAuthor.username}>
-          {safeAuthor.avatarUrl ? (
-            <Avatar.Image source={{ uri: safeAuthor.avatarUrl }} />
+        <Avatar size="md" alt={author.username}>
+          {author.avatarUrl ? (
+            <Avatar.Image source={{ uri: author.avatarUrl }} />
           ) : null}
           <Avatar.Fallback>
-            {safeAuthor.username.slice(0, 2).toUpperCase()}
+            {author.username.slice(0, 2).toUpperCase()}
           </Avatar.Fallback>
         </Avatar>
       </StyledView>
@@ -59,7 +56,7 @@ export const AiTimelineItem = ({
             className="font-semibold text-base text-white"
             style={{ fontFamily: "DotGothic16_400Regular" }}
           >
-            {safeAuthor.username}
+            {author.username}
           </StyledText>
           <StyledText
             className="text-gray-400 text-xs"
