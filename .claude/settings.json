@@ -88,6 +88,7 @@
       "Bash(gh workflow view:*)",
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
+      "Bash(gh pr comment:*)",
       "mcp__ide__getDiagnostics",
       "WebSearch",
       "WebFetch(domain:developers.cloudflare.com)",

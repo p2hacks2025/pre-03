@@ -32,3 +32,17 @@ export const getWeeklySummaryPrompt = (): string => {
     "utf-8",
   );
 };
+
+export const getAiPostGenerationPrompt = (): string => {
+  return readFileSync(
+    resolve(ASSETS_DIR, "prompts/ai_post_generation.md"),
+    "utf-8",
+  );
+};
+
+export const getAiPostStandalonePrompt = (): string => {
+  return readFileSync(
+    resolve(ASSETS_DIR, "prompts/ai_post_standalone.md"),
+    "utf-8",
+  );
+};
