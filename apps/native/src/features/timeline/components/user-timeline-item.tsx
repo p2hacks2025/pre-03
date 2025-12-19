@@ -1,39 +1,20 @@
-import { useFonts } from "expo-font";
 import { LinearGradient } from "expo-linear-gradient";
-import { Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
+
+import { formatAbsoluteTime } from "../lib/format-absolute-time";
+import type { UserTimelineItemProps } from "./types";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
+const StyledImage = withUniwind(Image);
 
-export interface DiaryCardProps {
-  /**
-   * 日記の投稿日
-   */
-  date: string;
-  /**
-   * 日記の本文
-   */
-  content: string;
-}
+export type { UserTimelineItemProps };
 
-/**
- * 日記詳細画面用のカードコンポーネント
- *
- *
- * @example
- * ```tsx
- * <DiaryCard
- *   date="2024/01/15"
- *   content="今日は楽しい一日でした。"
- * />
- * ```
- */
 // インナーシャドウ効果のグラデーション設定
 const INNER_SHADOW_GRADIENTS = [
   {
     id: "top",
-    // 上から中心に向かう
     colors: [
       "rgba(190, 166, 123, 0.8)",
       "rgba(190, 166, 123, 0.4)",
@@ -54,7 +35,6 @@ const INNER_SHADOW_GRADIENTS = [
   },
   {
     id: "bottom",
-    // 下から中心に向かう
     colors: [
       "transparent",
       "rgba(190, 166, 123, 0.05)",
@@ -75,7 +55,6 @@ const INNER_SHADOW_GRADIENTS = [
   },
   {
     id: "left",
-    // 左から中心に向かう
     colors: [
       "rgba(190, 166, 123, 0.8)",
       "rgba(190, 166, 123, 0.4)",
@@ -96,7 +75,6 @@ const INNER_SHADOW_GRADIENTS = [
   },
   {
     id: "right",
-    // 右から中心に向かう
     colors: [
       "transparent",
       "rgba(190, 166, 123, 0.05)",
@@ -117,22 +95,33 @@ const INNER_SHADOW_GRADIENTS = [
   },
 ];
 
-export const DiaryCard = ({ date, content }: DiaryCardProps) => {
-  const [fontsLoaded] = useFonts({
-    "ZenKurenaido-Regular": require("../../../../assets/fonts/ZenKurenaido-Regular.ttf"),
-  });
-
-  if (!fontsLoaded) {
-    return null;
-  }
+/**
+ * 人間投稿用タイムラインアイテムコンポーネント
+ *
+ * 日記風のデザインで、絶対時間表示と画像添付に対応。
+ *
+ * @example
+ * ```tsx
+ * <UserTimelineItem
+ *   content="今日は良い天気でした。"
+ *   createdAt="2025-12-18T10:30:00.000Z"
+ *   uploadImageUrl="https://example.com/image.png"
+ *   author={{ username: "田中", avatarUrl: null }}
+ * />
+ * ```
+ */
+export const UserTimelineItem = ({
+  content,
+  createdAt,
+  uploadImageUrl,
+}: UserTimelineItemProps) => {
+  const formattedDate = formatAbsoluteTime(createdAt);
 
   return (
     <StyledView className="overflow-hidden rounded-md border border-[#A28758]">
       <StyledView
         className="rounded-md p-5"
-        style={{
-          backgroundColor: "#FFF4DE",
-        }}
+        style={{ backgroundColor: "#FFF4DE" }}
       >
         {INNER_SHADOW_GRADIENTS.map((gradient) => (
           <LinearGradient
@@ -145,21 +134,34 @@ export const DiaryCard = ({ date, content }: DiaryCardProps) => {
           />
         ))}
 
+        {/* 日時表示 */}
         <StyledView>
           <StyledText
             className="mb-1 text-black"
             style={{ fontFamily: "ZenKurenaido-Regular" }}
           >
-            {date}
+            {formattedDate}
           </StyledText>
         </StyledView>
 
+        {/* 本文 */}
         <StyledText
           className="text-black text-em leading-5"
           style={{ fontFamily: "ZenKurenaido-Regular" }}
         >
           {content}
         </StyledText>
+
+        {/* 添付画像 */}
+        {uploadImageUrl && (
+          <StyledView className="mt-3 overflow-hidden rounded-lg">
+            <StyledImage
+              source={{ uri: uploadImageUrl }}
+              className="aspect-video w-full"
+              resizeMode="cover"
+            />
+          </StyledView>
+        )}
       </StyledView>
     </StyledView>
   );

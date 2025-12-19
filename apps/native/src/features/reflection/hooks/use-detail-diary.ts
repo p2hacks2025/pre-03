@@ -6,21 +6,24 @@ export interface DiaryEntry {
    */
   id: string;
   /**
-   * ユーザー名
-   */
-  username: string;
-  /**
    * 日記の内容
    */
   content: string;
   /**
-   * 投稿日時（例: "2025/12/14 22:39"）
+   * 投稿日時（ISO 8601形式）
    */
-  timestamp: string;
+  createdAt: string;
   /**
-   * アバター画像のURI（オプション）
+   * 添付画像URL
    */
-  avatarUri?: string;
+  uploadImageUrl: string | null;
+  /**
+   * 著者情報
+   */
+  author: {
+    username: string;
+    avatarUrl: string | null;
+  };
 }
 
 export interface DetailDiaryData {
@@ -63,28 +66,32 @@ export const useDetailDiary = () => {
     diaryEntries: [
       {
         id: "1",
-        username: "ユーザーネーム",
         content: "なんかピザが食べたくなってきたな、頼んじゃおうかな",
-        timestamp: "2025/12/14 22:39",
+        createdAt: "2025-12-14T22:39:00.000Z",
+        uploadImageUrl: null,
+        author: { username: "ユーザーネーム", avatarUrl: null },
       },
       {
         id: "2",
-        username: "ユーザーネーム",
         content:
           "なんかピザが食べたくなってきたな、頼んじゃおうかなあああああああああああああああああああああああああああああいいいいいいいいいいいいいいいいいいいいいい",
-        timestamp: "2025/12/14 22:39",
+        createdAt: "2025-12-14T22:39:00.000Z",
+        uploadImageUrl: null,
+        author: { username: "ユーザーネーム", avatarUrl: null },
       },
       {
         id: "3",
-        username: "ユーザーネーム",
         content: "なんかピザが食べたくなってきたな、頼んじゃおうかな",
-        timestamp: "2025/12/14 22:39",
+        createdAt: "2025-12-14T22:39:00.000Z",
+        uploadImageUrl: null,
+        author: { username: "ユーザーネーム", avatarUrl: null },
       },
       {
         id: "4",
-        username: "ユーザーネーム",
         content: "なんかピザが食べたくなってきたな、頼んじゃおうかな",
-        timestamp: "2025/12/14 22:39",
+        createdAt: "2025-12-14T22:39:00.000Z",
+        uploadImageUrl: null,
+        author: { username: "ユーザーネーム", avatarUrl: null },
       },
     ],
   };
