@@ -1,14 +1,9 @@
-import {
-  createAiPost,
-  getRandomAiProfile,
-  getRandomHistoricalPosts,
-  type WorkerContext,
-} from "@/lib";
+import type { WorkerContext } from "@/lib";
 import {
   AI_POST_CONFIG,
-  generateAiPostContents,
+  fetchRandomHistoricalPosts,
   generateStandalonePosts,
-  getRandomPublishedAt,
+  processHistoricalAiPost,
   shouldExecuteWithChance,
 } from "@/tasks";
 
@@ -56,7 +51,7 @@ export const aiPostLongTerm = async (
     result.errors.push(...standalone.errors);
 
     // Process historical diaries
-    const diaries = await getRandomHistoricalPosts(
+    const diaries = await fetchRandomHistoricalPosts(
       ctx,
       AI_POST_CONFIG.LONG_TERM_FETCH_COUNT,
       AI_POST_CONFIG.LONG_TERM_EXCLUDE_DAYS,
@@ -64,29 +59,13 @@ export const aiPostLongTerm = async (
 
     for (const diary of diaries) {
       try {
-        const aiProfile = await getRandomAiProfile(ctx);
-        const contents = await generateAiPostContents(
+        const { generated } = await processHistoricalAiPost(
           ctx,
-          aiProfile,
-          diary.content,
-          AI_POST_CONFIG.POSTS_PER_USER,
+          diary,
+          AI_POST_CONFIG.LONG_TERM_SCHEDULE_MIN,
+          AI_POST_CONFIG.LONG_TERM_SCHEDULE_MAX,
         );
-        const sourceDate = new Date(diary.createdAt);
-
-        for (const content of contents) {
-          await createAiPost(ctx, {
-            aiProfileId: aiProfile.id,
-            userProfileId: diary.userProfileId,
-            content,
-            sourceStartAt: sourceDate,
-            sourceEndAt: sourceDate,
-            publishedAt: getRandomPublishedAt(
-              AI_POST_CONFIG.LONG_TERM_SCHEDULE_MIN,
-              AI_POST_CONFIG.LONG_TERM_SCHEDULE_MAX,
-            ),
-          });
-          result.generatedPosts++;
-        }
+        result.generatedPosts += generated;
       } catch (error) {
         result.errors.push(`Diary ${diary.id}: ${(error as Error).message}`);
         result.success = false;

@@ -1,12 +1,16 @@
 export {
   AI_POST_CONFIG,
   type DiaryGroup,
+  fetchRandomHistoricalPosts,
+  fetchRecentUserPosts,
   type GenerationResult,
   generateAiPostContents,
   generateStandaloneAiPostContents,
   generateStandalonePosts,
   getRandomPublishedAt,
   groupPostsByUser,
+  processHistoricalAiPost,
+  processUserAiPosts,
   shouldExecuteWithChance,
 } from "./ai-post";
 export {
