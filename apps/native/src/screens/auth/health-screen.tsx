@@ -99,7 +99,7 @@ export const HealthScreen = () => {
           />
           <Button.Label>Refresh Status</Button.Label>
         </Button>
-        <Button variant="ghost" onPress={() => router.push("/(app)/profile")}>
+        <Button variant="ghost" onPress={() => router.back()}>
           <Button.Label>Back to Profile</Button.Label>
         </Button>
       </StyledView>

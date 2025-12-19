@@ -9,6 +9,12 @@ const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
 const StyledImage = withUniwind(Image);
 
+// カラー定義
+const COLORS = {
+  cardBackground: "#FDF8EE",
+  cardBorder: "#E8DFC7",
+};
+
 export interface EntryCardProps {
   entry: Entry;
 }
@@ -22,8 +28,12 @@ export interface EntryCardProps {
 export const EntryCard = ({ entry }: EntryCardProps) => {
   return (
     <StyledView
-      className="border-divider/30 border-b px-4 py-4"
-      style={{ backgroundColor: "transparent" }}
+      className="mx-4 mb-3 rounded-2xl p-4"
+      style={{
+        backgroundColor: COLORS.cardBackground,
+        borderColor: COLORS.cardBorder,
+        borderWidth: 1,
+      }}
     >
       <StyledText className="mb-2 text-muted text-sm">
         {formatDateTime(entry.postedAt)}

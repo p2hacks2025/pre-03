@@ -1,68 +1,141 @@
-import { useState } from "react";
+import type { TimelineEntry } from "@packages/schema/entry";
+import { useCallback, useEffect, useState } from "react";
 
-import type { Entry } from "../types";
-
-const MOCK_ENTRIES: Entry[] = [
-  {
-    id: "1",
-    postedAt: new Date(2025, 11, 17, 12, 30),
-    content:
-      "今日はとても良い天気でした。散歩に行って、近所の公園でコーヒーを飲みました。",
-  },
-  {
-    id: "2",
-    postedAt: new Date(2025, 11, 16, 9, 15),
-    content: "新しいカフェを発見！抹茶ラテが美味しかった。",
-    imageUrl: "https://picsum.photos/400/300",
-  },
-  {
-    id: "3",
-    postedAt: new Date(2025, 11, 15, 18, 45),
-    content:
-      "プロジェクトが無事に完了しました。チームのみんなに感謝です。打ち上げで焼肉を食べに行きました。",
-  },
-  {
-    id: "4",
-    postedAt: new Date(2025, 11, 14, 21, 0),
-    content: "映画を見てきた。感動して泣いてしまった。",
-    imageUrl: "https://picsum.photos/400/250",
-  },
-  {
-    id: "5",
-    postedAt: new Date(2025, 11, 13, 14, 20),
-    content: "久しぶりに友達と会えて嬉しかった。",
-  },
-];
+import { useAuth } from "@/contexts/auth-context";
+import { createAuthenticatedClient } from "@/lib/api";
+import { logger } from "@/lib/logger";
 
 export type SortOrder = "newest" | "oldest";
 
+interface ProfileEntriesState {
+  entries: TimelineEntry[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+/**
+ * 日付を YYYY-MM-DD 形式にフォーマット
+ */
+const formatDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export interface UseProfileEntriesReturn {
-  entries: Entry[];
+  entries: TimelineEntry[];
+  isLoading: boolean;
+  error: string | null;
   sortOrder: SortOrder;
+  selectedDate: Date | null;
   toggleSortOrder: () => void;
+  setSelectedDate: (date: Date | null) => void;
+  refresh: () => void;
 }
 
 /**
  * プロフィール画面用のエントリーデータを取得するフック
  *
- * 現在はモックデータを返す。
- * 将来的にはAPIから取得する。
+ * 日付を指定してAPIからエントリーを取得。
+ * ソート順と日付フィルタリングをサポート。
  */
 export const useProfileEntries = (): UseProfileEntriesReturn => {
+  const { accessToken } = useAuth();
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [state, setState] = useState<ProfileEntriesState>({
+    entries: [],
+    isLoading: true,
+    error: null,
+  });
+
+  const fetchEntries = useCallback(async () => {
+    if (!accessToken) {
+      setState({
+        entries: [],
+        isLoading: false,
+        error: "認証が必要です",
+      });
+      return;
+    }
+
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const authClient = createAuthenticatedClient(accessToken);
+
+      // 日付が指定されている場合は、その日のエントリーのみ取得
+      const query: { limit: number; from?: string; to?: string } = {
+        limit: 50,
+      };
+
+      if (selectedDate) {
+        const dateStr = formatDate(selectedDate);
+        query.from = dateStr;
+        query.to = dateStr;
+      }
+
+      logger.debug("Fetching profile entries", { query });
+
+      const res = await authClient.entries.timeline.$get({ query });
+
+      if (res.ok) {
+        const data = await res.json();
+        logger.info("Profile entries fetched", { count: data.entries.length });
+
+        // ユーザー投稿のみフィルタリング
+        const userEntries = data.entries.filter(
+          (entry) => entry.type === "user",
+        );
+
+        setState({
+          entries: userEntries,
+          isLoading: false,
+          error: null,
+        });
+      } else {
+        logger.warn("Profile entries fetch failed", { status: res.status });
+        setState({
+          entries: [],
+          isLoading: false,
+          error: `取得に失敗しました (${res.status})`,
+        });
+      }
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error("Profile entries fetch error", {}, err);
+      setState({
+        entries: [],
+        isLoading: false,
+        error: "通信エラーが発生しました",
+      });
+    }
+  }, [accessToken, selectedDate]);
 
   const toggleSortOrder = () => {
     setSortOrder((prev) => (prev === "newest" ? "oldest" : "newest"));
   };
 
-  const sortedEntries = [...MOCK_ENTRIES].sort((a, b) => {
-    const diff = b.postedAt.getTime() - a.postedAt.getTime();
+  useEffect(() => {
+    fetchEntries();
+  }, [fetchEntries]);
+
+  // ソート順に応じてエントリーを並び替え
+  const sortedEntries = [...state.entries].sort((a, b) => {
+    const diff =
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     return sortOrder === "newest" ? diff : -diff;
   });
 
   return {
     entries: sortedEntries,
+    isLoading: state.isLoading,
+    error: state.error,
     sortOrder,
+    selectedDate,
     toggleSortOrder,
+    setSelectedDate,
+    refresh: fetchEntries,
   };
 };
