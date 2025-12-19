@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Spinner, useToast } from "heroui-native";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
@@ -27,7 +27,7 @@ export const ProfileScreen = () => {
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = async () => {
+  const executeLogout = async () => {
     setIsLoggingOut(true);
     try {
       await logout();
@@ -46,6 +46,20 @@ export const ProfileScreen = () => {
     } finally {
       setIsLoggingOut(false);
     }
+  };
+
+  const handleLogout = () => {
+    Alert.alert("ログアウト", "ログアウトしますか？", [
+      {
+        text: "キャンセル",
+        style: "cancel",
+      },
+      {
+        text: "ログアウト",
+        style: "destructive",
+        onPress: executeLogout,
+      },
+    ]);
   };
 
   return (
@@ -83,7 +97,7 @@ export const ProfileScreen = () => {
               <StyledIonicons
                 name="log-out-outline"
                 size={24}
-                className="text-foreground"
+                className="text-red-600"
               />
             )}
           </StyledPressable>
