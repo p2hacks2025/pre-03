@@ -42,13 +42,13 @@ export const ProfileHeader = () => {
 
       <StyledView className="flex-1">
         <StyledView
-          className="flex-row items-center pb-2"
-          style={{ borderBottomWidth: 1, borderBottomColor: "#e5e5e5" }}
+          className="flex-row items-center"
+          style={{ borderBottomWidth: 1, borderBottomColor: "#fff" }}
         >
           {isEditing ? (
             <StyledTextInput
               ref={inputRef}
-              className="flex-1 rounded-md border border-primary bg-background px-2 py-1 text-foreground text-xl"
+              className="flex-1 rounded-md border border-primary bg-background p-1 text-2xl text-foreground"
               value={editName}
               onChangeText={setEditName}
               onBlur={cancelEdit}
@@ -58,13 +58,13 @@ export const ProfileHeader = () => {
               editable={!isSaving}
             />
           ) : (
-            <StyledText className="flex-1 rounded-md border border-transparent px-2 py-1 font-bold text-foreground text-xl">
+            <StyledText className="flex-1 rounded-md border border-transparent p-1 font-bold text-2xl text-foreground">
               {profile.displayName}
             </StyledText>
           )}
           <StyledPressable
-            className={`ml-2 rounded-md px-3 py-1 active:opacity-70 ${
-              isEditing ? "bg-success/20" : "bg-muted/20"
+            className={`mt-1 ml-2 rounded-md px-1 py-1 active:opacity-70 ${
+              isEditing ? "bg-success" : "bg-muted/30"
             }`}
             onPress={isEditing ? saveEdit : startEdit}
             disabled={isSaving}
@@ -75,13 +75,15 @@ export const ProfileHeader = () => {
               <StyledIonicons
                 name={isEditing ? "checkmark" : "pencil-outline"}
                 size={18}
-                className={isEditing ? "text-success" : "text-muted"}
+                className={isEditing ? "text-black" : "text-muted"}
               />
             )}
           </StyledPressable>
         </StyledView>
 
-        <StyledText className="mt-2 text-muted">{streakDays}日連続!</StyledText>
+        <StyledText className="mt-2 px-2 text-foreground">
+          {streakDays}日連続!
+        </StyledText>
       </StyledView>
     </StyledView>
   );

@@ -1,30 +1,27 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Spinner } from "heroui-native";
 import { Pressable, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
-import { useProfileEntries } from "../hooks/use-profile-entries";
+import { UserTimelineItem } from "@/features/timeline";
 
-import { EntryCard } from "./entry-card";
+import { useProfileEntries } from "../hooks/use-profile-entries";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
 const StyledPressable = withUniwind(Pressable);
 const StyledIonicons = withUniwind(Ionicons);
 
-/**
- * エントリー一覧コンポーネント
- *
- * プロフィール画面で自分のエントリー一覧を表示。
- * ソート切り替え機能付き。
- */
 export const EntryList = () => {
-  const { entries, sortOrder, toggleSortOrder } = useProfileEntries();
+  const { entries, isLoading, error, sortOrder, toggleSortOrder } =
+    useProfileEntries();
 
   const sortLabel = sortOrder === "newest" ? "新しい順" : "古い順";
 
   return (
     <StyledView className="flex-1">
-      <StyledView className="flex-row items-center border-divider/30 border-b px-4 py-3">
+      {/* ソート切り替え */}
+      <StyledView className="flex-row justify-end px-4 py-3">
         <StyledPressable
           className="flex-row items-center active:opacity-70"
           onPress={toggleSortOrder}
@@ -33,18 +30,53 @@ export const EntryList = () => {
             {sortLabel}
           </StyledText>
           <StyledIonicons
-            name="chevron-down"
+            name={sortOrder === "newest" ? "chevron-down" : "chevron-up"}
             size={16}
             className="ml-1 text-foreground"
           />
         </StyledPressable>
       </StyledView>
 
-      <StyledView>
-        {entries.map((entry) => (
-          <EntryCard key={entry.id} entry={entry} />
-        ))}
-      </StyledView>
+      {/* ローディング */}
+      {isLoading && (
+        <StyledView className="items-center py-8">
+          <Spinner size="lg" />
+        </StyledView>
+      )}
+
+      {/* エラー */}
+      {error && !isLoading && (
+        <StyledView className="items-center py-8">
+          <StyledText className="text-danger">{error}</StyledText>
+        </StyledView>
+      )}
+
+      {/* 空状態 */}
+      {!isLoading && !error && entries.length === 0 && (
+        <StyledView className="items-center py-8">
+          <StyledIonicons
+            name="document-text-outline"
+            size={48}
+            className="mb-2 text-muted"
+          />
+          <StyledText className="text-muted">日記がありません</StyledText>
+        </StyledView>
+      )}
+
+      {/* カードリスト */}
+      {!isLoading && !error && entries.length > 0 && (
+        <StyledView className="gap-3 px-4 pt-1">
+          {entries.map((entry) => (
+            <UserTimelineItem
+              key={entry.id}
+              content={entry.content}
+              createdAt={entry.createdAt}
+              uploadImageUrl={entry.uploadImageUrl}
+              author={entry.author}
+            />
+          ))}
+        </StyledView>
+      )}
     </StyledView>
   );
 };
