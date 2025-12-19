@@ -107,10 +107,10 @@ if [[ -f "$WORKTREE_PATH/.envrc" ]]; then
   fi
 fi
 
-# pnpm install
+# pnpm workspace:setup
 echo ""
-echo "📦 pnpm install を実行中..."
-(cd "$WORKTREE_PATH" && pnpm install)
+echo "📦 pnpm workspace:setup を実行中..."
+(cd "$WORKTREE_PATH" && pnpm workspace:setup)
 echo "✓ 依存関係をインストールしました"
 
 # VSCode で開く
