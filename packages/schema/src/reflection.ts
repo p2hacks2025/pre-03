@@ -134,7 +134,7 @@ export const AiProfileSummarySchema = z
     }),
     username: z.string().openapi({
       description: "AI名",
-      example: "ゆめみ",
+      example: "Nova",
     }),
     avatarUrl: z.url().nullable().openapi({
       description: "AIアバター画像URL",
@@ -143,7 +143,7 @@ export const AiProfileSummarySchema = z
     }),
     description: z.string().openapi({
       description: "AIの説明",
-      example: "あなたの日記を見守るAI",
+      example: "冒険が大好きなAI",
     }),
   })
   .openapi("AiProfileSummary");
