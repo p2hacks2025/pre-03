@@ -1,4 +1,5 @@
 import { useFonts } from "expo-font";
+import { LinearGradient } from "expo-linear-gradient";
 import { Button, Spinner } from "heroui-native";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
@@ -77,7 +78,7 @@ export const CalendarScreen = () => {
   ).current;
 
   const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 10,
+    itemVisiblePercentThreshold: 22,
   }).current;
 
   const renderItem: ListRenderItem<MonthGroup> = useCallback(
@@ -142,15 +143,31 @@ export const CalendarScreen = () => {
 
       {/* 年月表示（ヘッダーの下） */}
       <StyledView
-        className="absolute right-0 left-0 z-10 flex-row items-center bg-background px-4 pb-4"
+        className="absolute right-0 left-0 z-10 bg-background px-4 pb-3"
         style={{
           top: insets.top + HEADER_HEIGHT,
           height: DATE_DISPLAY_HEIGHT,
         }}
       >
-        <StickyMonthHeader month={currentMonth} />
-        <StickyYearHeader year={currentYear} />
-        <StyledView className="w-16" />
+        <StyledView className="flex-1 flex-row items-center">
+          <StickyMonthHeader month={currentMonth} />
+          <StickyYearHeader year={currentYear} />
+          <StyledView className="w-16" />
+        </StyledView>
+        {/* 下向きの影 */}
+        <LinearGradient
+          colors={["rgba(0, 0, 0, 0.08)", "transparent"]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={{
+            position: "absolute",
+            bottom: -8,
+            left: 0,
+            right: 0,
+            height: 8,
+          }}
+          pointerEvents="none"
+        />
       </StyledView>
 
       <FlatList
