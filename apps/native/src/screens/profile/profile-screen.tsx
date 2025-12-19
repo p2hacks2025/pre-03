@@ -55,13 +55,8 @@ export const ProfileScreen = () => {
         paddingBottom: insets.bottom + 16,
       }}
     >
-      {/* ゴールド背景のヘッダーエリア */}
-      <StyledView
-        style={{
-          backgroundColor: COLORS.headerBackground,
-          paddingTop: insets.top + 8,
-        }}
-      >
+      {/* ヘッダーエリア */}
+      <StyledView style={{ paddingTop: insets.top + 8 }}>
         {/* アイコンバー */}
         <StyledView className="flex-row items-center justify-between px-4 py-2">
           <StyledPressable
@@ -74,6 +69,9 @@ export const ProfileScreen = () => {
               className="text-foreground"
             />
           </StyledPressable>
+          <StyledText className="text-center font-bold text-foreground text-xl">
+            プロフィール
+          </StyledText>
           <StyledPressable
             className="rounded-full p-2 active:opacity-70"
             onPress={handleLogout}
@@ -91,13 +89,10 @@ export const ProfileScreen = () => {
           </StyledPressable>
         </StyledView>
 
-        {/* タイトル */}
-        <StyledText className="pb-4 text-center font-bold text-foreground text-xl">
-          プロフィール
-        </StyledText>
-
-        {/* プロフィール情報 */}
-        <ProfileHeader />
+        {/* プロフィール情報（ゴールド背景） */}
+        <StyledView style={{ backgroundColor: COLORS.headerBackground }}>
+          <ProfileHeader />
+        </StyledView>
       </StyledView>
 
       {/* エントリー一覧 */}
