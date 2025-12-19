@@ -1,18 +1,41 @@
 import { useEffect, useRef } from "react";
+import { useAuth } from "@/contexts/auth-context";
 import { usePopup } from "@/contexts/popup-context";
+import { createAuthenticatedClient } from "@/lib/api";
 import { logger } from "@/lib/logger";
-import { MOCK_DAILY_UPDATE_RESPONSE } from "../lib/mock-data";
 import { popupStorage } from "../lib/popup-storage";
 import type { DailyUpdateResponse, PopupConfig } from "../types";
 
 /**
- * 日付更新 API を呼び出す（現在はモックデータを返す）
+ * 日付更新 API を呼び出す
  */
-const fetchDailyUpdate = async (): Promise<DailyUpdateResponse> => {
-  // TODO: 実際の API 実装時に置き換え
-  // const res = await client.daily.$get();
-  // return res.json();
-  return MOCK_DAILY_UPDATE_RESPONSE;
+const fetchDailyUpdate = async (
+  accessToken: string,
+): Promise<DailyUpdateResponse> => {
+  const client = createAuthenticatedClient(accessToken);
+  const res = await client.reflection["date-update"].$get();
+
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
+  }
+
+  return res.json();
+};
+
+/**
+ * ステータスに応じたポップアップのタイトルを返す
+ */
+const getPopupTitle = (type: "daily" | "weekly"): string => {
+  return type === "weekly" ? "週間サマリー" : "今日の振り返り";
+};
+
+/**
+ * ステータスに応じたポップアップのメッセージを返す
+ */
+const getPopupMessage = (type: "daily" | "weekly"): string => {
+  return type === "weekly"
+    ? "今週の記録がまとまりました。1週間でどんな成長があったか確認してみましょう。"
+    : "今日も一日お疲れ様でした。昨日の記録を振り返って、今日の目標を立ててみましょう。";
 };
 
 /**
@@ -27,8 +50,8 @@ const createPopupItemsFromResponse = (
   if (response.weekly) {
     items.push({
       id: `weekly-${response.date}`,
-      title: response.weekly.title,
-      message: response.weekly.message,
+      title: getPopupTitle("weekly"),
+      message: getPopupMessage("weekly"),
       imageUrl: response.weekly.imageUrl,
       closeButtonLabel: "確認しました",
     });
@@ -37,8 +60,8 @@ const createPopupItemsFromResponse = (
   if (response.daily) {
     items.push({
       id: `daily-${response.date}`,
-      title: response.daily.title,
-      message: response.daily.message,
+      title: getPopupTitle("daily"),
+      message: getPopupMessage("daily"),
       imageUrl: response.daily.imageUrl,
       closeButtonLabel: "閉じる",
     });
@@ -54,16 +77,18 @@ const createPopupItemsFromResponse = (
  */
 export const useDailyPopup = () => {
   const { enqueue, isLoaded } = usePopup();
+  const { accessToken, isAuthenticated } = useAuth();
   const hasCheckedRef = useRef(false);
 
   useEffect(() => {
-    if (!isLoaded || hasCheckedRef.current) return;
+    if (!isLoaded || !isAuthenticated || !accessToken || hasCheckedRef.current)
+      return;
     hasCheckedRef.current = true;
 
     const checkAndShowPopup = async () => {
       try {
         const lastLaunchDate = await popupStorage.getLastLaunchDate();
-        const response = await fetchDailyUpdate();
+        const response = await fetchDailyUpdate(accessToken);
 
         logger.debug("Daily popup check", {
           responseDate: response.date,
@@ -98,5 +123,5 @@ export const useDailyPopup = () => {
     };
 
     checkAndShowPopup();
-  }, [enqueue, isLoaded]);
+  }, [enqueue, isLoaded, isAuthenticated, accessToken]);
 };

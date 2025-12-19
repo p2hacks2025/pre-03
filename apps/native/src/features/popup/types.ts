@@ -43,19 +43,14 @@ export interface PopupContextValue {
 }
 
 /**
- * 日付更新ステータス
+ * 日付更新ステータス（英語）
  */
-export type DailyUpdateStatus =
-  | "更新なし"
-  | "デイリー更新"
-  | "ウィークリー更新";
+export type DailyUpdateStatus = "no_update" | "daily_update" | "weekly_update";
 
 /**
- * 日付更新情報
+ * 日付更新情報（画像URLのみ）
  */
 export interface DailyUpdateInfo {
-  title: string;
-  message: string;
   imageUrl: string | null;
 }
 

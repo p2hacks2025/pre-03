@@ -1,46 +1,47 @@
+import type { TimelineEntry } from "@packages/schema/entry";
 import { ScrollView, View } from "react-native";
 import { withUniwind } from "uniwind";
 
-import { TimelineCard, type TimelineCardProps } from "./timeline-card";
+import { AiTimelineItem } from "./ai-timeline-item";
+import { UserTimelineItem } from "./user-timeline-item";
 
 const StyledView = withUniwind(View);
 const StyledScrollView = withUniwind(ScrollView);
-
-/**
- * TimelineCardProps に id フィールドを追加した型
- */
-export type TimelineItem = TimelineCardProps & {
-  /**
-   * アイテムの一意なID
-   */
-  id: string;
-};
 
 export interface TimelineProps {
   /**
    * タイムラインアイテムの配列
    */
-  items: TimelineItem[];
+  items: TimelineEntry[];
 }
 
 /**
  * タイムラインリストコンポーネント
  *
- * TimelineCard のリストを表示するコンポーネント。
- * APIとの接続時に楽になるよう、リスト化しています。
+ * TimelineEntry の type に応じて適切なコンポーネントを表示します。
+ * - type === "ai": AiTimelineItem（SNS風デザイン）
+ * - type === "user": UserTimelineItem（日記風デザイン）
  *
  * @example
  * ```tsx
  * <Timeline
  *   items={[
  *     {
+ *       type: "ai",
  *       id: "1",
- *       username: "poyopoyo",
- *       content: "ピザが食べたくなってきた",
+ *       content: "AIが生成したコンテンツです。",
  *       createdAt: "2025-12-18T10:30:00.000Z",
- *       avatarUri: "https://example.com/avatar.png"
+ *       uploadImageUrl: null,
+ *       author: { username: "AIアシスタント", avatarUrl: null }
  *     },
- *     ...
+ *     {
+ *       type: "user",
+ *       id: "2",
+ *       content: "今日は良い天気でした。",
+ *       createdAt: "2025-12-18T09:00:00.000Z",
+ *       uploadImageUrl: null,
+ *       author: { username: "田中", avatarUrl: null }
+ *     },
  *   ]}
  * />
  * ```
@@ -49,9 +50,13 @@ export const Timeline = ({ items }: TimelineProps) => {
   return (
     <StyledScrollView className="flex-1">
       <StyledView className="gap-3 p-4">
-        {items.map((item) => (
-          <TimelineCard key={item.id} {...item} />
-        ))}
+        {items.map((item) =>
+          item.type === "ai" ? (
+            <AiTimelineItem key={item.id} {...item} />
+          ) : (
+            <UserTimelineItem key={item.id} {...item} />
+          ),
+        )}
       </StyledView>
     </StyledScrollView>
   );
