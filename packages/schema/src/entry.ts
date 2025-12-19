@@ -20,6 +20,46 @@ export const EntrySchema = z
 export type Entry = z.infer<typeof EntrySchema>;
 
 /**
+ * Timeline Entry Schema（タイムライン用拡張）
+ */
+export const TimelineEntryTypeSchema = z.enum(["user", "ai"]).openapi({
+  description: "投稿の種類（user: ユーザー投稿, ai: AI投稿）",
+  example: "user",
+});
+
+export type TimelineEntryType = z.infer<typeof TimelineEntryTypeSchema>;
+
+export const AuthorSchema = z
+  .object({
+    username: z.string().openapi({ example: "田中太郎" }),
+    avatarUrl: z.url().nullable().openapi({
+      example:
+        "https://xxx.supabase.co/storage/v1/object/public/avatars/xxx.png",
+    }),
+  })
+  .openapi("Author");
+
+export type Author = z.infer<typeof AuthorSchema>;
+
+export const TimelineEntrySchema = z
+  .object({
+    type: TimelineEntryTypeSchema,
+    id: z.uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
+    content: z.string().openapi({ example: "今日は良い天気でした。" }),
+    uploadImageUrl: z.url().nullable().openapi({
+      example:
+        "https://xxx.supabase.co/storage/v1/object/public/entries/profile-id/1234567890.png",
+    }),
+    createdAt: z.iso.datetime().openapi({
+      example: "2024-01-01T00:00:00.000Z",
+    }),
+    author: AuthorSchema,
+  })
+  .openapi("TimelineEntry");
+
+export type TimelineEntry = z.infer<typeof TimelineEntrySchema>;
+
+/**
  * POST /entries - 日記投稿
  */
 export const CreateEntryInputSchema = z
@@ -74,8 +114,8 @@ export type GetTimelineInput = z.infer<typeof GetTimelineInputSchema>;
 
 export const GetTimelineOutputSchema = z
   .object({
-    entries: z.array(EntrySchema).openapi({
-      description: "日記一覧",
+    entries: z.array(TimelineEntrySchema).openapi({
+      description: "タイムラインエントリ一覧（ユーザー投稿とAI投稿を含む）",
     }),
     nextCursor: z.string().nullable().openapi({
       description: "次ページのカーソル（nullの場合は次ページなし）",

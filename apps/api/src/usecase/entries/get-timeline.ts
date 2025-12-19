@@ -1,6 +1,11 @@
 import type { DbClient } from "@packages/db";
-import type { GetTimelineOutput } from "@packages/schema/entry";
-import { getUserPostsByProfileId } from "@/repository/user-post";
+import type {
+  GetTimelineOutput,
+  TimelineEntry,
+  TimelineEntryType,
+} from "@packages/schema/entry";
+import { getAiPostsForTimeline } from "@/repository/ai-post";
+import { getUserPostsForTimeline } from "@/repository/user-post";
 import { getUserProfileByUserId } from "@/repository/user-profile";
 import { AppError } from "@/shared/error/app-error";
 
@@ -19,6 +24,7 @@ type GetTimelineInput = {
 type Cursor = {
   createdAt: string;
   id: string;
+  type: TimelineEntryType;
 };
 
 const encodeCursor = (cursor: Cursor): string => {
@@ -29,13 +35,34 @@ const decodeCursor = (encoded: string): Cursor | null => {
   try {
     const decoded = atob(encoded);
     const parsed = JSON.parse(decoded);
-    if (typeof parsed.createdAt === "string" && typeof parsed.id === "string") {
+    if (
+      typeof parsed.createdAt === "string" &&
+      typeof parsed.id === "string" &&
+      (parsed.type === "user" || parsed.type === "ai")
+    ) {
       return parsed as Cursor;
+    }
+    // 後方互換性: type がない場合は user として扱う
+    if (typeof parsed.createdAt === "string" && typeof parsed.id === "string") {
+      return { ...parsed, type: "user" } as Cursor;
     }
     return null;
   } catch {
     return null;
   }
+};
+
+// 内部用の統合エントリ型
+type MergedEntry = {
+  type: TimelineEntryType;
+  id: string;
+  content: string;
+  imageUrl: string | null;
+  displayAt: Date;
+  author: {
+    username: string;
+    avatarUrl: string | null;
+  };
 };
 
 export const getTimeline = async (
@@ -72,35 +99,78 @@ export const getTimeline = async (
   const fromDate = from ? new Date(from) : undefined;
   const toDate = to ? new Date(to) : undefined;
 
-  // limit + 1 で取得して、余分があれば hasMore = true
-  const posts = await getUserPostsByProfileId(db, {
-    profileId: profile.id,
-    from: fromDate,
-    to: toDate,
-    cursor,
-    limit: limit + 1,
+  // 両方のテーブルから取得（各 limit + 1）
+  const [userPosts, aiPosts] = await Promise.all([
+    getUserPostsForTimeline(db, {
+      profileId: profile.id,
+      from: fromDate,
+      to: toDate,
+      cursor,
+      limit: limit + 1,
+    }),
+    getAiPostsForTimeline(db, {
+      userProfileId: profile.id,
+      from: fromDate,
+      to: toDate,
+      cursor,
+      limit: limit + 1,
+    }),
+  ]);
+
+  // マージして統一フォーマットに変換
+  const merged: MergedEntry[] = [
+    ...userPosts.map((p) => ({
+      type: "user" as const,
+      id: p.id,
+      content: p.content,
+      imageUrl: p.uploadImageUrl,
+      displayAt: p.createdAt,
+      author: p.userProfile,
+    })),
+    ...aiPosts.map((p) => ({
+      type: "ai" as const,
+      id: p.id,
+      content: p.content,
+      imageUrl: p.imageUrl,
+      displayAt: p.publishedAt,
+      author: p.aiProfile,
+    })),
+  ];
+
+  // displayAt（新しい順）、同時刻ならid降順でソート
+  merged.sort((a, b) => {
+    const timeDiff = b.displayAt.getTime() - a.displayAt.getTime();
+    if (timeDiff !== 0) return timeDiff;
+    return b.id.localeCompare(a.id);
   });
 
-  const hasMore = posts.length > limit;
-  const entries = posts.slice(0, limit);
+  // limit + 1 から hasMore を判定
+  const hasMore = merged.length > limit;
+  const entries = merged.slice(0, limit);
 
   // 次のカーソルを生成
   let nextCursor: string | null = null;
   if (hasMore && entries.length > 0) {
     const lastEntry = entries[entries.length - 1];
     nextCursor = encodeCursor({
-      createdAt: lastEntry.createdAt.toISOString(),
+      createdAt: lastEntry.displayAt.toISOString(),
       id: lastEntry.id,
+      type: lastEntry.type,
     });
   }
 
+  // レスポンス形式に変換
+  const responseEntries: TimelineEntry[] = entries.map((entry) => ({
+    type: entry.type,
+    id: entry.id,
+    content: entry.content,
+    uploadImageUrl: entry.imageUrl,
+    createdAt: entry.displayAt.toISOString(),
+    author: entry.author,
+  }));
+
   return {
-    entries: entries.map((entry) => ({
-      id: entry.id,
-      content: entry.content,
-      uploadImageUrl: entry.uploadImageUrl,
-      createdAt: entry.createdAt.toISOString(),
-    })),
+    entries: responseEntries,
     nextCursor,
     hasMore,
   };
