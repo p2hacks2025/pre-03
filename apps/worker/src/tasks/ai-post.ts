@@ -5,6 +5,9 @@ import {
   getAiPostGenerationPrompt,
   getAiPostStandalonePrompt,
   getRandomAiProfile,
+  getRandomHistoricalPosts,
+  getRecentUserPosts,
+  hasExistingAiPost,
   type WorkerContext,
 } from "@/lib";
 
@@ -213,3 +216,97 @@ export const getRandomPublishedAt = (min: number, max: number): Date =>
     Date.now() +
       (Math.floor(Math.random() * (max - min + 1)) + min) * 60 * 1000,
   );
+
+export const fetchRecentUserPosts = async (
+  ctx: WorkerContext,
+  minutes: number,
+): Promise<UserPost[]> => {
+  return getRecentUserPosts(ctx, minutes);
+};
+
+export const fetchRandomHistoricalPosts = async (
+  ctx: WorkerContext,
+  count: number,
+  excludeDays: number,
+): Promise<UserPost[]> => {
+  return getRandomHistoricalPosts(ctx, count, excludeDays);
+};
+
+export const processUserAiPosts = async (
+  ctx: WorkerContext,
+  group: DiaryGroup,
+  scheduleMin: number,
+  scheduleMax: number,
+): Promise<{ generated: number }> => {
+  const diaryContent = group.posts.map((p) => p.content).join("\n\n");
+  const sorted = [...group.posts].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  );
+  const sourceStartAt = new Date(sorted[0].createdAt);
+  const sourceEndAt = new Date(sorted[sorted.length - 1].createdAt);
+
+  if (
+    await hasExistingAiPost(
+      ctx,
+      group.userProfileId,
+      sourceStartAt,
+      sourceEndAt,
+    )
+  ) {
+    return { generated: 0 };
+  }
+
+  const aiProfile = await getRandomAiProfile(ctx);
+  const contents = await generateAiPostContents(
+    ctx,
+    aiProfile,
+    diaryContent,
+    AI_POST_CONFIG.POSTS_PER_USER,
+  );
+
+  let generated = 0;
+  for (const content of contents) {
+    await createAiPost(ctx, {
+      aiProfileId: aiProfile.id,
+      userProfileId: group.userProfileId,
+      content,
+      sourceStartAt,
+      sourceEndAt,
+      publishedAt: getRandomPublishedAt(scheduleMin, scheduleMax),
+    });
+    generated++;
+  }
+
+  return { generated };
+};
+
+export const processHistoricalAiPost = async (
+  ctx: WorkerContext,
+  diary: UserPost,
+  scheduleMin: number,
+  scheduleMax: number,
+): Promise<{ generated: number }> => {
+  const aiProfile = await getRandomAiProfile(ctx);
+  const contents = await generateAiPostContents(
+    ctx,
+    aiProfile,
+    diary.content,
+    AI_POST_CONFIG.POSTS_PER_USER,
+  );
+  const sourceDate = new Date(diary.createdAt);
+
+  let generated = 0;
+  for (const content of contents) {
+    await createAiPost(ctx, {
+      aiProfileId: aiProfile.id,
+      userProfileId: diary.userProfileId,
+      content,
+      sourceStartAt: sourceDate,
+      sourceEndAt: sourceDate,
+      publishedAt: getRandomPublishedAt(scheduleMin, scheduleMax),
+    });
+    generated++;
+  }
+
+  return { generated };
+};

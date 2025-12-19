@@ -123,10 +123,10 @@ export const StickyMonthHeader = ({ month }: StickyMonthHeaderProps) => {
   });
 
   return (
-    <StyledView className="h-10 w-12 items-center justify-center overflow-hidden">
+    <StyledView className="h-10 w-16 items-start justify-center overflow-hidden">
       {prevValue !== null && (
         <StyledAnimatedView
-          className="absolute h-10 w-full items-center justify-center"
+          className="absolute h-10 w-full items-start justify-center"
           style={{
             transform: [
               {
@@ -144,7 +144,7 @@ export const StickyMonthHeader = ({ month }: StickyMonthHeaderProps) => {
         </StyledAnimatedView>
       )}
       <StyledAnimatedView
-        className="absolute h-10 w-full items-center justify-center"
+        className="absolute h-10 w-full items-start justify-center"
         style={{ transform: [{ translateY: offsetAnim }] }}
       >
         <StyledText className="font-bold text-2xl text-foreground">
