@@ -1,8 +1,15 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
 import { Spinner } from "heroui-native";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Pressable, Text, View } from "react-native";
+import Reanimated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
@@ -11,8 +18,15 @@ import {
   DetailTabs,
   DetailTimeline,
 } from "@/features/reflection/components";
-import type { AiTimelineItem, DiaryEntry } from "@/features/reflection/hooks";
-import { useWeeklyWorld, useWeekNavigation } from "@/features/reflection/hooks";
+import type {
+  AiTimelineItem,
+  DiaryEntry,
+  WeekChangeDirection,
+} from "@/features/reflection/hooks";
+import {
+  useWeeklyWorldPrefetch,
+  useWeekNavigation,
+} from "@/features/reflection/hooks";
 import WorldShadowSvg from "../../../assets/world-shadow.svg";
 
 const StyledView = withUniwind(View);
@@ -21,26 +35,84 @@ const StyledPressable = withUniwind(Pressable);
 
 type TabType = "diary" | "timeline";
 
+/** スライドアニメーションの距離 */
+const SLIDE_DISTANCE = 300;
+
 export const ReflectionDetailScreen = () => {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabType>("diary");
 
-  // ルートパラメータから週開始日を取得
-  const { week } = useLocalSearchParams<{ week: string }>();
+  // ルートパラメータから週開始日を取得（初期値として使用）
+  const { week: initialWeek } = useLocalSearchParams<{ week: string }>();
 
-  // 週間世界データを取得
-  const { weeklyWorld, userPosts, aiPosts, isLoading, error, refresh } =
-    useWeeklyWorld(week ?? "");
+  // 現在表示中の週（状態で管理）
+  const [currentWeek, setCurrentWeek] = useState(initialWeek ?? "");
 
-  // 週ナビゲーション
+  // スワイプ + ボタン共通のアニメーション値（Reanimated）
+  const translateX = useSharedValue(0);
+
+  // アニメーションスタイル
+  const slideAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  // 週ナビゲーション情報を取得
   const {
     canGoPrev,
     canGoNext,
-    goToPrevWeek,
-    goToNextWeek,
+    prevWeekStartDate,
+    nextWeekStartDate,
     startDate,
     endDate,
-  } = useWeekNavigation(week ?? "");
+  } = useWeekNavigation(currentWeek);
+
+  // 週間世界データを取得（プリフェッチ機能付き）
+  const {
+    weeklyWorld,
+    userPosts,
+    aiPosts,
+    isLoading,
+    error,
+    refresh,
+    prefetchAdjacent,
+  } = useWeeklyWorldPrefetch(currentWeek);
+
+  /**
+   * 週を移動する（スワイプ・ボタン共通）
+   *
+   * @param newWeek 移動先の週開始日
+   * @param direction 移動方向
+   *   - "prev": 前週へ移動（新コンテンツは左端から登場 → 左から右へスライドイン）
+   *   - "next": 次週へ移動（新コンテンツは右端から登場 → 右から左へスライドイン）
+   */
+  const goToWeek = useCallback(
+    (newWeek: string, direction: WeekChangeDirection) => {
+      // 新しいコンテンツの開始位置
+      // prev: 左端から登場（-SLIDE_DISTANCE）→ 左から右へスライドイン
+      // next: 右端から登場（+SLIDE_DISTANCE）→ 右から左へスライドイン
+      const startPosition =
+        direction === "prev" ? -SLIDE_DISTANCE : SLIDE_DISTANCE;
+
+      // 週を変更（即座に新しいコンテンツに切り替え）
+      setCurrentWeek(newWeek);
+
+      // withSequence で順序を保証：画面外から中央へスライドイン
+      translateX.value = withSequence(
+        withTiming(startPosition, { duration: 0 }), // 即座に画面外へ配置
+        withTiming(0, { duration: 350, easing: Easing.out(Easing.cubic) }), // 中央へスライドイン
+      );
+    },
+    [translateX],
+  );
+
+  // ボタン操作
+  const handlePrevWeek = useCallback(() => {
+    if (canGoPrev) goToWeek(prevWeekStartDate, "prev");
+  }, [canGoPrev, prevWeekStartDate, goToWeek]);
+
+  const handleNextWeek = useCallback(() => {
+    if (canGoNext) goToWeek(nextWeekStartDate, "next");
+  }, [canGoNext, nextWeekStartDate, goToWeek]);
 
   // userPosts を DiaryEntry[] に変換
   const diaryEntries: DiaryEntry[] = userPosts.map((post) => ({
@@ -62,7 +134,7 @@ export const ReflectionDetailScreen = () => {
     },
   }));
 
-  // 浮遊アニメーション
+  // 浮遊アニメーション（React Native Animated - 世界画像の上下動）
   const floatAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -91,6 +163,13 @@ export const ReflectionDetailScreen = () => {
     inputRange: [0, 1],
     outputRange: [1.4, 1.2],
   });
+
+  // 初回レンダリング後にプリフェッチ開始
+  useEffect(() => {
+    if (!isLoading && weeklyWorld) {
+      prefetchAdjacent();
+    }
+  }, [isLoading, weeklyWorld, prefetchAdjacent]);
 
   // ローディング状態
   if (isLoading) {
@@ -140,11 +219,14 @@ export const ReflectionDetailScreen = () => {
       </StyledView>
 
       {/* 世界画像パネル */}
-      <StyledView className="relative h-60 items-center justify-center">
-        {/* 前の週へ移動ボタン */}
+      <StyledView
+        className="relative h-60 items-center justify-center"
+        style={{ overflow: "hidden" }}
+      >
+        {/* 前の週へ移動ボタン（左ボタン） */}
         <StyledPressable
           className="absolute left-4 z-10"
-          onPress={goToPrevWeek}
+          onPress={handlePrevWeek}
           disabled={!canGoPrev}
           style={{ opacity: canGoPrev ? 1 : 0.3 }}
         >
@@ -156,32 +238,43 @@ export const ReflectionDetailScreen = () => {
         </StyledPressable>
 
         {/* 世界画像（アニメーション付き） */}
-        <StyledView className="items-center justify-center">
-          <Animated.View
-            style={{
-              position: "absolute",
-              bottom: 30,
-              transform: [{ scaleX: shadowScale }, { scaleY: shadowScale }],
-            }}
-          >
-            <WorldShadowSvg width={200} height={90} opacity={0.6} />
-          </Animated.View>
+        <Reanimated.View
+          style={[
+            {
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+            },
+            slideAnimatedStyle,
+          ]}
+        >
+          <StyledView className="items-center justify-center">
+            <Animated.View
+              style={{
+                position: "absolute",
+                bottom: 30,
+                transform: [{ scaleX: shadowScale }, { scaleY: shadowScale }],
+              }}
+            >
+              <WorldShadowSvg width={200} height={90} opacity={0.6} />
+            </Animated.View>
 
-          <Animated.Image
-            source={worldImageSource}
-            style={{
-              width: 300,
-              height: 300,
-              transform: [{ translateY }],
-            }}
-            resizeMode="contain"
-          />
-        </StyledView>
+            <Animated.Image
+              source={worldImageSource}
+              style={{
+                width: 300,
+                height: 300,
+                transform: [{ translateY }],
+              }}
+              resizeMode="contain"
+            />
+          </StyledView>
+        </Reanimated.View>
 
-        {/* 次の週へ移動ボタン */}
+        {/* 次の週へ移動ボタン（右ボタン） */}
         <StyledPressable
           className="absolute right-4 z-10"
-          onPress={goToNextWeek}
+          onPress={handleNextWeek}
           disabled={!canGoNext}
           style={{ opacity: canGoNext ? 1 : 0.3 }}
         >
@@ -197,13 +290,20 @@ export const ReflectionDetailScreen = () => {
       <DetailTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* タブコンテンツ */}
-      <StyledView className="flex-1">
+      <Reanimated.View
+        style={[
+          {
+            flex: 1,
+          },
+          slideAnimatedStyle,
+        ]}
+      >
         {activeTab === "diary" ? (
           <DetailDiary diaryEntries={diaryEntries} />
         ) : (
           <DetailTimeline timelineItems={timelineItems} />
         )}
-      </StyledView>
+      </Reanimated.View>
     </StyledView>
   );
 };

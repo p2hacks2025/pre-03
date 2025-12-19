@@ -1,4 +1,3 @@
-import { useRouter } from "expo-router";
 import { useMemo } from "react";
 
 import {
@@ -67,6 +66,9 @@ const formatDisplayDate = (dateStr: string): string => {
   return `${year}/${month}/${day}`;
 };
 
+/** 週移動の方向 */
+export type WeekChangeDirection = "prev" | "next";
+
 interface UseWeekNavigationReturn {
   /** 現在の週開始日 */
   currentWeekStartDate: string;
@@ -74,10 +76,6 @@ interface UseWeekNavigationReturn {
   canGoPrev: boolean;
   /** 次の週に移動可能か（今週まで） */
   canGoNext: boolean;
-  /** 前の週に移動 */
-  goToPrevWeek: () => void;
-  /** 次の週に移動 */
-  goToNextWeek: () => void;
   /** 前週の週開始日 */
   prevWeekStartDate: string;
   /** 次週の週開始日 */
@@ -89,7 +87,7 @@ interface UseWeekNavigationReturn {
 }
 
 /**
- * 週間ナビゲーションを管理するフック
+ * 週間ナビゲーション情報を提供するフック
  *
  * @param weekStartDate 現在の週開始日（YYYY-MM-DD形式、月曜日）
  *
@@ -98,19 +96,22 @@ interface UseWeekNavigationReturn {
  * const {
  *   canGoPrev,
  *   canGoNext,
- *   goToPrevWeek,
- *   goToNextWeek,
+ *   prevWeekStartDate,
+ *   nextWeekStartDate,
  *   startDate,
  *   endDate,
  * } = useWeekNavigation("2025-12-15");
+ *
+ * // 週移動は呼び出し側で実装
+ * const goToWeek = (newWeek: string, direction: WeekChangeDirection) => {
+ *   setCurrentWeek(newWeek);
+ * };
  * ```
  */
 export const useWeekNavigation = (
   weekStartDate: string,
 ): UseWeekNavigationReturn => {
-  const router = useRouter();
-
-  const navigation = useMemo(() => {
+  return useMemo(() => {
     const prevWeek = getPrevWeekStartDate(weekStartDate);
     const nextWeek = getNextWeekStartDate(weekStartDate);
     const currentMonday = getCurrentWeekMonday();
@@ -126,6 +127,7 @@ export const useWeekNavigation = (
     const endDate = formatDisplayDate(getWeekEndDate(weekStartDate));
 
     return {
+      currentWeekStartDate: weekStartDate,
       prevWeekStartDate: prevWeek,
       nextWeekStartDate: nextWeek,
       canGoPrev,
@@ -134,32 +136,4 @@ export const useWeekNavigation = (
       endDate,
     };
   }, [weekStartDate]);
-
-  const goToPrevWeek = () => {
-    if (navigation.canGoPrev) {
-      router.replace(
-        `/(app)/(tabs)/reflection/${navigation.prevWeekStartDate}`,
-      );
-    }
-  };
-
-  const goToNextWeek = () => {
-    if (navigation.canGoNext) {
-      router.replace(
-        `/(app)/(tabs)/reflection/${navigation.nextWeekStartDate}`,
-      );
-    }
-  };
-
-  return {
-    currentWeekStartDate: weekStartDate,
-    canGoPrev: navigation.canGoPrev,
-    canGoNext: navigation.canGoNext,
-    goToPrevWeek,
-    goToNextWeek,
-    prevWeekStartDate: navigation.prevWeekStartDate,
-    nextWeekStartDate: navigation.nextWeekStartDate,
-    startDate: navigation.startDate,
-    endDate: navigation.endDate,
-  };
 };
