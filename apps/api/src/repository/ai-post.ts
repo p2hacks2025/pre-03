@@ -55,8 +55,9 @@ export const getAiPostsForTimeline = async (
     lte(aiPosts.publishedAt, now), // 公開済みのみ
   ];
 
-  // biome-ignore lint/style/noNonNullAssertion: or() は常にSQLオブジェクトを返す
-  conditions.push(userOrStandaloneCondition!);
+  if (userOrStandaloneCondition) {
+    conditions.push(userOrStandaloneCondition);
+  }
 
   // 日付範囲フィルタ（publishedAtベース）
   if (from) {
@@ -76,8 +77,9 @@ export const getAiPostsForTimeline = async (
       lt(aiPosts.publishedAt, cursor.createdAt),
       and(eq(aiPosts.publishedAt, cursor.createdAt), lt(aiPosts.id, cursor.id)),
     );
-    // biome-ignore lint/style/noNonNullAssertion: or() は常にSQLオブジェクトを返す
-    conditions.push(cursorCondition!);
+    if (cursorCondition) {
+      conditions.push(cursorCondition);
+    }
   }
 
   const results = await db
