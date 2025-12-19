@@ -26,8 +26,13 @@ export {
 } from "./notification";
 export { removeWhiteBackground } from "./utils";
 export {
+  fetchAllUserProfiles,
+  fetchUserPostsForWeek,
+  findWeeklyWorldForUser,
   getNextWeekStart,
   getTargetWeekStart,
+  processUserWeeklyResetWithoutPosts,
+  processUserWeeklyResetWithPosts,
   selectRandomFieldIds,
   summarizePostsWithLLM,
 } from "./weekly-reset";

@@ -1,21 +1,12 @@
+import type { WorkerContext } from "@/lib";
 import {
-  createOrUpdateWorldBuildLog,
-  createWeeklyWorld,
-  findWeeklyWorld,
-  getAllUserProfiles,
-  getBaseImageBase64,
-  getBaseImageBuffer,
-  getUserPostsForWeek,
-  uploadGeneratedImage,
-  type WorkerContext,
-} from "@/lib";
-import {
-  fetchImageAsBase64,
-  generateImage,
+  fetchAllUserProfiles,
+  fetchUserPostsForWeek,
+  findWeeklyWorldForUser,
   getNextWeekStart,
   getTargetWeekStart,
-  selectRandomFieldIds,
-  summarizePostsWithLLM,
+  processUserWeeklyResetWithoutPosts,
+  processUserWeeklyResetWithPosts,
 } from "@/tasks";
 
 export type WeeklyResetResult = {
@@ -47,7 +38,7 @@ export const weeklyReset = async (
     errors: [],
   };
 
-  const userProfiles = await getAllUserProfiles(ctx);
+  const userProfiles = await fetchAllUserProfiles(ctx);
 
   if (userProfiles.length === 0) {
     ctx.logger.info("No active users, skipping");
@@ -56,7 +47,7 @@ export const weeklyReset = async (
 
   for (const profile of userProfiles) {
     try {
-      const existingNewWeekWorld = await findWeeklyWorld(
+      const existingNewWeekWorld = await findWeeklyWorldForUser(
         ctx,
         profile.id,
         newWeekStart,
@@ -66,70 +57,21 @@ export const weeklyReset = async (
         continue;
       }
 
-      const posts = await getUserPostsForWeek(ctx, profile.id, targetWeekStart);
-      let initialImageUrl: string;
+      const posts = await fetchUserPostsForWeek(
+        ctx,
+        profile.id,
+        targetWeekStart,
+      );
 
       if (posts.length > 0) {
-        const summary = await summarizePostsWithLLM(ctx, posts);
-        const fieldIds = selectRandomFieldIds(2);
-
-        let currentImageBase64 = getBaseImageBase64();
-
-        const firstImageBuffer = await generateImage(
+        await processUserWeeklyResetWithPosts(
           ctx,
-          currentImageBase64,
-          fieldIds[0],
-          summary,
-        );
-
-        const firstImageUrl = await uploadGeneratedImage(
-          ctx,
-          profile.id,
+          profile,
+          posts,
           newWeekStart,
-          firstImageBuffer,
         );
-        currentImageBase64 = await fetchImageAsBase64(firstImageUrl);
-
-        const secondImageBuffer = await generateImage(
-          ctx,
-          currentImageBase64,
-          fieldIds[1],
-          summary,
-        );
-
-        initialImageUrl = await uploadGeneratedImage(
-          ctx,
-          profile.id,
-          newWeekStart,
-          secondImageBuffer,
-        );
-
-        const newWeeklyWorld = await createWeeklyWorld(
-          ctx,
-          profile.id,
-          newWeekStart,
-          initialImageUrl,
-        );
-
-        const today = new Date();
-        for (const fieldId of fieldIds) {
-          await createOrUpdateWorldBuildLog(
-            ctx,
-            newWeeklyWorld.id,
-            fieldId,
-            today,
-            false,
-          );
-        }
       } else {
-        initialImageUrl = await uploadGeneratedImage(
-          ctx,
-          profile.id,
-          newWeekStart,
-          getBaseImageBuffer(),
-        );
-
-        await createWeeklyWorld(ctx, profile.id, newWeekStart, initialImageUrl);
+        await processUserWeeklyResetWithoutPosts(ctx, profile, newWeekStart);
       }
 
       result.processedUsers++;
