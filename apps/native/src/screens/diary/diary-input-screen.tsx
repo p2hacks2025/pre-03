@@ -10,7 +10,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  Text,
   TextInput,
   View,
 } from "react-native";
@@ -22,7 +21,6 @@ import { createAuthenticatedClient } from "@/lib/api";
 import { postMultipartWithAuth } from "@/lib/multipart";
 
 const StyledView = withUniwind(View);
-const StyledText = withUniwind(Text);
 const StyledTextInput = withUniwind(TextInput);
 const StyledImage = withUniwind(Image);
 const StyledPressable = withUniwind(Pressable);
@@ -185,13 +183,6 @@ export const DiaryInputScreen = () => {
         className="flex-1"
         style={{ paddingTop: 5, paddingBottom: insets.bottom }}
       >
-        {/* タイトル */}
-        <StyledView className="px-4 pt-2">
-          <StyledText className="font-bold text-2xl text-foreground">
-            日記の入力
-          </StyledText>
-        </StyledView>
-
         {/* ヘッダー */}
         <StyledView className="flex-row items-center justify-between px-4 py-3">
           <Pressable onPress={handleClose} disabled={isSubmitting}>
