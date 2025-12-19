@@ -77,9 +77,11 @@ const WeekContent = ({ imageUrl }: { imageUrl: string | null }) => {
   if (imageUrl === null) {
     return (
       <StyledView className="mt-2 h-48 items-center justify-center overflow-hidden rounded-lg bg-surface-secondary">
-        <StyledText className="text-center text-foreground/60">
-          世界がありません
-        </StyledText>
+        <StyledImage
+          source={require("../../../../assets/world-example.png")}
+          className="h-full w-full"
+          resizeMode="contain"
+        />
       </StyledView>
     );
   }
