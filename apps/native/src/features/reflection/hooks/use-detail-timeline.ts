@@ -1,16 +1,12 @@
 import { useState } from "react";
 
-import type { TimelineItem } from "@/features/timeline/components/timeline";
+import type { AiTimelineItemProps } from "@/features/timeline";
 
 export interface TimelineEntry {
   /**
    * エントリの一意なID
    */
   id: string;
-  /**
-   * ユーザー名
-   */
-  username: string;
   /**
    * 投稿内容
    */
@@ -20,9 +16,16 @@ export interface TimelineEntry {
    */
   createdAt: string;
   /**
-   * アバター画像のURI（オプション）
+   * 添付画像URL
    */
-  avatarUri?: string;
+  uploadImageUrl: string | null;
+  /**
+   * 著者情報
+   */
+  author: {
+    username: string;
+    avatarUrl: string | null;
+  };
 }
 
 export interface DetailTimelineData {
@@ -71,47 +74,53 @@ export const useDetailTimeline = () => {
     timelineEntries: [
       {
         id: "1",
-        username: "ユーザーネーム",
         content: "なんかピザが食べたくなってきたな、頼んじゃおうかな",
         createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+        uploadImageUrl: null,
+        author: { username: "AIアシスタント", avatarUrl: null },
       },
       {
         id: "2",
-        username: "ユーザーネーム",
         content: "今日も一日がんばった!明日も頑張ろう",
         createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+        uploadImageUrl: null,
+        author: { username: "AIアシスタント", avatarUrl: null },
       },
       {
         id: "3",
-        username: "ユーザーネーム",
         content:
           "なんかピザが食べたくなってきたな、頼んじゃおうかなあああああああああああああああああああああああああああああいいいいいいいいいいいいいいいいいいいいいい",
         createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        uploadImageUrl: null,
+        author: { username: "AIアシスタント", avatarUrl: null },
       },
       {
         id: "4",
-        username: "ユーザーネーム",
         content: "天気がいいから散歩に行ってきた",
         createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+        uploadImageUrl: null,
+        author: { username: "AIアシスタント", avatarUrl: null },
       },
       {
         id: "5",
-        username: "ユーザーネーム",
         content: "朝ごはんはパンケーキにしました",
         createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+        uploadImageUrl: null,
+        author: { username: "AIアシスタント", avatarUrl: null },
       },
     ],
   };
 
   /**
-   * Timelineコンポーネントにそのまま渡せる形式に変換
+   * AiTimelineItemコンポーネントにそのまま渡せる形式に変換
    */
-  const timelineItems: TimelineItem[] = data.timelineEntries.map((entry) => ({
+  type AiTimelineItem = AiTimelineItemProps & { id: string };
+  const timelineItems: AiTimelineItem[] = data.timelineEntries.map((entry) => ({
     id: entry.id,
-    username: entry.username,
     content: entry.content,
     createdAt: entry.createdAt,
-    avatarUri: entry.avatarUri,
+    uploadImageUrl: entry.uploadImageUrl,
+    author: entry.author,
   }));
 
   /**

@@ -1,2 +1,7 @@
-export { Timeline, type TimelineItem, type TimelineProps } from "./timeline";
-export { TimelineCard, type TimelineCardProps } from "./timeline-card";
+export { AiTimelineItem, type AiTimelineItemProps } from "./ai-timeline-item";
+export { Timeline, type TimelineProps } from "./timeline";
+export type { TimelineItemProps } from "./types";
+export {
+  UserTimelineItem,
+  type UserTimelineItemProps,
+} from "./user-timeline-item";
