@@ -11,10 +11,12 @@ export {
 } from "./ai-post";
 export {
   fetchImageAsBase64,
+  fetchUserPostsByDate,
   generateImage,
   getJstToday,
   getJstYesterday,
   getWeekStartDate,
+  processUserDailyUpdate,
 } from "./daily-update";
 export { checkDb, checkSupabase, type HealthCheckResult } from "./health";
 export {
