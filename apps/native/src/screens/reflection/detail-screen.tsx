@@ -220,7 +220,7 @@ export const ReflectionDetailScreen = () => {
 
       {/* 世界画像パネル */}
       <StyledView
-        className="relative h-60 items-center justify-center"
+        className="relative h-[270px] items-center justify-center"
         style={{ overflow: "hidden" }}
       >
         {/* 前の週へ移動ボタン（左ボタン） */}
@@ -256,14 +256,14 @@ export const ReflectionDetailScreen = () => {
                 transform: [{ scaleX: shadowScale }, { scaleY: shadowScale }],
               }}
             >
-              <WorldShadowSvg width={200} height={90} opacity={0.6} />
+              <WorldShadowSvg width={170} height={75} opacity={0.6} />
             </Animated.View>
 
             <Animated.Image
               source={worldImageSource}
               style={{
-                width: 300,
-                height: 300,
+                width: 250,
+                height: 250,
                 transform: [{ translateY }],
               }}
               resizeMode="contain"
