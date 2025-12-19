@@ -124,39 +124,47 @@ apps/native/
 │   ├── index.tsx                 # エントリーポイント
 │   ├── (app)/                    # 認証必須グループ
 │   │   ├── _layout.tsx           # 認証ガード
-│   │   ├── index.tsx             # ホーム画面
-│   │   ├── profile.tsx           # プロフィール画面
+│   │   ├── (tabs)/               # タブナビゲーション
+│   │   │   ├── _layout.tsx       # タブレイアウト
+│   │   │   ├── index.tsx         # ホーム画面
+│   │   │   ├── profile.tsx       # プロフィール画面
+│   │   │   └── reflection/       # 振り返り画面
+│   │   │       ├── _layout.tsx
+│   │   │       ├── index.tsx     # カレンダー画面
+│   │   │       └── [week].tsx    # 週詳細画面（動的ルート）
+│   │   ├── diary/                # 日記機能
+│   │   │   ├── _layout.tsx
+│   │   │   └── new.tsx           # 新規日記作成
 │   │   └── health.tsx            # ヘルスチェック画面
 │   └── (auth)/                   # 認証不要グループ
 │       ├── _layout.tsx           # 認証グループレイアウト
+│       ├── health.tsx            # ヘルスチェック画面
 │       ├── login.tsx             # ログイン画面
 │       └── signup.tsx            # サインアップ画面
 │
 ├── src/
 │   ├── screens/                  # 画面コンポーネント
 │   │   ├── auth/
+│   │   │   ├── health-screen.tsx
 │   │   │   ├── login-screen.tsx
 │   │   │   └── signup-screen.tsx
-│   │   ├── health/
-│   │   │   └── health-screen.tsx
-│   │   └── profile/
-│   │       └── profile-screen.tsx
+│   │   ├── diary/
+│   │   │   └── diary-input-screen.tsx
+│   │   ├── home/
+│   │   │   └── home-screen.tsx
+│   │   ├── profile/
+│   │   │   └── profile-screen.tsx
+│   │   └── reflection/
+│   │       ├── calendar-screen.tsx
+│   │       └── detail-screen.tsx
 │   │
 │   ├── features/                 # 機能単位のUI・ロジック
-│   │   ├── auth/
-│   │   │   ├── components/       # 認証関連コンポーネント
-│   │   │   │   ├── login-form.tsx
-│   │   │   │   ├── signup-form.tsx
-│   │   │   │   └── profile-card.tsx
-│   │   │   ├── lib/              # 認証関連ロジック
-│   │   │   │   ├── token-storage.ts
-│   │   │   │   └── validations.ts
-│   │   │   └── index.ts
-│   │   └── health/
-│   │       ├── components/       # ヘルスチェック関連コンポーネント
-│   │       ├── hooks/            # ヘルスチェック関連フック
-│   │       ├── types.ts
-│   │       └── index.ts
+│   │   ├── auth/                 # 認証機能
+│   │   ├── calendar/             # カレンダー機能
+│   │   ├── health/               # ヘルスチェック機能
+│   │   ├── profile/              # プロフィール機能
+│   │   ├── reflection/           # 振り返り機能
+│   │   └── timeline/             # タイムライン機能
 │   │
 │   ├── contexts/
 │   │   └── auth-context.tsx      # 認証状態管理（React Context）
@@ -164,7 +172,9 @@ apps/native/
 │   ├── lib/
 │   │   ├── api.ts                # Hono RPC クライアント
 │   │   ├── env.ts                # 環境変数バリデーション
-│   │   └── logger.ts             # ロガー初期化
+│   │   ├── logger.ts             # ロガー初期化
+│   │   ├── multipart.ts          # multipart/form-data ヘルパー
+│   │   └── onesignal.ts          # OneSignal プッシュ通知
 │   │
 │   └── globals.css               # グローバルスタイル（Uniwind）
 │
@@ -280,9 +290,10 @@ Expo Router によるルーティング定義のみ。
 
 | 参考ファイル | 内容 |
 |-------------|------|
-| `app/(app)/health.tsx` | ルートファイルの例（Screen re-export） |
-| `src/screens/health/health-screen.tsx` | 画面コンポーネントの例 |
+| `app/(app)/(tabs)/index.tsx` | タブ画面のルートファイルの例 |
+| `src/screens/home/home-screen.tsx` | 画面コンポーネントの例 |
 | `app/(app)/_layout.tsx` | 認証ガード付きレイアウトの例 |
+| `app/(app)/(tabs)/_layout.tsx` | タブナビゲーションの例 |
 
 ### パターン別参考ファイル
 
@@ -293,6 +304,9 @@ Expo Router によるルーティング定義のみ。
 | API 呼び出し | `src/features/health/hooks/use-health-check.ts` |
 | トークン管理 | `src/features/auth/lib/token-storage.ts` |
 | バリデーション拡張 | `src/features/auth/lib/validations.ts` |
+| カレンダー実装 | `src/features/calendar/components/calendar.tsx` |
+| タイムライン実装 | `src/features/timeline/components/timeline.tsx` |
+| ファイルアップロード | `src/lib/multipart.ts` |
 
 ---
 

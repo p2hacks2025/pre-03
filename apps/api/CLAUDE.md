@@ -65,18 +65,20 @@ src/
 ├── routes/               # プレゼンテーション層
 │   ├── index.ts          # ルート集約・マウント
 │   ├── root.ts           # ルートエンドポイント
-│   └── {feature}/        # 機能別ディレクトリ（health/, auth/, user/）
+│   └── {feature}/        # 機能別ディレクトリ（auth/, entries/, health/, reflection/, user/）
 │       ├── index.ts      # ルーター組み立て
 │       ├── route.ts      # OpenAPI ルート定義
 │       └── handlers.ts   # ハンドラー実装
 │
 ├── usecase/              # アプリケーション層（ビジネスロジック）
-│   └── {feature}/        # 機能別ディレクトリ（auth/, user/）
+│   └── {feature}/        # 機能別ディレクトリ（auth/, entries/, reflection/, user/）
 │       ├── index.ts      # 集約エクスポート
 │       └── {action}.ts   # 個別ユースケース
 │
 ├── repository/           # データアクセス層（DB 操作）
-│   └── {entity}.ts       # エンティティ別（profile.ts）
+│   ├── user-profile.ts   # プロフィール操作
+│   ├── user-post.ts      # 投稿操作
+│   └── weekly-world.ts   # 週間ワールド操作
 │
 ├── infrastructure/       # 外部サービス連携
 │   ├── db.ts             # Drizzle ORM クライアント
@@ -357,7 +359,7 @@ const getWeekStartDatesForMonth = (year: number, month: number): Date[] => {
 | `routes/user/index.ts` | ルーター組み立ての例 |
 | `usecase/user/get-me.ts` | 認証ユーザーを扱うユースケースの例 |
 | `usecase/user/upload-avatar.ts` | ファイルアップロード処理の例 |
-| `repository/profile.ts` | リポジトリ関数の例（CRUD 操作） |
+| `repository/user-profile.ts` | リポジトリ関数の例（CRUD 操作） |
 
 ### パターン別参考ファイル
 

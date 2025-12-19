@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createDbClient } from "../client";
 import { runSeeders } from "./runner";
 import type { SeedOptions } from "./seeders";
+import { aiProfilesSeeder } from "./seeders/ai-profiles";
 // Data seeders（データ初期化）
 import { postsSeeder } from "./seeders/posts";
 // Infrastructure seeders（インフラ初期化）
@@ -58,6 +59,7 @@ const main = async () => {
    */
   const seeders = [
     storageSeeder,
+    aiProfilesSeeder,
     usersSeeder,
     postsSeeder,
     testWeeklyWorldsSeeder,
