@@ -37,3 +37,30 @@ export const getWeeklyWorldsByDateRange = async (
       ),
     );
 };
+
+/**
+ * 特定の週開始日のweeklyWorldを取得
+ * @param db - DBクライアント
+ * @param profileId - ユーザープロフィールID
+ * @param weekStartDate - 週開始日（UTC）
+ * @returns WeeklyWorld または null
+ */
+export const getWeeklyWorldByWeekStart = async (
+  db: DbClient,
+  profileId: string,
+  weekStartDate: Date,
+): Promise<WeeklyWorld | null> => {
+  const result = await db
+    .select()
+    .from(weeklyWorlds)
+    .where(
+      and(
+        eq(weeklyWorlds.userProfileId, profileId),
+        eq(weeklyWorlds.weekStartDate, weekStartDate),
+        isNull(weeklyWorlds.deletedAt),
+      ),
+    )
+    .limit(1);
+
+  return result[0] ?? null;
+};

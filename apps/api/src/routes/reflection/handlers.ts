@@ -1,6 +1,7 @@
 import type { AppRouteHandler } from "@/context";
 import { getReflectionCalendar } from "@/usecase/reflection/get-calendar";
-import type { getReflectionCalendarRoute } from "./route";
+import { getDateUpdate } from "@/usecase/reflection/get-date-update";
+import type { getDateUpdateRoute, getReflectionCalendarRoute } from "./route";
 
 export const getReflectionCalendarHandler: AppRouteHandler<
   typeof getReflectionCalendarRoute
@@ -13,6 +14,17 @@ export const getReflectionCalendarHandler: AppRouteHandler<
     { db },
     { userId: user.id, year, month },
   );
+
+  return c.json(result);
+};
+
+export const getDateUpdateHandler: AppRouteHandler<
+  typeof getDateUpdateRoute
+> = async (c) => {
+  const user = c.get("user");
+  const db = c.get("db");
+
+  const result = await getDateUpdate({ db }, { userId: user.id });
 
   return c.json(result);
 };

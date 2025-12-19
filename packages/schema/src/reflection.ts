@@ -74,3 +74,51 @@ export const GetReflectionCalendarOutputSchema = z
 export type GetReflectionCalendarOutput = z.infer<
   typeof GetReflectionCalendarOutputSchema
 >;
+
+/**
+ * 日付更新ステータス
+ */
+export const DateUpdateStatusSchema = z
+  .enum(["no_update", "daily_update", "weekly_update"])
+  .openapi("DateUpdateStatus");
+
+export type DateUpdateStatus = z.infer<typeof DateUpdateStatusSchema>;
+
+/**
+ * 日付更新情報（画像URLのみ）
+ */
+export const DateUpdateInfoSchema = z
+  .object({
+    imageUrl: z.url().nullable().openapi({
+      description: "ワールド画像URL",
+      example:
+        "https://xxx.supabase.co/storage/v1/object/public/worlds/user-id/2025-12-01.png",
+    }),
+  })
+  .openapi("DateUpdateInfo");
+
+export type DateUpdateInfo = z.infer<typeof DateUpdateInfoSchema>;
+
+/**
+ * GET /reflection/date-update - 日付更新チェック
+ */
+export const GetDateUpdateOutputSchema = z
+  .object({
+    date: z.iso.date().openapi({
+      description: "JST基準の今日の日付（YYYY-MM-DD形式）",
+      example: "2025-12-19",
+    }),
+    status: DateUpdateStatusSchema.openapi({
+      description: "更新ステータス",
+      example: "daily_update",
+    }),
+    daily: DateUpdateInfoSchema.nullable().openapi({
+      description: "デイリー更新情報（今週のワールド画像）",
+    }),
+    weekly: DateUpdateInfoSchema.nullable().openapi({
+      description: "ウィークリー更新情報（前週のワールド画像）",
+    }),
+  })
+  .openapi("GetDateUpdateOutput");
+
+export type GetDateUpdateOutput = z.infer<typeof GetDateUpdateOutputSchema>;
