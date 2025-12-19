@@ -64,3 +64,61 @@ export const formatDateString = (date: Date | string): string => {
  * 使用例: sql`DATE(${userPosts.createdAt} AT TIME ZONE 'Asia/Tokyo')`
  */
 export const JST_TIMEZONE = "Asia/Tokyo";
+
+/**
+ * JST基準の現在日時をUTC Dateとして取得
+ * UTC時刻に9時間を加算し、getUTC*メソッドでJSTの値を読み取る
+ */
+const getJSTNow = (): Date => {
+  const now = new Date();
+  return new Date(now.getTime() + JST_OFFSET_HOURS * 60 * 60 * 1000);
+};
+
+/**
+ * JST基準の今日の日付文字列を取得
+ * @returns "YYYY-MM-DD" 形式の文字列
+ */
+export const getJSTTodayString = (): string => {
+  const jstNow = getJSTNow();
+  const year = jstNow.getUTCFullYear();
+  const month = String(jstNow.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(jstNow.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * JST基準の今週の月曜日（週開始日）をUTCで取得
+ * ISO 8601準拠: 月曜日を週の開始とする
+ * @returns 今週月曜日の00:00:00 UTC
+ */
+export const getJSTCurrentWeekStart = (): Date => {
+  const jstNow = getJSTNow();
+  const dayOfWeek = jstNow.getUTCDay(); // 0=日, 1=月, ..., 6=土
+
+  // 月曜日を基準に何日前か計算
+  // 日曜(0)の場合は6日前、月曜(1)は0日前、火曜(2)は1日前...
+  const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+  return new Date(
+    Date.UTC(
+      jstNow.getUTCFullYear(),
+      jstNow.getUTCMonth(),
+      jstNow.getUTCDate() - daysFromMonday,
+    ),
+  );
+};
+
+/**
+ * JST基準の前週の月曜日（週開始日）をUTCで取得
+ * @returns 前週月曜日の00:00:00 UTC
+ */
+export const getJSTPreviousWeekStart = (): Date => {
+  const currentWeekStart = getJSTCurrentWeekStart();
+  return new Date(
+    Date.UTC(
+      currentWeekStart.getUTCFullYear(),
+      currentWeekStart.getUTCMonth(),
+      currentWeekStart.getUTCDate() - 7,
+    ),
+  );
+};
