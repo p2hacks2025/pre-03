@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { Entry } from "@packages/schema/entry";
+import type { TimelineEntry } from "@packages/schema/entry";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Spinner } from "heroui-native";
 import { useCallback, useRef } from "react";
@@ -14,8 +14,11 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
-import { useAuth } from "@/contexts/auth-context";
-import { TimelineCard, useTimeline } from "@/features/timeline";
+import {
+  AiTimelineItem,
+  UserTimelineItem,
+  useTimeline,
+} from "@/features/timeline";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
@@ -24,14 +27,15 @@ const StyledIonicons = withUniwind(Ionicons);
 const StyledAnimatedView = withUniwind(Animated.View);
 const StyledAnimatedText = withUniwind(Animated.Text);
 
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<Entry>);
+const AnimatedFlatList = Animated.createAnimatedComponent(
+  FlatList<TimelineEntry>,
+);
 
 const HEADER_HEIGHT = 60;
 
 export const HomeScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { profile } = useAuth();
   const {
     entries,
     isLoading,
@@ -70,18 +74,26 @@ export const HomeScreen = () => {
   }, [hasMore, isFetchingMore, fetchMore]);
 
   const renderItem = useCallback(
-    ({ item }: { item: Entry }) => (
+    ({ item }: { item: TimelineEntry }) => (
       <StyledView className="px-4 pb-3">
-        <TimelineCard
-          username={profile?.displayName ?? "名無し"}
-          avatarUri={profile?.avatarUrl ?? undefined}
-          content={item.content}
-          createdAt={item.createdAt}
-          uploadImageUrl={item.uploadImageUrl}
-        />
+        {item.type === "ai" ? (
+          <AiTimelineItem
+            content={item.content}
+            createdAt={item.createdAt}
+            uploadImageUrl={item.uploadImageUrl}
+            author={item.author}
+          />
+        ) : (
+          <UserTimelineItem
+            content={item.content}
+            createdAt={item.createdAt}
+            uploadImageUrl={item.uploadImageUrl}
+            author={item.author}
+          />
+        )}
       </StyledView>
     ),
-    [profile],
+    [],
   );
 
   const renderListHeader = useCallback(() => {
@@ -124,7 +136,10 @@ export const HomeScreen = () => {
     );
   }, [isFetchingMore]);
 
-  const keyExtractor = useCallback((item: Entry) => item.id, []);
+  const keyExtractor = useCallback(
+    (item: TimelineEntry) => `${item.type}-${item.id}`,
+    [],
+  );
 
   // 画面フォーカス時に自動リフレッシュ
   useFocusEffect(
