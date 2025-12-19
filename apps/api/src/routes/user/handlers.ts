@@ -1,8 +1,12 @@
 import type { AppRouteHandler } from "@/context";
 import { createSupabaseAdminClient } from "@/infrastructure/supabase";
 import { AppError } from "@/shared/error/app-error";
-import { getMe, uploadAvatar } from "@/usecase/user";
-import type { getMeRoute, uploadAvatarRoute } from "./route";
+import { getMe, updateProfile, uploadAvatar } from "@/usecase/user";
+import type {
+  getMeRoute,
+  updateProfileRoute,
+  uploadAvatarRoute,
+} from "./route";
 
 export const getMeHandler: AppRouteHandler<typeof getMeRoute> = async (c) => {
   const user = c.get("user");
@@ -35,6 +39,18 @@ export const uploadAvatarHandler: AppRouteHandler<
     { supabase: supabaseAdmin, db },
     { userId: user.id, file },
   );
+
+  return c.json(result);
+};
+
+export const updateProfileHandler: AppRouteHandler<
+  typeof updateProfileRoute
+> = async (c) => {
+  const user = c.get("user");
+  const db = c.get("db");
+  const input = c.req.valid("json");
+
+  const result = await updateProfile({ db }, { userId: user.id, input });
 
   return c.json(result);
 };

@@ -84,12 +84,21 @@ export const useTimeline = () => {
       if (res.ok) {
         const data = await res.json();
 
+        // 重複を排除
+        const seen = new Set<string>();
+        const uniqueEntries = data.entries.filter((e) => {
+          const key = `${e.type}-${e.id}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
         logger.info("Timeline fetched", {
-          count: data.entries.length,
+          count: uniqueEntries.length,
           hasMore: data.hasMore,
         });
         setState({
-          entries: data.entries,
+          entries: uniqueEntries,
           isLoading: false,
           isFetchingMore: false,
           error: null,
