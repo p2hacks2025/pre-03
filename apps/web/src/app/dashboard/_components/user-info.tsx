@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Button, Card, CardBody, CardHeader } from "@heroui/react";
 import { postMultipart } from "@packages/api-contract";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth-context";
 import { client } from "@/lib/api";
 
@@ -52,11 +51,11 @@ export const UserInfo = () => {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="p-2">
         <CardHeader>
-          <CardTitle>User Information</CardTitle>
+          <h2 className="font-semibold text-lg">User Information</h2>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardBody className="space-y-4">
           <div className="flex justify-center">
             <AvatarUpload
               currentAvatarUrl={profile?.avatarUrl ?? null}
@@ -65,34 +64,32 @@ export const UserInfo = () => {
               onFileSelect={handleFileSelect}
             />
           </div>
-          {error && (
-            <p className="text-center text-destructive text-sm">{error}</p>
-          )}
+          {error && <p className="text-center text-danger text-sm">{error}</p>}
           <dl className="space-y-2">
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">Email:</dt>
+              <dt className="text-default-500">Email:</dt>
               <dd className="font-medium">{user.email}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">User ID:</dt>
+              <dt className="text-default-500">User ID:</dt>
               <dd className="font-mono text-sm">{user.id}</dd>
             </div>
             {profile && (
               <div className="flex justify-between">
-                <dt className="text-muted-foreground">Display Name:</dt>
+                <dt className="text-default-500">Display Name:</dt>
                 <dd className="font-medium">
                   {profile.displayName ?? "Not set"}
                 </dd>
               </div>
             )}
           </dl>
-        </CardContent>
+        </CardBody>
       </Card>
       <Button
-        onClick={handleLogout}
-        variant="outline"
-        className="w-full"
-        disabled={isLoggingOut}
+        onPress={handleLogout}
+        variant="bordered"
+        fullWidth
+        isDisabled={isLoggingOut}
       >
         {isLoggingOut ? "Logging out..." : "Logout"}
       </Button>

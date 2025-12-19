@@ -1,17 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
+import { Button, Card, CardBody, CardHeader } from "@heroui/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth-context";
 
 export default function Home() {
@@ -28,7 +21,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-default-500">Loading...</p>
       </div>
     );
   }
@@ -37,7 +30,7 @@ export default function Home() {
   if (user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Redirecting...</p>
+        <p className="text-default-500">Redirecting...</p>
       </div>
     );
   }
@@ -45,26 +38,26 @@ export default function Home() {
   return (
     <div className="flex min-h-screen items-center justify-center p-8">
       <div className="w-full max-w-md space-y-6">
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle>Welcome</CardTitle>
-            <CardDescription>
+        <Card className="p-2">
+          <CardHeader className="flex flex-col items-center gap-2">
+            <h2 className="font-semibold text-xl">Welcome</h2>
+            <p className="text-default-500 text-small">
               Get started by logging in or creating an account
-            </CardDescription>
+            </p>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Button asChild className="w-full">
-              <Link href="/auth/login">Login</Link>
+          <CardBody className="space-y-3">
+            <Button as={Link} href="/auth/login" color="primary" fullWidth>
+              Login
             </Button>
-            <Button asChild variant="outline" className="w-full">
-              <Link href="/auth/signup">Sign Up</Link>
+            <Button as={Link} href="/auth/signup" variant="bordered" fullWidth>
+              Sign Up
             </Button>
-          </CardContent>
+          </CardBody>
         </Card>
         <p className="text-center">
           <Link
             href="/health"
-            className="text-muted-foreground text-sm hover:underline"
+            className="text-default-500 text-sm hover:underline"
           >
             View Backend Status
           </Link>
