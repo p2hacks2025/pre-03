@@ -1,11 +1,14 @@
 import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 import {
   createOrUpdateWorldBuildLog,
-  getGuideImageBase64,
+  FIELD_POSITIONS,
   getImageGenerationPrompt,
+  getSceneDescriptionPrompt,
   getUserPostsByDate,
   getWeeklyWorld,
   JST_OFFSET,
+  LLM_CONFIG,
   selectFieldId,
   type UserPostsGroupedByUser,
   updateWeeklyWorldImage,
@@ -44,35 +47,91 @@ export const getWeekStartDate = (targetDate: Date): Date => {
   );
 };
 
+/**
+ * 日記内容からシーン記述を生成する（GPT-5-nano）
+ *
+ * GPT-5シリーズは responses.create API を使用
+ *
+ * @param ctx WorkerContext
+ * @param diaryContent 日記内容
+ * @returns シーン記述（自然言語、最大15文字）
+ */
+export const generateSceneDescription = async (
+  ctx: WorkerContext,
+  diaryContent: string,
+): Promise<string> => {
+  const openai = new OpenAI({ apiKey: ctx.env.OPENAI_API_KEY });
+  const systemPrompt = getSceneDescriptionPrompt();
+
+  const response = await openai.responses.create({
+    model: LLM_CONFIG.sceneDescription.model,
+    input: [
+      { role: "developer", content: systemPrompt },
+      { role: "user", content: diaryContent },
+    ],
+    text: {
+      format: { type: "text" },
+    },
+  });
+
+  const text = response.output_text;
+  if (typeof text !== "string" || text.length === 0) {
+    ctx.logger.warn("Empty scene description from OpenAI", {
+      response: JSON.stringify(response),
+    });
+    throw new Error("No text in OpenAI response for scene description");
+  }
+
+  ctx.logger.debug("Generated scene description", { sceneDescription: text });
+  return text.slice(0, 15);
+};
+
+/**
+ * シーン記述から画像を生成する（Gemini）
+ *
+ * @param ctx WorkerContext
+ * @param currentImageBase64 現在の画像（Base64）
+ * @param fieldId 更新対象のフィールドID
+ * @param sceneDescription シーン記述（自然言語）
+ * @returns 生成された画像のBuffer
+ */
 export const generateImage = async (
   ctx: WorkerContext,
   currentImageBase64: string,
   fieldId: number,
-  diaryContent: string,
+  sceneDescription: string,
 ): Promise<Buffer> => {
   const ai = new GoogleGenAI({ apiKey: ctx.env.GOOGLE_API_KEY });
   const prompt = getImageGenerationPrompt();
-  const guideImageBase64 = getGuideImageBase64(fieldId);
+  const positionDescription = FIELD_POSITIONS[fieldId];
+  const { model, temperature, seed, candidateCount } =
+    LLM_CONFIG.imageGeneration;
+
+  const userPrompt = `${prompt}
+
+---
+
+Block position: ${positionDescription}
+Scene: ${sceneDescription}`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-pro-image-preview",
+    model,
     contents: [
       {
         role: "user",
         parts: [
           { inlineData: { mimeType: "image/png", data: currentImageBase64 } },
-          { inlineData: { mimeType: "image/png", data: guideImageBase64 } },
-          { text: `${prompt}\n\n---\n\nDiary:\n${diaryContent}` },
+          { text: userPrompt },
         ],
       },
     ],
     config: {
       responseModalities: ["IMAGE"],
-      imageConfig: { aspectRatio: "1:1", imageSize: "2K" },
+      imageConfig: { aspectRatio: "1:1", imageSize: "1K" },
       systemInstruction: prompt,
-      temperature: 0.1,
-      seed: 1234,
-      candidateCount: 1,
+      temperature,
+      seed,
+      candidateCount,
     },
   });
 
@@ -116,16 +175,20 @@ export const processUserDailyUpdate = async (
   const { fieldId, isOverwrite } = await selectFieldId(ctx, weeklyWorld.id);
   ctx.logger.info("Selected fieldId", { fieldId, isOverwrite });
 
+  // Step 1: 日記からシーン記述を生成（GPT-5-nano）
   const diaryContent = group.posts.map((p) => p.content).join("\n\n");
+  const sceneDescription = await generateSceneDescription(ctx, diaryContent);
+  ctx.logger.info("Scene description generated", { sceneDescription });
+
+  // Step 2: シーン記述から画像を生成（Gemini）
   const currentImageBase64 = await fetchImageAsBase64(
     weeklyWorld.weeklyWorldImageUrl,
   );
-
   const imageBuffer = await generateImage(
     ctx,
     currentImageBase64,
     fieldId,
-    diaryContent,
+    sceneDescription,
   );
 
   const newImageUrl = await uploadGeneratedImage(

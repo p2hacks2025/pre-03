@@ -1,5 +1,4 @@
 import type { UserPost, UserProfile } from "@packages/db";
-import OpenAI from "openai";
 import {
   createOrUpdateWorldBuildLog,
   createWeeklyWorld,
@@ -10,13 +9,13 @@ import {
   getBaseImageBase64,
   getBaseImageBuffer,
   getUserPostsForWeek,
-  getWeeklySummaryPrompt,
   uploadGeneratedImage,
   type WorkerContext,
 } from "@/lib";
 import {
   fetchImageAsBase64,
   generateImage,
+  generateSceneDescription,
   getJstToday,
   getWeekStartDate,
 } from "./daily-update";
@@ -33,34 +32,6 @@ export const getTargetWeekStart = (ctx: WorkerContext): Date => {
 
 export const getNextWeekStart = (weekStartDate: Date): Date => {
   return new Date(weekStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-};
-
-export const summarizePostsWithLLM = async (
-  ctx: WorkerContext,
-  posts: UserPost[],
-): Promise<string> => {
-  if (posts.length === 0) {
-    return "";
-  }
-
-  const openai = new OpenAI({ apiKey: ctx.env.OPENAI_API_KEY });
-  const diaryContent = posts.map((post) => post.content).join("\n\n---\n\n");
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-5-nano",
-    messages: [
-      { role: "system", content: getWeeklySummaryPrompt() },
-      { role: "user", content: diaryContent },
-    ],
-    max_completion_tokens: 200,
-  });
-
-  const text = response.choices[0]?.message?.content;
-  if (typeof text !== "string") {
-    throw new Error("No text in OpenAI response for summary");
-  }
-
-  return text.slice(0, 200);
 };
 
 export const selectRandomFieldIds = (count: number): number[] => {
@@ -105,16 +76,22 @@ export const processUserWeeklyResetWithPosts = async (
   posts: UserPost[],
   newWeekStart: Date,
 ): Promise<string> => {
-  const summary = await summarizePostsWithLLM(ctx, posts);
-  const fieldIds = selectRandomFieldIds(2);
+  // Step 1: 週間投稿からシーン記述を生成（GPT-5-nano）
+  const diaryContent = posts.map((post) => post.content).join("\n\n---\n\n");
+  const sceneDescription = await generateSceneDescription(ctx, diaryContent);
+  ctx.logger.info("Scene description generated for weekly reset", {
+    sceneDescription,
+  });
 
+  const fieldIds = selectRandomFieldIds(2);
   let currentImageBase64 = getBaseImageBase64();
 
+  // Step 2: シーン記述から画像を生成（Gemini）- 1回目
   const firstImageBuffer = await generateImage(
     ctx,
     currentImageBase64,
     fieldIds[0],
-    summary,
+    sceneDescription,
   );
 
   const firstImageUrl = await uploadGeneratedImage(
@@ -125,11 +102,12 @@ export const processUserWeeklyResetWithPosts = async (
   );
   currentImageBase64 = await fetchImageAsBase64(firstImageUrl);
 
+  // Step 2: シーン記述から画像を生成（Gemini）- 2回目
   const secondImageBuffer = await generateImage(
     ctx,
     currentImageBase64,
     fieldIds[1],
-    summary,
+    sceneDescription,
   );
 
   const initialImageUrl = await uploadGeneratedImage(
