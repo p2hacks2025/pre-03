@@ -1,8 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
 import { Spinner } from "heroui-native";
-import { useState } from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Animated, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
@@ -13,6 +13,7 @@ import {
 } from "@/features/reflection/components";
 import type { AiTimelineItem, DiaryEntry } from "@/features/reflection/hooks";
 import { useWeeklyWorld, useWeekNavigation } from "@/features/reflection/hooks";
+import WorldShadowSvg from "../../../assets/world-shadow.svg";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
@@ -61,6 +62,36 @@ export const ReflectionDetailScreen = () => {
     },
   }));
 
+  // 浮遊アニメーション
+  const floatAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  }, [floatAnim]);
+
+  const translateY = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [10, -5],
+  });
+
+  const shadowScale = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1.4, 1.2],
+  });
+
   // ローディング状態
   if (isLoading) {
     return (
@@ -91,6 +122,11 @@ export const ReflectionDetailScreen = () => {
     );
   }
 
+  // 画像ソースを決定（APIから取得した画像があればそれを使用、なければダミー画像）
+  const worldImageSource = weeklyWorld?.weeklyWorldImageUrl
+    ? { uri: weeklyWorld.weeklyWorldImageUrl }
+    : require("../../../assets/world-example.png");
+
   return (
     <StyledView
       className="flex-1 bg-[#4ECCDD]"
@@ -119,20 +155,28 @@ export const ReflectionDetailScreen = () => {
           </StyledView>
         </StyledPressable>
 
-        {/* 世界画像 */}
-        {weeklyWorld?.weeklyWorldImageUrl ? (
-          <Image
-            source={{ uri: weeklyWorld.weeklyWorldImageUrl }}
-            style={{ width: 300, height: 300 }}
+        {/* 世界画像（アニメーション付き） */}
+        <StyledView className="items-center justify-center">
+          <Animated.View
+            style={{
+              position: "absolute",
+              bottom: 30,
+              transform: [{ scaleX: shadowScale }, { scaleY: shadowScale }],
+            }}
+          >
+            <WorldShadowSvg width={200} height={90} opacity={0.6} />
+          </Animated.View>
+
+          <Animated.Image
+            source={worldImageSource}
+            style={{
+              width: 300,
+              height: 300,
+              transform: [{ translateY }],
+            }}
             resizeMode="contain"
           />
-        ) : (
-          <Image
-            source={require("../../../assets/world-example.png")}
-            style={{ width: 300, height: 300 }}
-            resizeMode="contain"
-          />
-        )}
+        </StyledView>
 
         {/* 次の週へ移動ボタン */}
         <StyledPressable

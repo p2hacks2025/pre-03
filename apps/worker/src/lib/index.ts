@@ -35,4 +35,4 @@ export {
   type UserPostsGroupedByUser,
   updateWeeklyWorldImage,
   uploadGeneratedImage,
-} from "./infra";
+} from "./infra/index";
