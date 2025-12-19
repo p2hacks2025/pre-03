@@ -1,3 +1,5 @@
+import { DotGothic16_400Regular } from "@expo-google-fonts/dotgothic16";
+import { useFonts } from "expo-font";
 import { Avatar } from "heroui-native";
 import { Image, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
@@ -32,6 +34,15 @@ export const AiTimelineItem = ({
   uploadImageUrl,
   author,
 }: AiTimelineItemProps) => {
+  const [fontsLoaded] = useFonts({
+    DotGothic16_400Regular,
+    Madoufmg: require("../../../../assets/fonts/madoufmg.ttf"),
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   const timeAgo = formatRelativeTime(createdAt);
 
   return (
@@ -54,7 +65,7 @@ export const AiTimelineItem = ({
         <StyledView className="flex-row items-center justify-between">
           <StyledText
             className="font-semibold text-base text-white"
-            style={{ fontFamily: "DotGothic16_400Regular" }}
+            style={{ fontFamily: "Madoufmg" }}
           >
             {author.username}
           </StyledText>
