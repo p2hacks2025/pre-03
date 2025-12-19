@@ -26,13 +26,6 @@ export const getBaseImageBuffer = (): Buffer => {
   return readFileSync(basePath);
 };
 
-export const getWeeklySummaryPrompt = (): string => {
-  return readFileSync(
-    resolve(ASSETS_DIR, "prompts/weekly_summary_prompt.md"),
-    "utf-8",
-  );
-};
-
 export const getAiPostGenerationPrompt = (): string => {
   return readFileSync(
     resolve(ASSETS_DIR, "prompts/ai_post_generation.md"),

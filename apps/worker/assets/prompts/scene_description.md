@@ -1,35 +1,35 @@
-# SCENE DESCRIPTION TASK
+You extract a character-focused scene from diary content.
 
-You are tasked with converting diary entries into a visual scene description for image generation.
+FORMAT: [WHO] + [ACTION] (+ [PLACE])
+- WHO is REQUIRED (character/person)
+- ACTION is REQUIRED (static verb)
+- PLACE is optional (single word)
 
-## INPUT
+REQUIRED:
+- Include WHO (男の子, 女の子, 友人, etc.) - use generic character if unclear
+- Include static ACTION verb (座る, 話す, 読む, 食べる)
+- Max 15 characters
+- Same language as input
 
-One or more diary entries describing the user's day or week.
+FORBIDDEN (causes image generation errors):
+- Indoor locations with walls (部屋, リビング, 寝室, 家) → creates walls/ceilings
+- Time info (夜, 朝, 夕方) → creates walls/backgrounds
+- Scenery (絶景, 景色, 星空, 海) → exceeds block boundaries
+- Movement verbs (歩く, 向かう, 走る)
+- Compound locations (駅前のカフェ)
 
-## OUTPUT REQUIREMENTS
+GOOD:
+- "男の子が公園で座る"
+- "うさぎがベンチで休む"
+- "友人とカフェで話す"
+- "女の子が本を読む"
+- "友人がテーブルで食べる" ← use furniture, not room
 
-1. **Language**: Output in the SAME language as the diary entries
-2. **Length**: Maximum 200 characters
-3. **Style**: Concrete, visual scene description
-4. **Format**: A single sentence describing a scene
+BAD:
+- "公園で座る" ← missing WHO
+- "友人が部屋で食べる" ← indoor with walls
+- "リビングで静かな夜" ← indoor, time info
+- "絶景を見る人" ← scenery
+- "公園を散歩する" ← movement
 
-## RULES
-
-1. **Visualize the emotion**: Convert feelings into visual elements (e.g., "happy" -> "sunny sky", "tired" -> "cozy bed")
-2. **Add characters**: Include people or creatures doing activities (e.g., "two friends sitting on a bench")
-3. **Describe the setting**: Include environment details (e.g., "park with cherry blossoms", "cozy room with warm lights")
-4. **Use concrete objects**: Mention specific items that can be drawn (e.g., "coffee cup", "bicycle", "umbrella")
-5. **NO abstractions**: Avoid concepts that cannot be visualized (e.g., "hope", "future", "memory")
-6. **NO personal info**: Do NOT include names, dates, or identifiable information
-
-## EXAMPLES
-
-Input: "今日は友達とカフェに行った。美味しいケーキを食べながらたくさん話した。"
-Output: "明るいカフェで二人の友人がケーキを前に楽しそうに会話している"
-
-Input: "仕事が忙しくて疲れた。でも帰りに見た夕焼けがきれいだった。"
-Output: "オレンジ色の夕焼け空の下、疲れた表情の人がベンチで休んでいる"
-
-## OUTPUT
-
-Text description only. No markdown, no bullet points, no quotes.
+Output ONLY the scene.

@@ -6,12 +6,12 @@ export {
   getGuideImageBase64,
   getImageGenerationPrompt,
   getSceneDescriptionPrompt,
-  getWeeklySummaryPrompt,
 } from "./assets";
 export {
   ASSETS_DIR,
   FIELD_ID_MAX,
   FIELD_ID_MIN,
+  FIELD_POSITIONS,
   JST_OFFSET,
   ONESIGNAL_API_URL,
   TIMEZONE,

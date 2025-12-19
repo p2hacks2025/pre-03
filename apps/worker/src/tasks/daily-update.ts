@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 import {
   createOrUpdateWorldBuildLog,
-  getGuideImageBase64,
+  FIELD_POSITIONS,
   getImageGenerationPrompt,
   getSceneDescriptionPrompt,
   getUserPostsByDate,
@@ -50,9 +50,11 @@ export const getWeekStartDate = (targetDate: Date): Date => {
 /**
  * 日記内容からシーン記述を生成する（GPT-5-nano）
  *
+ * GPT-5シリーズは responses.create API を使用
+ *
  * @param ctx WorkerContext
  * @param diaryContent 日記内容
- * @returns シーン記述（自然言語）
+ * @returns シーン記述（自然言語、最大15文字）
  */
 export const generateSceneDescription = async (
   ctx: WorkerContext,
@@ -61,22 +63,27 @@ export const generateSceneDescription = async (
   const openai = new OpenAI({ apiKey: ctx.env.OPENAI_API_KEY });
   const systemPrompt = getSceneDescriptionPrompt();
 
-  const response = await openai.chat.completions.create({
+  const response = await openai.responses.create({
     model: LLM_CONFIG.sceneDescription.model,
-    messages: [
-      { role: "system", content: systemPrompt },
+    input: [
+      { role: "developer", content: systemPrompt },
       { role: "user", content: diaryContent },
     ],
-    max_completion_tokens: LLM_CONFIG.sceneDescription.maxCompletionTokens,
+    text: {
+      format: { type: "text" },
+    },
   });
 
-  const text = response.choices[0]?.message?.content;
-  if (typeof text !== "string") {
+  const text = response.output_text;
+  if (typeof text !== "string" || text.length === 0) {
+    ctx.logger.warn("Empty scene description from OpenAI", {
+      response: JSON.stringify(response),
+    });
     throw new Error("No text in OpenAI response for scene description");
   }
 
   ctx.logger.debug("Generated scene description", { sceneDescription: text });
-  return text.slice(0, 200);
+  return text.slice(0, 15);
 };
 
 /**
@@ -96,9 +103,16 @@ export const generateImage = async (
 ): Promise<Buffer> => {
   const ai = new GoogleGenAI({ apiKey: ctx.env.GOOGLE_API_KEY });
   const prompt = getImageGenerationPrompt();
-  const guideImageBase64 = getGuideImageBase64(fieldId);
+  const positionDescription = FIELD_POSITIONS[fieldId];
   const { model, temperature, seed, candidateCount } =
     LLM_CONFIG.imageGeneration;
+
+  const userPrompt = `${prompt}
+
+---
+
+Block position: ${positionDescription}
+Scene: ${sceneDescription}`;
 
   const response = await ai.models.generateContent({
     model,
@@ -107,14 +121,13 @@ export const generateImage = async (
         role: "user",
         parts: [
           { inlineData: { mimeType: "image/png", data: currentImageBase64 } },
-          { inlineData: { mimeType: "image/png", data: guideImageBase64 } },
-          { text: `${prompt}\n\n---\n\nScene:\n${sceneDescription}` },
+          { text: userPrompt },
         ],
       },
     ],
     config: {
       responseModalities: ["IMAGE"],
-      imageConfig: { aspectRatio: "1:1", imageSize: "2K" },
+      imageConfig: { aspectRatio: "1:1", imageSize: "1K" },
       systemInstruction: prompt,
       temperature,
       seed,
