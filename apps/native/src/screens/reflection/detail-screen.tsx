@@ -2,34 +2,20 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { SvgXml } from "react-native-svg";
 import { withUniwind } from "uniwind";
-
 import {
   DetailDiary,
   DetailTabs,
   DetailTimeline,
 } from "@/features/reflection/components";
 import { useDetailDiary } from "@/features/reflection/hooks";
+import WorldShadowSvg from "../../../assets/world-shadow.svg";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
 const StyledPressable = withUniwind(Pressable);
 
 type TabType = "diary" | "timeline";
-
-const shadowSvg = `<svg width="459" height="216" viewBox="0 0 459 216" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g filter="url(#filter0_f_33_102)">
-<ellipse cx="229.5" cy="108" rx="219.5" ry="98" fill="#57ABBC"/>
-</g>
-<defs>
-<filter id="filter0_f_33_102" x="0" y="0" width="459" height="216" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-<feGaussianBlur stdDeviation="5" result="effect1_foregroundBlur_33_102"/>
-</filter>
-</defs>
-</svg>`;
 
 export const ReflectionDetailScreen = () => {
   const insets = useSafeAreaInsets();
@@ -96,7 +82,7 @@ export const ReflectionDetailScreen = () => {
               transform: [{ scaleX: shadowScale }, { scaleY: shadowScale }],
             }}
           >
-            <SvgXml xml={shadowSvg} width={200} height={90} opacity={0.6} />
+            <WorldShadowSvg width={200} height={90} opacity={0.6} />
           </Animated.View>
 
           <Animated.Image

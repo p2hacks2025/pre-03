@@ -67,6 +67,7 @@
     "@types/react-dom": "^19.1.11",
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-preset-expo": "~54.0.9",
+    "react-native-svg-transformer": "^1.5.2",
     "typescript": "~5.9.2"
   },
   "private": true
