@@ -1,18 +1,23 @@
 export {
   AI_POST_CONFIG,
   type DiaryGroup,
+  fetchRandomHistoricalPosts,
+  fetchRecentUserPosts,
   type GenerationResult,
   generateAiPostContents,
   generateStandaloneAiPostContents,
   generateStandalonePosts,
   getRandomPublishedAt,
   groupPostsByUser,
+  processHistoricalAiPost,
+  processUserAiPosts,
   shouldExecuteWithChance,
 } from "./ai-post";
 export {
   fetchImageAsBase64,
   fetchUserPostsByDate,
   generateImage,
+  generateSceneDescription,
   getJstToday,
   getJstYesterday,
   getWeekStartDate,
@@ -34,5 +39,4 @@ export {
   processUserWeeklyResetWithoutPosts,
   processUserWeeklyResetWithPosts,
   selectRandomFieldIds,
-  summarizePostsWithLLM,
 } from "./weekly-reset";

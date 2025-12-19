@@ -1,8 +1,10 @@
+import { ErrorResponseSchema } from "@packages/schema/common/error";
 import { useToast } from "heroui-native";
 import { useRef, useState } from "react";
 import type { TextInput } from "react-native";
 
 import { useAuth } from "@/contexts/auth-context";
+import { createAuthenticatedClient } from "@/lib/api";
 
 import type {
   ProfileEditActions,
@@ -19,28 +21,27 @@ export interface UseProfileEditReturn
 /**
  * プロフィール名を保存
  *
- * 現在はローカル更新のみ（mock）。
- * 将来的にはAPIを叩いてサーバー側にも保存する。
- *
- * @example 将来的なAPI呼び出しの実装例
- * ```typescript
- * const authClient = createAuthenticatedClient(accessToken);
- * const res = await authClient.user.profile.$patch({
- *   json: { displayName: params.displayName }
- * });
- * if (!res.ok) throw new Error('Failed to update profile');
- * ```
+ * APIを叩いてサーバー側に保存し、成功後にローカルstateも更新する。
  */
 async function saveProfileName(
   params: UpdateProfileNameParams,
   updateProfile: (updates: { displayName: string }) => void,
+  accessToken: string,
 ): Promise<void> {
-  // TODO: APIを叩いてサーバー側にも保存する
-  // 現在はローカル更新のみ（mock）
-  updateProfile({ displayName: params.displayName });
+  const authClient = createAuthenticatedClient(accessToken);
 
-  // 将来的にはここでAPIレスポンスを待つ
-  // await new Promise(resolve => setTimeout(resolve, 500));
+  const res = await authClient.user.profile.update.$post({
+    json: { displayName: params.displayName },
+  });
+
+  if (!res.ok) {
+    const errorData = ErrorResponseSchema.parse(await res.json());
+    throw new Error(errorData.error.message);
+  }
+
+  // API成功後にローカルstateも更新
+  const data = await res.json();
+  updateProfile({ displayName: data.profile.displayName });
 }
 
 /**
@@ -50,7 +51,7 @@ async function saveProfileName(
  * UIコンポーネントから編集ロジックを分離するために使用。
  */
 export const useProfileEdit = (): UseProfileEditReturn => {
-  const { profile, updateProfile } = useAuth();
+  const { profile, updateProfile, accessToken } = useAuth();
   const { toast } = useToast();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -91,9 +92,22 @@ export const useProfileEdit = (): UseProfileEditReturn => {
       return;
     }
 
+    if (!accessToken) {
+      toast.show({
+        variant: "danger",
+        label: "認証エラー",
+        description: "再度ログインしてください",
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
-      await saveProfileName({ displayName: trimmedName }, updateProfile);
+      await saveProfileName(
+        { displayName: trimmedName },
+        updateProfile,
+        accessToken,
+      );
       setIsEditing(false);
       toast.show({
         variant: "success",

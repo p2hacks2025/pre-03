@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
+import { HEADER_HEIGHT, Header } from "@/components";
 import {
   AiTimelineItem,
   UserTimelineItem,
@@ -24,14 +25,10 @@ const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
 const StyledTouchableOpacity = withUniwind(TouchableOpacity);
 const StyledIonicons = withUniwind(Ionicons);
-const StyledAnimatedView = withUniwind(Animated.View);
-const StyledAnimatedText = withUniwind(Animated.Text);
 
 const AnimatedFlatList = Animated.createAnimatedComponent(
   FlatList<TimelineEntry>,
 );
-
-const HEADER_HEIGHT = 60;
 
 export const HomeScreen = () => {
   const router = useRouter();
@@ -48,20 +45,6 @@ export const HomeScreen = () => {
 
   // スクロール位置を追跡
   const scrollY = useRef(new Animated.Value(0)).current;
-
-  // 「新世界の声」の透明度を計算（スクロール50pxで完全に透明）
-  const titleOpacity = scrollY.interpolate({
-    inputRange: [0, 50],
-    outputRange: [1, 0],
-    extrapolate: "clamp",
-  });
-
-  // ヘッダーの上方向への移動を計算（スクロールに合わせて押し上げ）
-  const headerTranslateY = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT],
-    outputRange: [0, -HEADER_HEIGHT + 30],
-    extrapolate: "clamp",
-  });
 
   // 今日の日付を取得してフォーマット
   const today = new Date();
@@ -184,24 +167,13 @@ export const HomeScreen = () => {
         ListFooterComponent={renderListFooter}
       />
 
-      <StyledAnimatedView
-        className="absolute top-0 right-0 left-0 items-center border-border border-b bg-white px-4"
-        style={{
-          paddingTop: insets.top + 0,
-          paddingBottom: 12,
-          transform: [{ translateY: headerTranslateY }],
-        }}
-      >
-        <StyledAnimatedText
-          className="font-bold text-2xl text-foreground"
-          style={{ opacity: titleOpacity }}
-        >
-          新世界の声
-        </StyledAnimatedText>
-        <StyledText className="font-bold text-foreground text-sm">
-          {formattedDate}
-        </StyledText>
-      </StyledAnimatedView>
+      <Header
+        title="新世界の声"
+        subtitle={formattedDate}
+        animated
+        scrollY={scrollY}
+        showBorder
+      />
 
       <StyledView
         className="absolute right-0 bottom-0 p-4"

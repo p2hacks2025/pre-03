@@ -5,12 +5,13 @@ export {
   getBaseImageBuffer,
   getGuideImageBase64,
   getImageGenerationPrompt,
-  getWeeklySummaryPrompt,
+  getSceneDescriptionPrompt,
 } from "./assets";
 export {
   ASSETS_DIR,
   FIELD_ID_MAX,
   FIELD_ID_MIN,
+  FIELD_POSITIONS,
   JST_OFFSET,
   ONESIGNAL_API_URL,
   TIMEZONE,
@@ -36,3 +37,4 @@ export {
   updateWeeklyWorldImage,
   uploadGeneratedImage,
 } from "./infra/index";
+export { LLM_CONFIG, type LLMConfigKey } from "./llm-config";

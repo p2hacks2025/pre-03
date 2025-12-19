@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Text, View } from "react-native";
+import { Animated, Easing, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
 const StyledView = withUniwind(View);
@@ -43,6 +43,7 @@ const useStickyAnimation = <T extends number>({
       Animated.timing(offsetAnim, {
         toValue: 0,
         duration: 150,
+        easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }).start(() => {
         setPrevValue(null);
@@ -85,7 +86,7 @@ export const StickyYearHeader = ({ year }: StickyYearHeaderProps) => {
             ],
           }}
         >
-          <StyledText className="text-center font-bold text-foreground text-xl">
+          <StyledText className="text-center font-bold text-2xl text-foreground">
             {prevValue}年
           </StyledText>
         </StyledAnimatedView>
@@ -94,7 +95,7 @@ export const StickyYearHeader = ({ year }: StickyYearHeaderProps) => {
         className="absolute h-10 w-full justify-center"
         style={{ transform: [{ translateY: offsetAnim }] }}
       >
-        <StyledText className="text-center font-bold text-foreground text-xl">
+        <StyledText className="text-center font-bold text-2xl text-foreground">
           {year}年
         </StyledText>
       </StyledAnimatedView>
@@ -123,10 +124,10 @@ export const StickyMonthHeader = ({ month }: StickyMonthHeaderProps) => {
   });
 
   return (
-    <StyledView className="h-10 w-12 items-center justify-center overflow-hidden">
+    <StyledView className="h-10 w-16 items-start justify-center overflow-hidden">
       {prevValue !== null && (
         <StyledAnimatedView
-          className="absolute h-10 w-full items-center justify-center"
+          className="absolute h-10 w-full items-start justify-center"
           style={{
             transform: [
               {
@@ -144,7 +145,7 @@ export const StickyMonthHeader = ({ month }: StickyMonthHeaderProps) => {
         </StyledAnimatedView>
       )}
       <StyledAnimatedView
-        className="absolute h-10 w-full items-center justify-center"
+        className="absolute h-10 w-full items-start justify-center"
         style={{ transform: [{ translateY: offsetAnim }] }}
       >
         <StyledText className="font-bold text-2xl text-foreground">

@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Avatar } from "@heroui/react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 interface AvatarUploadProps {
@@ -35,15 +35,6 @@ export const AvatarUpload = ({
     }
   };
 
-  const initials = displayName
-    ? displayName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "?";
-
   return (
     <div className="relative">
       <input
@@ -60,12 +51,15 @@ export const AvatarUpload = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         disabled={isUploading}
-        className="relative cursor-pointer rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed"
+        className="relative cursor-pointer rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed"
       >
-        <Avatar className="size-20">
-          <AvatarImage src={currentAvatarUrl ?? undefined} alt="Avatar" />
-          <AvatarFallback className="text-lg">{initials}</AvatarFallback>
-        </Avatar>
+        <Avatar
+          src={currentAvatarUrl ?? undefined}
+          name={displayName ?? undefined}
+          showFallback
+          className="h-20 w-20 text-lg"
+          fallback={displayName ? undefined : <span>?</span>}
+        />
         <div
           className={cn(
             "absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-white text-xs transition-opacity",

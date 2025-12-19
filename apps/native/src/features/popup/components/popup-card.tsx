@@ -1,3 +1,4 @@
+import { useFonts } from "expo-font";
 import { Image, Pressable, Text, View } from "react-native";
 import Animated, { FadeInUp, FadeOutDown } from "react-native-reanimated";
 import { withUniwind } from "uniwind";
@@ -26,6 +27,14 @@ export const PopupCard = ({
   onClose,
   remainingCount = 0,
 }: PopupCardProps) => {
+  const [fontsLoaded] = useFonts({
+    Madoufmg: require("../../../../assets/fonts/madoufmg.ttf"),
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   const image = imageUrl ? { uri: imageUrl } : undefined;
 
   return (
@@ -35,11 +44,17 @@ export const PopupCard = ({
       className="w-full max-w-sm"
     >
       <StyledView className="overflow-hidden rounded-3xl bg-[#C4A574] p-4 shadow-xl">
-        <StyledText className="mb-2 text-center font-bold text-white text-xl">
+        <StyledText
+          className="mb-2 text-center font-bold text-white text-xl"
+          style={{ fontFamily: "Madoufmg" }}
+        >
           {title}
         </StyledText>
 
-        <StyledText className="mb-4 text-center text-base text-white">
+        <StyledText
+          className="mb-4 text-center text-base text-white"
+          style={{ fontFamily: "Madoufmg" }}
+        >
           {message}
         </StyledText>
 
