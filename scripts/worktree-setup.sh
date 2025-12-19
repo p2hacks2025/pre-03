@@ -78,7 +78,11 @@ fi
 # .env ファイルをコピー（パス構造を維持）
 echo ""
 echo "📋 .env ファイルをコピー中..."
-ENV_FILES=$(cd "$REPO_ROOT" && fd -H -t f '^\.env' 2>/dev/null || true)
+if command -v fd &> /dev/null; then
+  ENV_FILES=$(cd "$REPO_ROOT" && fd -H -t f '^\.env' 2>/dev/null || true)
+else
+  ENV_FILES=$(cd "$REPO_ROOT" && find . -name '.env*' -type f 2>/dev/null || true)
+fi
 if [[ -n "$ENV_FILES" ]]; then
   while IFS= read -r env_file; do
     DEST_DIR="$WORKTREE_PATH/$(dirname "$env_file")"
@@ -92,10 +96,15 @@ fi
 
 # direnv allow
 if [[ -f "$WORKTREE_PATH/.envrc" ]]; then
-  echo ""
-  echo "🔧 direnv allow を実行中..."
-  (cd "$WORKTREE_PATH" && direnv allow)
-  echo "✓ direnv allow を実行しました"
+  if command -v direnv &> /dev/null; then
+    echo ""
+    echo "🔧 direnv allow を実行中..."
+    (cd "$WORKTREE_PATH" && direnv allow)
+    echo "✓ direnv allow を実行しました"
+  else
+    echo ""
+    echo "⚠️  direnv がインストールされていません。手動で direnv allow を実行してください"
+  fi
 fi
 
 # pnpm install
@@ -106,8 +115,12 @@ echo "✓ 依存関係をインストールしました"
 
 # VSCode で開く
 echo ""
-echo "🚀 VSCode で開きます..."
-code -n "$WORKTREE_PATH"
+if command -v code &> /dev/null; then
+  echo "🚀 VSCode で開きます..."
+  code -n "$WORKTREE_PATH"
+else
+  echo "💡 VSCode を手動で開いてください: $WORKTREE_PATH"
+fi
 
 echo ""
 echo "✅ Worktree のセットアップが完了しました！"

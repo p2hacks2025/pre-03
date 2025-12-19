@@ -4,6 +4,38 @@
 
 set -e
 
+# tput が利用可能かチェック
+HAS_TPUT=false
+if command -v tput &> /dev/null; then
+  HAS_TPUT=true
+fi
+
+# 番号選択UI（tput がない場合のフォールバック）
+# 引数: 選択肢の配列
+# 戻り値: 選択されたインデックス（0始まり）、キャンセル時は255
+select_with_numbers() {
+  local options=("$@")
+  local count=${#options[@]}
+
+  for i in "${!options[@]}"; do
+    echo "  $((i + 1))) ${options[$i]}"
+  done
+  echo "  0) キャンセル"
+  echo ""
+  read -p "番号を入力してください: " choice
+
+  if [[ "$choice" == "0" ]] || [[ -z "$choice" ]]; then
+    return 255
+  fi
+
+  if [[ "$choice" =~ ^[0-9]+$ ]] && ((choice >= 1 && choice <= count)); then
+    return $((choice - 1))
+  fi
+
+  echo "無効な選択です"
+  return 255
+}
+
 # 矢印キー選択UI
 # 引数: 選択肢の配列
 # 戻り値: 選択されたインデックス（0始まり）、キャンセル時は255
@@ -102,9 +134,6 @@ if [[ -z "$OTHER_WORKTREES" ]]; then
   exit 0
 fi
 
-echo "削除する worktree を選択してください (↑↓で選択, Enterで確定, qでキャンセル):"
-echo ""
-
 # worktreeを配列に格納
 WORKTREE_PATHS=()
 WORKTREE_BRANCHES=()
@@ -120,9 +149,18 @@ while IFS= read -r line; do
   DISPLAY_OPTIONS+=("${PATH_SHORT} [${BRANCH}]")
 done <<< "$OTHER_WORKTREES"
 
-# 矢印キーで選択
-select_with_arrows "${DISPLAY_OPTIONS[@]}"
-SELECTION=$?
+# 選択UIを表示（tput がある場合は矢印キー、ない場合は番号選択）
+if [[ "$HAS_TPUT" == "true" ]]; then
+  echo "削除する worktree を選択してください (↑↓で選択, Enterで確定, qでキャンセル):"
+  echo ""
+  select_with_arrows "${DISPLAY_OPTIONS[@]}"
+  SELECTION=$?
+else
+  echo "削除する worktree を選択してください:"
+  echo ""
+  select_with_numbers "${DISPLAY_OPTIONS[@]}"
+  SELECTION=$?
+fi
 
 if [[ $SELECTION -eq 255 ]]; then
   echo ""
