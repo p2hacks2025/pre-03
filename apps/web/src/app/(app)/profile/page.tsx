@@ -66,13 +66,15 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      {/* プロフィールヘッダー（ゴールド背景） */}
-      <div style={{ backgroundColor: "#C4A86C" }}>
-        <ProfileHeader />
-      </div>
+      <div className="mx-auto max-w-2xl">
+        {/* プロフィールヘッダー（ゴールド背景） */}
+        <div style={{ backgroundColor: "#C4A86C" }}>
+          <ProfileHeader />
+        </div>
 
-      {/* エントリー一覧 */}
-      <EntryList />
+        {/* エントリー一覧 */}
+        <EntryList />
+      </div>
     </div>
   );
 }

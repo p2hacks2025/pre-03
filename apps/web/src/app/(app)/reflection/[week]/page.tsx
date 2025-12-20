@@ -151,21 +151,23 @@ export default function ReflectionDetailPage() {
 
       {/* メインコンテンツ */}
       <div className="flex-1 overflow-auto">
-        {/* ワールドビューア */}
-        <div className="bg-gradient-to-b from-gray-50 to-gray-100 py-4">
-          <WorldViewer imageUrl={weeklyWorld?.weeklyWorldImageUrl ?? null} />
-        </div>
+        <div className="mx-auto max-w-2xl">
+          {/* ワールドビューア */}
+          <div className="bg-gradient-to-b from-gray-50 to-gray-100 py-4">
+            <WorldViewer imageUrl={weeklyWorld?.weeklyWorldImageUrl ?? null} />
+          </div>
 
-        {/* タブ */}
-        <DetailTabs activeTab={activeTab} onTabChange={setActiveTab} />
+          {/* タブ */}
+          <DetailTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* タブコンテンツ */}
-        <div className="min-h-[200px]">
-          {activeTab === "diary" ? (
-            <DetailDiary diaryEntries={diaryEntries} />
-          ) : (
-            <DetailTimeline timelineItems={timelineItems} />
-          )}
+          {/* タブコンテンツ */}
+          <div className="min-h-[200px]">
+            {activeTab === "diary" ? (
+              <DetailDiary diaryEntries={diaryEntries} />
+            ) : (
+              <DetailTimeline timelineItems={timelineItems} />
+            )}
+          </div>
         </div>
       </div>
     </div>

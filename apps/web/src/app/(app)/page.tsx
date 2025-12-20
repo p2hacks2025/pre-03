@@ -71,41 +71,43 @@ export default function HomePage() {
         </Button>
       </header>
 
-      {error && (
-        <div className="mx-4 mt-4 rounded-lg bg-danger/10 p-4 text-center">
-          <p className="text-danger">{error}</p>
-          <Button
-            size="sm"
-            color="danger"
-            variant="light"
-            onPress={refresh}
-            className="mt-2"
-          >
-            再試行
-          </Button>
-        </div>
-      )}
+      <div className="mx-auto max-w-2xl">
+        {error && (
+          <div className="mx-4 mt-4 rounded-lg bg-danger/10 p-4 text-center">
+            <p className="text-danger">{error}</p>
+            <Button
+              size="sm"
+              color="danger"
+              variant="light"
+              onPress={refresh}
+              className="mt-2"
+            >
+              再試行
+            </Button>
+          </div>
+        )}
 
-      {!isLoading && !error && entries.length === 0 && (
-        <div className="flex flex-col items-center py-12">
-          <DocumentTextOutline color="#4B5563" width="48px" height="48px" />
-          <p className="mt-4 text-center text-gray-400">
-            まだ投稿がありません
-            <br />
-            最初の日記を書いてみましょう
-          </p>
-        </div>
-      )}
+        {!isLoading && !error && entries.length === 0 && (
+          <div className="flex flex-col items-center py-12">
+            <DocumentTextOutline color="#4B5563" width="48px" height="48px" />
+            <p className="mt-4 text-center text-gray-400">
+              まだ投稿がありません
+              <br />
+              最初の日記を書いてみましょう
+            </p>
+          </div>
+        )}
 
-      {entries.length > 0 && <Timeline items={entries} />}
+        {entries.length > 0 && <Timeline items={entries} />}
 
-      <div ref={observerRef} className="h-4" />
+        <div ref={observerRef} className="h-4" />
 
-      {isFetchingMore && (
-        <div className="flex justify-center py-4">
-          <Spinner size="sm" color="warning" />
-        </div>
-      )}
+        {isFetchingMore && (
+          <div className="flex justify-center py-4">
+            <Spinner size="sm" color="warning" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
