@@ -1,5 +1,13 @@
+import { Image as ExpoImage } from "expo-image";
+import { useEffect } from "react";
 import { Image, Pressable, Text, View } from "react-native";
-import Animated, { FadeInUp, FadeOutDown } from "react-native-reanimated";
+import Animated, {
+  FadeInUp,
+  FadeOutDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { withUniwind } from "uniwind";
 
 import { FONT_FAMILY } from "@/lib/fonts";
@@ -9,6 +17,14 @@ const StyledText = withUniwind(Text);
 const StyledImage = withUniwind(Image);
 const StyledPressable = withUniwind(Pressable);
 const AnimatedView = withUniwind(Animated.View);
+const StyledExpoImage = withUniwind(
+  ExpoImage as React.ComponentType<React.ComponentProps<typeof ExpoImage>>,
+);
+
+// 煙GIFアセット
+const SMOKE_GIF = require("../../../../assets/kemuri.gif");
+const SMOKE_DURATION_MS = 2000; // GIF再生時間
+const FADE_OUT_DURATION_MS = 500; // フェードアウト時間
 
 interface PopupCardProps {
   title: string;
@@ -29,6 +45,22 @@ export const PopupCard = ({
   remainingCount = 0,
 }: PopupCardProps) => {
   const image = imageUrl ? { uri: imageUrl } : undefined;
+
+  // 煙エフェクトのフェードアウトアニメーション
+  const smokeOpacity = useSharedValue(1);
+
+  useEffect(() => {
+    // GIF再生完了後にフェードアウト開始
+    const timer = setTimeout(() => {
+      smokeOpacity.value = withTiming(0, { duration: FADE_OUT_DURATION_MS });
+    }, SMOKE_DURATION_MS);
+
+    return () => clearTimeout(timer);
+  }, [smokeOpacity]);
+
+  const smokeAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: smokeOpacity.value,
+  }));
 
   return (
     <AnimatedView
@@ -77,6 +109,19 @@ export const PopupCard = ({
             あと {remainingCount} 件のお知らせがあります
           </StyledText>
         )}
+
+        {/* 煙エフェクトオーバーレイ */}
+        <AnimatedView
+          style={smokeAnimatedStyle}
+          className="absolute inset-0"
+          pointerEvents="none"
+        >
+          <StyledExpoImage
+            source={SMOKE_GIF}
+            className="h-full w-full"
+            contentFit="cover"
+          />
+        </AnimatedView>
       </StyledView>
     </AnimatedView>
   );
