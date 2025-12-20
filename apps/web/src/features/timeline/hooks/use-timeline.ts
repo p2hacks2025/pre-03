@@ -14,6 +14,7 @@ interface TimelineState {
   error: string | null;
   nextCursor: string | null;
   hasMore: boolean;
+  lastBatchStartIndex: number;
 }
 
 /**
@@ -41,6 +42,7 @@ export const useTimeline = () => {
     error: null,
     nextCursor: null,
     hasMore: false,
+    lastBatchStartIndex: 0,
   });
 
   // 二重呼び出し防止用のref
@@ -87,6 +89,7 @@ export const useTimeline = () => {
           error: null,
           nextCursor: data.nextCursor,
           hasMore: data.hasMore,
+          lastBatchStartIndex: 0,
         });
       } else {
         logger.warn("Timeline fetch failed", { status: res.status });
@@ -152,6 +155,7 @@ export const useTimeline = () => {
             isFetchingMore: false,
             nextCursor: data.nextCursor,
             hasMore: data.hasMore,
+            lastBatchStartIndex: prev.entries.length,
           };
         });
       } else {
@@ -179,6 +183,7 @@ export const useTimeline = () => {
     isFetchingMore: state.isFetchingMore,
     error: state.error,
     hasMore: state.hasMore,
+    lastBatchStartIndex: state.lastBatchStartIndex,
     refresh: fetchTimeline,
     fetchMore,
   };

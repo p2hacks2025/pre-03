@@ -32,7 +32,7 @@ export default function ProfilePage() {
       <div
         className="-translate-x-1/2 pointer-events-none absolute left-1/2"
         style={{
-          top: "40%",
+          top: "55%",
           width: "200vw",
           height: "200vw",
           borderRadius: "50%",
@@ -44,12 +44,12 @@ export default function ProfilePage() {
       {/* メインコンテンツ */}
       <div className="relative z-10 mx-auto max-w-2xl px-4">
         {/* プロフィールカード */}
-        <div className="flex justify-center pt-8">
+        <div className="flex justify-center pt-12">
           <ProfileCard />
         </div>
 
         {/* 今週の世界 */}
-        <div className="-mt-8 flex justify-center">
+        <div className="mt-0 flex justify-center">
           <WeeklyWorldPreview />
         </div>
       </div>

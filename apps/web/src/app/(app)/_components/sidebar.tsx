@@ -44,7 +44,7 @@ export const Sidebar = () => {
               height="20px"
             />
           }
-          label="カレンダー"
+          label="振り返り"
         />
         <SidebarItem
           href="/profile"

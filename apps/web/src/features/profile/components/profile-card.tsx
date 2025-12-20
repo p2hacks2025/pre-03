@@ -9,7 +9,6 @@ import { useProfileEdit } from "../hooks/use-profile-edit";
 import { PROFILE_COLORS } from "../lib/colors";
 import { ProfileAvatarDisplay } from "./profile-avatar-display";
 import { ProfileStatsRow } from "./profile-stats-row";
-import { ShareWorldButton } from "./share-world-button";
 
 /** カードの固定幅 */
 const CARD_WIDTH = 320;
@@ -127,9 +126,6 @@ export const ProfileCard = () => {
 
       {/* 統計情報 */}
       <ProfileStatsRow />
-
-      {/* シェアボタン */}
-      <ShareWorldButton />
     </div>
   );
 };
