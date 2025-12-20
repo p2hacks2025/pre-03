@@ -55,7 +55,7 @@ const createPopupItemsFromResponse = (
       title: getPopupTitle("weekly"),
       message: getPopupMessage("weekly"),
       imageUrl: response.weekly.imageUrl,
-      closeButtonLabel: "確認しました",
+      closeButtonLabel: "OK",
     });
   }
 
@@ -65,7 +65,7 @@ const createPopupItemsFromResponse = (
       title: getPopupTitle("daily"),
       message: getPopupMessage("daily"),
       imageUrl: response.daily.imageUrl,
-      closeButtonLabel: "閉じる",
+      closeButtonLabel: "OK",
     });
   }
 
