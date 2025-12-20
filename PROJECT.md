@@ -3,6 +3,32 @@
 Next.js 15（フロントエンド）と Hono（バックエンド）、RN/expo（ネイティブ）を使用したモノレポテンプレート
 Turborepo + pnpm で管理し、Cloudflare Workers にデプロイ
 
+---
+
+## クイックスタート
+
+### 必要な環境
+
+- Node.js 20.x 以上
+- pnpm 10.12.1
+- Docker（Supabase ローカル開発用）
+- [direnv](https://direnv.net/)（環境変数の自動読み込み用）
+
+各自の環境に合わせてインストールしてください。
+
+> **Note**: Windows環境では WSL2 の使用を推奨します
+
+### セットアップ
+
+```bash
+direnv allow           # direnv 有効化
+pnpm workspace:setup   # .env ファイル作成
+pnpm db:setup          # Supabase起動 + DB初期化
+pnpm dev               # 開発サーバー起動
+```
+
+---
+
 ## 主要技術
 
 | 層 | 技術 |
