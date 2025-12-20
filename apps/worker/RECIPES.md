@@ -396,6 +396,77 @@ export const transferPoints = async (
 
 ---
 
+## infra 層の使用パターン
+
+リファクタリング後のアーキテクチャでは、DB・外部サービス操作は `lib/infra/` に集約されています。
+
+### タスクから infra 層を使用
+
+```typescript
+// tasks/daily-update.ts
+import {
+  createOrUpdateWorldBuildLog,
+  findWeeklyWorld,
+  createWeeklyWorld,
+  getBaseImageBuffer,
+  getUserPostsByDate,
+  selectFieldId,
+  updateWeeklyWorldImage,
+  uploadGeneratedImage,
+  type WorkerContext,
+} from "@/lib";
+
+export const processUserDailyUpdate = async (
+  ctx: WorkerContext,
+  userProfileId: string,
+  weekStartDate: Date,
+) => {
+  // infra層の関数を使用してweeklyWorldを取得
+  let weeklyWorld = await findWeeklyWorld(ctx, userProfileId, weekStartDate);
+
+  // 存在しない場合は新規作成
+  if (!weeklyWorld) {
+    const imageUrl = await uploadGeneratedImage(
+      ctx,
+      userProfileId,
+      weekStartDate,
+      getBaseImageBuffer(),
+    );
+    weeklyWorld = await createWeeklyWorld(ctx, userProfileId, weekStartDate, imageUrl);
+  }
+
+  // フィールド選択もinfra層から
+  const { fieldId, isOverwrite } = await selectFieldId(ctx, weeklyWorld.id);
+
+  // ... 画像生成処理 ...
+
+  // 更新もinfra層を使用
+  await updateWeeklyWorldImage(ctx, weeklyWorld.id, newImageUrl);
+  await createOrUpdateWorldBuildLog(ctx, weeklyWorld.id, fieldId, targetDate, isOverwrite);
+};
+```
+
+### infra 層のファイル構成
+
+| ファイル | 提供する関数 |
+|---------|-------------|
+| `lib/infra/weekly-world.ts` | `getWeeklyWorld`, `findWeeklyWorld`, `createWeeklyWorld`, `updateWeeklyWorldImage`, `selectFieldId`, `createOrUpdateWorldBuildLog` |
+| `lib/infra/user-post.ts` | `getUserPostsByDate`, `getUserPostsForWeek`, `getRecentUserPosts`, `getRandomHistoricalPosts` |
+| `lib/infra/ai-post.ts` | `getRandomAiProfile`, `hasExistingAiPost`, `createAiPost` |
+| `lib/infra/user-profile.ts` | `getAllUserProfiles` |
+| `lib/infra/storage.ts` | `uploadGeneratedImage` |
+
+### 使い分けの指針
+
+| シチュエーション | 推奨 |
+|----------------|------|
+| 既存のドメイン操作 | infra 層の関数を使用 |
+| 新しいドメイン操作 | infra 層に新規関数を追加 |
+| 一時的・特殊なクエリ | 直接 `ctx.db` を使用（タスク内に閉じる） |
+| トランザクション | 直接 `ctx.db.transaction` を使用 |
+
+---
+
 ## テスト実行パターン
 
 ### 単体でジョブをテスト
