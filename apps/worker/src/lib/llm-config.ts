@@ -23,7 +23,6 @@ export const LLM_CONFIG = {
   imageGeneration: {
     model: "gemini-3-pro-image-preview",
     temperature: 0.1,
-    seed: 1234,
     candidateCount: 1,
   },
 

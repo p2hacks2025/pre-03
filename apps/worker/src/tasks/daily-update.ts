@@ -2,11 +2,13 @@ import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 import {
   createOrUpdateWorldBuildLog,
+  createWeeklyWorld,
   FIELD_POSITIONS,
+  findWeeklyWorld,
+  getBaseImageBuffer,
   getImageGenerationPrompt,
   getSceneDescriptionPrompt,
   getUserPostsByDate,
-  getWeeklyWorld,
   JST_OFFSET,
   LLM_CONFIG,
   selectFieldId,
@@ -104,8 +106,7 @@ export const generateImage = async (
   const ai = new GoogleGenAI({ apiKey: ctx.env.GOOGLE_API_KEY });
   const prompt = getImageGenerationPrompt();
   const positionDescription = FIELD_POSITIONS[fieldId];
-  const { model, temperature, seed, candidateCount } =
-    LLM_CONFIG.imageGeneration;
+  const { model, temperature, candidateCount } = LLM_CONFIG.imageGeneration;
 
   const userPrompt = `${prompt}
 
@@ -130,7 +131,6 @@ Scene: ${sceneDescription}`;
       imageConfig: { aspectRatio: "1:1", imageSize: "1K" },
       systemInstruction: prompt,
       temperature,
-      seed,
       candidateCount,
     },
   });
@@ -166,11 +166,33 @@ export const processUserDailyUpdate = async (
   targetDate: Date,
   weekStartDate: Date,
 ): Promise<void> => {
-  const weeklyWorld = await getWeeklyWorld(
+  // weekly worldを取得、存在しない場合は新規作成
+  let weeklyWorld = await findWeeklyWorld(
     ctx,
     group.userProfileId,
     weekStartDate,
   );
+
+  if (!weeklyWorld) {
+    ctx.logger.info("Weekly world not found, creating new one", {
+      userProfileId: group.userProfileId,
+      weekStartDate: weekStartDate.toISOString().split("T")[0],
+    });
+
+    const initialImageUrl = await uploadGeneratedImage(
+      ctx,
+      group.userProfileId,
+      weekStartDate,
+      getBaseImageBuffer(),
+    );
+
+    weeklyWorld = await createWeeklyWorld(
+      ctx,
+      group.userProfileId,
+      weekStartDate,
+      initialImageUrl,
+    );
+  }
 
   const { fieldId, isOverwrite } = await selectFieldId(ctx, weeklyWorld.id);
   ctx.logger.info("Selected fieldId", { fieldId, isOverwrite });
