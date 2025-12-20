@@ -1,4 +1,4 @@
-import type { WorkerContext } from "@/lib";
+import { countRecentAiPosts, type WorkerContext } from "@/lib";
 import {
   AI_POST_CONFIG,
   fetchRecentUserPosts,
@@ -22,19 +22,6 @@ export const aiPostShortTerm = async (
 ): Promise<AiPostShortTermJobResult> => {
   ctx.logger.info("Starting ai-post-short-term job");
 
-  // Probability check (10%)
-  if (!shouldExecuteWithChance(AI_POST_CONFIG.SHORT_TERM_POST_CHANCE)) {
-    ctx.logger.info("Skipping ai-post-short-term job due to probability check");
-    return {
-      success: true,
-      skipped: true,
-      processedUsers: 0,
-      generatedPosts: 0,
-      standaloneGenerated: 0,
-      errors: [],
-    };
-  }
-
   const result: AiPostShortTermJobResult = {
     success: true,
     skipped: false,
@@ -45,7 +32,55 @@ export const aiPostShortTerm = async (
   };
 
   try {
-    // Always generate standalone posts
+    // 頻度制御: 直近1時間の投稿数をチェック
+    const recentPostCount = await countRecentAiPosts(
+      ctx,
+      AI_POST_CONFIG.FREQUENCY_CHECK_WINDOW_MINUTES,
+    );
+    const remaining = AI_POST_CONFIG.MAX_POSTS_PER_HOUR - recentPostCount;
+
+    ctx.logger.info("Frequency check", {
+      recentPostCount,
+      maxPerHour: AI_POST_CONFIG.MAX_POSTS_PER_HOUR,
+      minPerHour: AI_POST_CONFIG.MIN_POSTS_PER_HOUR,
+      remaining,
+    });
+
+    // 上限超過時はスキップ
+    if (remaining <= 0) {
+      ctx.logger.info("Skipping: over upper limit", { recentPostCount });
+      return { ...result, skipped: true };
+    }
+
+    // 下限未満の場合は強制実行、それ以外は10%確率
+    const isBelowMinimum = recentPostCount < AI_POST_CONFIG.MIN_POSTS_PER_HOUR;
+    const shouldExecute =
+      isBelowMinimum ||
+      shouldExecuteWithChance(AI_POST_CONFIG.SHORT_TERM_POST_CHANCE);
+
+    if (!shouldExecute) {
+      ctx.logger.info("Skipping: probability check failed");
+      return { ...result, skipped: true };
+    }
+
+    if (isBelowMinimum) {
+      ctx.logger.info("Force execution: below minimum threshold");
+    }
+
+    // 残り枠が少ない場合は投稿数を動的に調整
+    let effectivePostCount: number = AI_POST_CONFIG.POSTS_PER_USER;
+    if (remaining < 3) {
+      effectivePostCount = Math.floor(Math.random() * (remaining + 1));
+      ctx.logger.info("Adjusted post count due to remaining capacity", {
+        remaining,
+        effectivePostCount,
+      });
+      if (effectivePostCount === 0) {
+        return { ...result, skipped: true };
+      }
+    }
+
+    // スタンドアロン投稿を生成
     const standalone = await generateStandalonePosts(
       ctx,
       AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
@@ -54,7 +89,7 @@ export const aiPostShortTerm = async (
     result.standaloneGenerated = standalone.generated;
     result.errors.push(...standalone.errors);
 
-    // Process user posts if any
+    // ユーザー投稿を処理
     const posts = await fetchRecentUserPosts(
       ctx,
       AI_POST_CONFIG.SHORT_TERM_MINUTES,
