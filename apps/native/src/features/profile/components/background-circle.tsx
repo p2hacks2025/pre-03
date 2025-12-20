@@ -1,16 +1,13 @@
 import { Dimensions, View } from "react-native";
 import { withUniwind } from "uniwind";
 
+import { PROFILE_COLORS } from "../lib/colors";
+
 const StyledView = withUniwind(View);
 const { width } = Dimensions.get("window");
 
 // 円の直径は画面幅の約1.5倍
 const CIRCLE_SIZE = width * 1.5;
-
-// カラー定義
-const COLORS = {
-  circle: "#4ECCDD",
-};
 
 /**
  * 背景の大きな円
@@ -27,7 +24,7 @@ export const BackgroundCircle = () => (
       width: CIRCLE_SIZE,
       height: CIRCLE_SIZE,
       borderRadius: CIRCLE_SIZE / 2,
-      backgroundColor: COLORS.circle,
+      backgroundColor: PROFILE_COLORS.background,
       zIndex: 0,
     }}
   />

@@ -1,42 +1,17 @@
 import { Spinner } from "heroui-native";
-import { useEffect, useRef } from "react";
-import { Animated, Text, useWindowDimensions, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Animated, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
 import WorldShadowSvg from "../../../../assets/world-shadow.svg";
-import { useCurrentWeekWorld } from "../hooks";
+
+import {
+  useCurrentWeekWorld,
+  useFloatingAnimation,
+  useWorldScale,
+} from "../hooks";
 
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
-
-// UIの固定高さ（ヘッダー、タブバー等）
-const HEADER_HEIGHT = 60;
-const TAB_BAR_HEIGHT = 50;
-const PROFILE_CARD_HEIGHT = 380; // カード + 上部余白の概算
-
-// 基準値
-const BASE_WORLD_IMAGE_SIZE = 280;
-const BASE_SHADOW_SIZE = { width: 190, height: 85 };
-const BASE_CONTAINER_HEIGHT = 300;
-const BASE_SHADOW_BOTTOM = 30;
-
-// スケールのしきい値（この高さ以上ならスケール1.0）
-const FULL_SIZE_THRESHOLD = 280;
-const MIN_SCALE = 0.6;
-
-/**
- * 利用可能な高さに応じたスケールを計算
- * - 十分な高さがあれば 1.0（フルサイズ）
- * - 小さい端末のみ縮小
- */
-const calculateScale = (availableHeight: number): number => {
-  if (availableHeight >= FULL_SIZE_THRESHOLD) {
-    return 1.0;
-  }
-  const scale = availableHeight / FULL_SIZE_THRESHOLD;
-  return Math.max(MIN_SCALE, scale);
-};
 
 /**
  * 今週の世界表示（浮遊アニメーション付き）
@@ -48,63 +23,9 @@ const calculateScale = (availableHeight: number): number => {
 export const WeeklyWorldPreview = () => {
   const { weeklyWorldImageUrl, isLoading, error, hasWorld, notFound } =
     useCurrentWeekWorld();
-  const { height: screenHeight } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
-
-  // 利用可能な高さ = 画面高さ - SafeArea - ヘッダー - タブバー - プロフィールカード
-  const availableHeight =
-    screenHeight -
-    insets.top -
-    insets.bottom -
-    HEADER_HEIGHT -
-    TAB_BAR_HEIGHT -
-    PROFILE_CARD_HEIGHT;
-
-  // 利用可能な高さに応じたスケール計算
-  const scale = calculateScale(availableHeight);
-  const worldImageSize = Math.round(BASE_WORLD_IMAGE_SIZE * scale);
-  const shadowSize = {
-    width: Math.round(BASE_SHADOW_SIZE.width * scale),
-    height: Math.round(BASE_SHADOW_SIZE.height * scale),
-  };
-  const containerHeight = Math.round(BASE_CONTAINER_HEIGHT * scale);
-  const shadowBottom = Math.round(BASE_SHADOW_BOTTOM * scale);
-
-  // 浮遊アニメーション値（React Native Animated）
-  const floatAnim = useRef(new Animated.Value(0)).current;
-
-  // アニメーション開始
-  useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(floatAnim, {
-          toValue: 0,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    animation.start();
-
-    return () => animation.stop();
-  }, [floatAnim]);
-
-  // 上下動のinterpolate
-  const translateY = floatAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [10, -5], // 上下15pxの範囲で動く
-  });
-
-  // 影のスケール（世界が上に行くと影が縮小）
-  const shadowScale = floatAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1.4, 1.2],
-  });
+  const { translateY, shadowScale } = useFloatingAnimation();
+  const { worldImageSize, shadowSize, containerHeight, shadowBottom } =
+    useWorldScale();
 
   // ローディング状態
   if (isLoading) {

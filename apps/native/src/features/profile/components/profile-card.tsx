@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { FONT_FAMILY } from "@/lib/fonts";
 
 import { useProfileEdit } from "../hooks";
+import { PROFILE_COLORS } from "../lib/colors";
 import { ProfileAvatarDisplay } from "./profile-avatar-display";
 import { ProfileStatsRow } from "./profile-stats-row";
 import { ShareWorldButton } from "./share-world-button";
@@ -16,12 +17,6 @@ const StyledText = withUniwind(Text);
 const StyledPressable = withUniwind(Pressable);
 const StyledIonicons = withUniwind(Ionicons);
 const StyledTextInput = withUniwind(TextInput);
-
-// カラー定義
-const COLORS = {
-  goldUnderline: "#C4A86C",
-  cardBackground: "#FFFFFF",
-};
 
 // カードの固定幅（iPhone SE3: 375pt でも左右約27ptの余白確保）
 const CARD_WIDTH = 320;
@@ -48,10 +43,10 @@ export const ProfileCard = () => {
   const {
     isEditing,
     isSaving,
-    editName,
+    draftDisplayName,
     startEdit,
     cancelEdit,
-    setEditName,
+    setDraftDisplayName,
     saveEdit,
     inputRef,
   } = useProfileEdit();
@@ -63,8 +58,8 @@ export const ProfileCard = () => {
       className="rounded-3xl p-6"
       style={{
         width: CARD_WIDTH,
-        backgroundColor: COLORS.cardBackground,
-        shadowColor: "#000",
+        backgroundColor: PROFILE_COLORS.card,
+        shadowColor: PROFILE_COLORS.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
@@ -86,8 +81,8 @@ export const ProfileCard = () => {
             <StyledTextInput
               ref={inputRef}
               className="rounded-md border border-primary bg-background px-2 py-1 text-foreground text-xl"
-              value={editName}
-              onChangeText={setEditName}
+              value={draftDisplayName}
+              onChangeText={setDraftDisplayName}
               onBlur={cancelEdit}
               onSubmitEditing={saveEdit}
               returnKeyType="done"
@@ -119,7 +114,7 @@ export const ProfileCard = () => {
             style={{
               width: "100%",
               height: 2,
-              backgroundColor: COLORS.goldUnderline,
+              backgroundColor: PROFILE_COLORS.gold,
             }}
           />
 
