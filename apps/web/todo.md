@@ -68,36 +68,40 @@ apps/native（React Native）の機能をapps/web（Next.js 15）にPC向けに�
 
 ---
 
-## Phase 2: カレンダー・週詳細
+## Phase 2: カレンダー・週詳細 ✅
 
 ### 2.1 カレンダー機能
 
 **新規作成ファイル:**
-- [ ] `src/features/calendar/index.ts`
-- [ ] `src/features/calendar/hooks/use-calendar.ts`
-- [ ] `src/features/calendar/components/calendar.tsx`
-- [ ] `src/features/calendar/components/week-row.tsx`
-- [ ] `src/features/calendar/components/sticky-header.tsx`
-- [ ] `src/features/calendar/lib/date-utils.ts`
+- [x] `src/features/calendar/index.ts`
+- [x] `src/features/calendar/hooks/use-calendar.ts`
+- [x] `src/features/calendar/components/calendar.tsx`
+- [x] `src/features/calendar/components/week-row.tsx`
+- [x] `src/features/calendar/lib/date-utils.ts`
+- [x] `src/features/calendar/types.ts`
 
 **移植元:**
 - `apps/native/src/features/calendar/`
 
+**備考:**
+- `sticky-header.tsx` は PC向けでは不要と判断し、スキップ
+
 ### 2.2 カレンダー画面
 
 **新規作成ファイル:**
-- [ ] `src/app/(app)/calendar/page.tsx`
+- [x] `src/app/(app)/calendar/page.tsx`
 
 ### 2.3 週詳細機能
 
 **新規作成ファイル:**
-- [ ] `src/features/reflection/index.ts`
-- [ ] `src/features/reflection/hooks/use-weekly-world.ts`
-- [ ] `src/features/reflection/hooks/use-week-navigation.ts`
-- [ ] `src/features/reflection/components/world-viewer.tsx`
-- [ ] `src/features/reflection/components/detail-tabs.tsx`
-- [ ] `src/features/reflection/components/detail-diary.tsx`
-- [ ] `src/features/reflection/components/detail-timeline.tsx`
+- [x] `src/features/reflection/index.ts`
+- [x] `src/features/reflection/hooks/use-weekly-world.ts`
+- [x] `src/features/reflection/hooks/use-week-navigation.ts`
+- [x] `src/features/reflection/components/world-viewer.tsx`
+- [x] `src/features/reflection/components/detail-tabs.tsx`
+- [x] `src/features/reflection/components/detail-diary.tsx`
+- [x] `src/features/reflection/components/detail-timeline.tsx`
+- [x] `src/features/reflection/types.ts`
 
 **移植元:**
 - `apps/native/src/features/reflection/`
@@ -105,7 +109,7 @@ apps/native（React Native）の機能をapps/web（Next.js 15）にPC向けに�
 ### 2.4 週詳細画面
 
 **新規作成ファイル:**
-- [ ] `src/app/(app)/reflection/[week]/page.tsx`
+- [x] `src/app/(app)/reflection/[week]/page.tsx`
 
 ---
 
