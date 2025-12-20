@@ -16,6 +16,7 @@ SUPABASE_URL=http://localhost:54321
 SUPABASE_ANON_KEY=<your-anon-key>
 SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 GOOGLE_API_KEY=<your-google-api-key>
+OPENAI_API_KEY=<your-openai-api-key>
 ONESIGNAL_APP_ID=<uuid-format>
 ONESIGNAL_REST_API_KEY=<your-onesignal-rest-api-key>
 ```
@@ -50,17 +51,10 @@ pnpm db:seed
 
 ## daily-update ジョブのテスト
 
-### 通常実行（昨日の投稿を処理）
+### 実行（昨日の投稿を処理）
 
 ```bash
 pnpm worker job daily-update
-```
-
-### 特定日付を指定して実行
-
-```bash
-# 2025-12-14 の投稿を処理
-TARGET_DATE=2025-12-14 pnpm worker job daily-update-date
 ```
 
 ### 処理の流れ
@@ -75,21 +69,15 @@ TARGET_DATE=2025-12-14 pnpm worker job daily-update-date
 
 ## トラブルシューティング
 
-### `Weekly world not found` エラー
-
-シードが実行されていないか、週が変わった可能性があります。
-
-```bash
-pnpm db:seed --reset
-```
-
 ### 投稿が見つからない
 
-`TARGET_DATE` がシードデータの日付範囲外の可能性があります。シードは実行時の日付を基準に投稿を作成するため、シードを再実行してください。
+シードデータの日付範囲外の可能性があります。シードは実行時の日付を基準に投稿を作成するため、シードを再実行してください。
 
 ```bash
 pnpm db:seed --reset
 ```
+
+> **Note**: WeeklyWorld が存在しない場合は自動的にデフォルト画像で新規作成されます。
 
 ## 関連ファイル
 
@@ -99,4 +87,4 @@ pnpm db:seed --reset
 | `packages/db/src/seed/seeders/weekly-worlds.ts` | WeeklyWorld シーダー |
 | `packages/db/src/seed/seeders/worker-posts.ts` | 投稿シーダー |
 | `apps/worker/src/jobs/daily-update.ts` | daily-update ジョブ |
-| `apps/worker/src/jobs/daily-update-date.ts` | 日付指定版 daily-update |
+| `apps/worker/src/tasks/daily-update.ts` | daily-update タスク |
