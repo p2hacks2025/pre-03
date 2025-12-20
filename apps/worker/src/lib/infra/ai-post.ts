@@ -5,7 +5,10 @@ import {
   aiProfiles,
   and,
   eq,
+  gte,
   isNull,
+  lte,
+  sql,
 } from "@packages/db";
 import type { WorkerContext } from "../context";
 
@@ -77,4 +80,29 @@ export const createAiPost = async (
     })
     .returning();
   return created;
+};
+
+/**
+ * 過去N分間にpublishedAtが設定されているAI投稿の数をカウント
+ * 頻度制御に使用（上限/下限チェック）
+ */
+export const countRecentAiPosts = async (
+  ctx: WorkerContext,
+  minutes: number,
+): Promise<number> => {
+  const since = new Date(Date.now() - minutes * 60 * 1000);
+  const now = new Date();
+
+  const result = await ctx.db
+    .select({ count: sql<number>`count(*)` })
+    .from(aiPosts)
+    .where(
+      and(
+        gte(aiPosts.publishedAt, since),
+        lte(aiPosts.publishedAt, now),
+        isNull(aiPosts.deletedAt),
+      ),
+    );
+
+  return Number(result[0]?.count ?? 0);
 };

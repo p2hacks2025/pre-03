@@ -145,6 +145,7 @@ export const CalendarScreen = () => {
           <StyledView className="w-16" />
         </StyledView>
         {/* 下向きの影 */}
+        {/* @ts-expect-error expo-linear-gradient type issue with React 19 */}
         <LinearGradient
           colors={["rgba(0, 0, 0, 0.08)", "transparent"]}
           start={{ x: 0.5, y: 0 }}

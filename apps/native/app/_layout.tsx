@@ -29,6 +29,7 @@ export default function RootLayout() {
   }
 
   return (
+    // @ts-expect-error GestureHandlerRootView children type issue with React 19
     <GestureHandlerRootView style={{ flex: 1 }}>
       <HeroUINativeProvider>
         <AuthProvider>

@@ -7,7 +7,10 @@ import {
   getRandomAiProfile,
   getRandomHistoricalPosts,
   getRecentUserPosts,
+  getUnreplacedVariables,
   hasExistingAiPost,
+  interpolatePrompt,
+  LLM_CONFIG,
   type WorkerContext,
 } from "@/lib";
 
@@ -23,10 +26,14 @@ export const AI_POST_CONFIG = {
   MAX_RETRIES: 3,
   MAX_POST_LENGTH: 50,
   MAX_INPUT_LENGTH: 1000,
-  POSTS_PER_USER: 3,
-  STANDALONE_POST_COUNT: 2,
+  POSTS_PER_USER: 2,
+  STANDALONE_POST_COUNT: 1,
   SHORT_TERM_POST_CHANCE: 0.1,
   LONG_TERM_POST_CHANCE: 0.5,
+  // 頻度制御
+  FREQUENCY_CHECK_WINDOW_MINUTES: 60,
+  MAX_POSTS_PER_HOUR: 5,
+  MIN_POSTS_PER_HOUR: 1,
 } as const;
 
 export type DiaryGroup = {
@@ -64,11 +71,21 @@ const buildPrompt = (
   template: string,
   aiProfile: AiProfile,
   postCount: number,
-): string =>
-  template
-    .replaceAll("{ai_profile_name}", aiProfile.username)
-    .replaceAll("{ai_profile_description}", aiProfile.description)
-    .replaceAll("{post_count}", String(postCount));
+): string => {
+  const prompt = interpolatePrompt(template, {
+    ai_profile_name: aiProfile.username,
+    ai_profile_description: aiProfile.description,
+    post_count: postCount,
+  });
+
+  // 未置換変数のチェック（開発時のエラー検出用）
+  const unreplaced = getUnreplacedVariables(prompt);
+  if (unreplaced.length > 0) {
+    throw new Error(`Unreplaced variables in prompt: ${unreplaced.join(", ")}`);
+  }
+
+  return prompt;
+};
 
 const callOpenAIJsonWithRetry = async (
   ctx: WorkerContext,
@@ -80,10 +97,10 @@ const callOpenAIJsonWithRetry = async (
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4.1-nano",
+        model: LLM_CONFIG.aiPost.model,
         messages,
-        response_format: { type: "json_object" },
-        max_completion_tokens: 500,
+        response_format: LLM_CONFIG.aiPost.responseFormat,
+        max_completion_tokens: LLM_CONFIG.aiPost.maxCompletionTokens,
       });
       const choice = response.choices[0];
       ctx.logger.debug("OpenAI response", {

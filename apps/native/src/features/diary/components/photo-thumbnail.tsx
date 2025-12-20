@@ -3,9 +3,8 @@ import { Pressable } from "react-native";
 import { withUniwind } from "uniwind";
 
 const StyledPressable = withUniwind(Pressable);
-const StyledImage = withUniwind(
-  Image as React.ComponentType<React.ComponentProps<typeof Image>>,
-);
+// @ts-expect-error expo-image type issue with React 19
+const StyledImage = withUniwind(Image);
 
 interface PhotoThumbnailProps {
   uri: string;

@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, Pressable, Text, View } from "react-native";
+import {
+  Animated,
+  type LayoutChangeEvent,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import { withUniwind } from "uniwind";
 
 const StyledView = withUniwind(View);
@@ -34,7 +40,7 @@ export const DetailTabs = ({ activeTab, onTabChange }: DetailTabsProps) => {
   return (
     <StyledView
       className="relative"
-      onLayout={(event) => {
+      onLayout={(event: LayoutChangeEvent) => {
         const { width } = event.nativeEvent.layout;
         setContainerWidth(width);
       }}

@@ -26,6 +26,17 @@ export const LLM_CONFIG = {
     seed: 1234,
     candidateCount: 1,
   },
+
+  /**
+   * AI投稿生成用（ユーザー日記ベース & スタンドアロン）
+   * - 用途: ユーザーの日記やランダムなトピックからツイートを生成
+   * - 軽量モデルで高速・低コスト
+   */
+  aiPost: {
+    model: "gpt-4.1-nano",
+    maxCompletionTokens: 500,
+    responseFormat: { type: "json_object" } as const,
+  },
 } as const;
 
 export type LLMConfigKey = keyof typeof LLM_CONFIG;

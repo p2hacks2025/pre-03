@@ -125,6 +125,7 @@ export const UserTimelineItem = ({
         style={{ backgroundColor: "#FFF4DE" }}
       >
         {INNER_SHADOW_GRADIENTS.map((gradient) => (
+          // @ts-expect-error expo-linear-gradient type issue with React 19
           <LinearGradient
             key={gradient.id}
             colors={gradient.colors}

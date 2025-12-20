@@ -1,4 +1,4 @@
-import type { WorkerContext } from "@/lib";
+import { countRecentAiPosts, type WorkerContext } from "@/lib";
 import {
   AI_POST_CONFIG,
   fetchRecentUserPosts,
@@ -22,8 +22,41 @@ export const aiPostShortTerm = async (
 ): Promise<AiPostShortTermJobResult> => {
   ctx.logger.info("Starting ai-post-short-term job");
 
-  // Probability check (10%)
-  if (!shouldExecuteWithChance(AI_POST_CONFIG.SHORT_TERM_POST_CHANCE)) {
+  // 頻度制御: 過去1時間のAI投稿数をカウント
+  const n = await countRecentAiPosts(
+    ctx,
+    AI_POST_CONFIG.FREQUENCY_CHECK_WINDOW_MINUTES,
+  );
+  const remaining = AI_POST_CONFIG.MAX_POSTS_PER_HOUR - n;
+
+  ctx.logger.info("Frequency control check", {
+    recentAiPosts: n,
+    remaining,
+    maxPerHour: AI_POST_CONFIG.MAX_POSTS_PER_HOUR,
+    minPerHour: AI_POST_CONFIG.MIN_POSTS_PER_HOUR,
+  });
+
+  // 上限チェック: 5件以上ならスキップ
+  if (remaining <= 0) {
+    ctx.logger.info("Skipping: max posts per hour reached", { n });
+    return {
+      success: true,
+      skipped: true,
+      processedUsers: 0,
+      generatedPosts: 0,
+      standaloneGenerated: 0,
+      errors: [],
+    };
+  }
+
+  // 下限チェック: 0件なら強制実行（抽選スキップ）
+  const forceExecute = n < AI_POST_CONFIG.MIN_POSTS_PER_HOUR;
+
+  // 通常の10%抽選（下限未満の場合はスキップ）
+  if (
+    !forceExecute &&
+    !shouldExecuteWithChance(AI_POST_CONFIG.SHORT_TERM_POST_CHANCE)
+  ) {
     ctx.logger.info("Skipping ai-post-short-term job due to probability check");
     return {
       success: true,
@@ -33,6 +66,23 @@ export const aiPostShortTerm = async (
       standaloneGenerated: 0,
       errors: [],
     };
+  }
+
+  // 動的件数調整: remaining < 3 の場合、0〜remaining件からランダム選択
+  if (remaining < 3) {
+    const maxPostCount = Math.floor(Math.random() * (remaining + 1));
+    if (maxPostCount === 0) {
+      ctx.logger.info("Skipping: random post count is 0", { remaining });
+      return {
+        success: true,
+        skipped: true,
+        processedUsers: 0,
+        generatedPosts: 0,
+        standaloneGenerated: 0,
+        errors: [],
+      };
+    }
+    ctx.logger.info("Dynamic post count selected", { remaining, maxPostCount });
   }
 
   const result: AiPostShortTermJobResult = {
