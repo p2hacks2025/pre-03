@@ -37,6 +37,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: "#ffffff",
     },
     edgeToEdgeEnabled: true,
+    userInterfaceStyle: "light",
   },
   web: {
     favicon: "./assets/favicon.png",
