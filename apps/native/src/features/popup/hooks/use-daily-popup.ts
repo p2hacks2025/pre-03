@@ -34,8 +34,8 @@ const getPopupTitle = (type: "daily" | "weekly"): string => {
  */
 const getPopupMessage = (type: "daily" | "weekly"): string => {
   return type === "weekly"
-    ? "新世界が完成しました。<br />1週間でどんな出来事があったか振り返ってみましょう。"
-    : "あなたの記録によって新世界が変化しました。<br />今日も起こったことを記録してみましょう。";
+    ? "新世界が完成しました。\n先週の記録を振り返りましょう。"
+    : "世界が変化しました。\n今日も続けて記録してみましょう。";
 };
 
 /**
