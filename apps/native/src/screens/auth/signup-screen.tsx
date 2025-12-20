@@ -43,10 +43,7 @@ export const SignupScreen = () => {
         <StyledView className="flex-1 justify-center">
           <StyledView className="mb-8 items-center">
             <StyledText className="font-bold text-3xl text-foreground">
-              アカウント作成
-            </StyledText>
-            <StyledText className="mt-2 text-center text-muted">
-              新しいアカウントを作成して始めましょう
+              新規登録
             </StyledText>
           </StyledView>
 
