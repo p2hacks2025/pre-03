@@ -115,7 +115,7 @@ export default function ReflectionDetailPage() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* ヘッダー */}
-      <header className="flex items-center justify-between border-gray-800 border-b bg-[#1C1C1E] px-4 py-3">
+      <header className="flex items-center justify-between border-gray-200 border-b bg-white px-4 py-3">
         <Button
           isIconOnly
           variant="light"
@@ -130,7 +130,7 @@ export default function ReflectionDetailPage() {
         </Button>
 
         <div className="text-center">
-          <h1 className="font-bold text-lg text-white">
+          <h1 className="font-bold text-gray-900 text-lg">
             {startDate} - {endDate}
           </h1>
         </div>
@@ -152,7 +152,7 @@ export default function ReflectionDetailPage() {
       {/* メインコンテンツ */}
       <div className="flex-1 overflow-auto">
         {/* ワールドビューア */}
-        <div className="bg-gradient-to-b from-[#1C1C1E] to-[#2C2C2E] py-4">
+        <div className="bg-gradient-to-b from-gray-50 to-gray-100 py-4">
           <WorldViewer imageUrl={weeklyWorld?.weeklyWorldImageUrl ?? null} />
         </div>
 

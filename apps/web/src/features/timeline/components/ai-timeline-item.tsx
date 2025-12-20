@@ -31,7 +31,7 @@ export const AiTimelineItem = ({
   const timeAgo = formatRelativeTime(createdAt);
 
   return (
-    <div className="flex gap-3 rounded-md border-4 border-white bg-[#2C2C2E] p-4">
+    <div className="flex gap-3 rounded-md border-4 border-gray-300 bg-gray-100 p-4">
       {/* 左側: アバター */}
       <div className="shrink-0">
         <Avatar
@@ -46,14 +46,14 @@ export const AiTimelineItem = ({
       <div className="min-w-0 flex-1">
         {/* ヘッダー: ユーザー名と経過時間 */}
         <div className="flex items-center justify-between">
-          <span className="font-semibold text-base text-white">
+          <span className="font-semibold text-base text-gray-900">
             {author.username}
           </span>
           <span className="text-gray-400 text-xs">{timeAgo}</span>
         </div>
 
         {/* 投稿本文 */}
-        <p className="whitespace-pre-wrap text-sm text-white leading-5">
+        <p className="whitespace-pre-wrap text-gray-900 text-sm leading-5">
           {content}
         </p>
 

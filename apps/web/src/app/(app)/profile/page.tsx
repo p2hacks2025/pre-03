@@ -35,8 +35,8 @@ export default function ProfilePage() {
 
   return (
     <div className="h-full overflow-auto">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-gray-800 border-b bg-[#1C1C1E]/95 px-6 py-4 backdrop-blur">
-        <h1 className="font-bold text-white text-xl">プロフィール</h1>
+      <header className="sticky top-0 z-10 flex items-center justify-between border-gray-200 border-b bg-white/95 px-6 py-4 backdrop-blur">
+        <h1 className="font-bold text-gray-900 text-xl">プロフィール</h1>
         <div className="flex items-center gap-2">
           <Button
             isIconOnly

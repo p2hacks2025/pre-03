@@ -19,7 +19,7 @@ export interface TimelineProps {
  */
 export const Timeline = ({ items }: TimelineProps) => {
   return (
-    <div className="flex flex-col gap-3 p-4">
+    <div className="mx-auto flex max-w-2xl flex-col gap-3 p-4">
       {items.map((item) =>
         item.type === "ai" ? (
           <AiTimelineItem key={`ai-${item.id}`} {...item} />

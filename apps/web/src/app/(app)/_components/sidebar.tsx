@@ -20,9 +20,9 @@ export const Sidebar = () => {
     pathname === href ? "#D6B575" : "#9CA3AF";
 
   return (
-    <aside className="flex h-screen w-60 flex-col border-gray-800 border-r bg-[#1C1C1E]">
+    <aside className="flex h-screen w-60 flex-col border-gray-200 border-r bg-white">
       <div className="flex h-16 items-center px-4">
-        <h1 className="font-bold text-lg text-white">新世界の声</h1>
+        <h1 className="font-bold text-gray-900 text-lg">新世界の声</h1>
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">

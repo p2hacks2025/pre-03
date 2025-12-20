@@ -90,8 +90,8 @@ export const DiaryForm = ({ onSuccess, onCancel }: DiaryFormProps) => {
         isDisabled={isSubmitting}
         autoFocus
         classNames={{
-          inputWrapper: "bg-[#2C2C2E] border-gray-700",
-          input: "text-white placeholder:text-gray-500",
+          inputWrapper: "bg-gray-100 border-gray-300",
+          input: "text-gray-900 placeholder:text-gray-500",
         }}
       />
 

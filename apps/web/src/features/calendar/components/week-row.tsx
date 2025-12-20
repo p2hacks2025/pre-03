@@ -15,13 +15,13 @@ const getTextColorClass = (day: DayInfo): string => {
   const isSunday = day.date.getDay() === 0;
   if (isSunday) return "text-red-500";
   if (day.isWeekend) return "text-blue-500"; // 土曜日
-  return "text-white";
+  return "text-gray-900";
 };
 
 const MonthIndicator = ({ month }: { month: number }) => {
   return (
     <div className="flex w-16 items-start justify-center">
-      <span className="font-bold text-2xl text-white">{month}月</span>
+      <span className="font-bold text-2xl text-gray-900">{month}月</span>
     </div>
   );
 };
@@ -52,7 +52,7 @@ const WeekDatesRow = ({
           return (
             <div
               key={day.dateString}
-              className="flex w-8 items-center justify-center"
+              className="flex w-9 items-center justify-center"
             >
               <div
                 className={`flex h-9 w-9 items-center justify-center rounded-full ${hasEntry ? "border-2 border-[#4ECCDD]" : ""}`}
@@ -74,7 +74,7 @@ const WeekDatesRow = ({
 const WeekContent = ({ imageUrl }: { imageUrl: string | null }) => {
   if (imageUrl === null) {
     return (
-      <div className="mt-2 flex h-48 items-center justify-center overflow-hidden rounded-lg bg-[#2C2C2E]">
+      <div className="mt-2 flex h-48 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
         <Image
           src="/images/world-placeholder.png"
           alt="プレースホルダー"
@@ -88,7 +88,7 @@ const WeekContent = ({ imageUrl }: { imageUrl: string | null }) => {
   }
 
   return (
-    <div className="mt-2 flex h-48 items-center justify-center overflow-hidden rounded-lg bg-[#2C2C2E]">
+    <div className="mt-2 flex h-48 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
       <Image
         src={imageUrl}
         alt="週間ワールド"

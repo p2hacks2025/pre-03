@@ -29,7 +29,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#1C1C1E]">
+      <div className="flex min-h-screen items-center justify-center bg-white">
         <Spinner size="lg" color="warning" />
       </div>
     );
@@ -37,14 +37,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#1C1C1E]">
+      <div className="flex min-h-screen items-center justify-center bg-white">
         <p className="text-gray-400">リダイレクト中...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-[#1C1C1E]">
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
       <main className="flex-1 overflow-auto">{children}</main>
       <DailyPopupChecker />

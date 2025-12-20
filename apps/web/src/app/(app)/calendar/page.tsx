@@ -46,9 +46,9 @@ export default function CalendarPage() {
 
   return (
     <div className="h-full overflow-auto">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-gray-800 border-b bg-[#1C1C1E]/95 px-6 py-4 backdrop-blur">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-gray-200 border-b bg-white/95 px-6 py-4 backdrop-blur">
         <div>
-          <h1 className="font-bold text-white text-xl">カレンダー</h1>
+          <h1 className="font-bold text-gray-900 text-xl">カレンダー</h1>
           <p className="text-gray-400 text-sm">{formattedDate}</p>
         </div>
         <Button
