@@ -234,3 +234,51 @@ export const getUserPostsByWeek = async (
     )
     .orderBy(asc(userPosts.createdAt));
 };
+
+/**
+ * ユーザーの総投稿数を取得
+ */
+export const countUserPosts = async (
+  db: DbClient,
+  profileId: string,
+): Promise<number> => {
+  const result = await db
+    .select({ count: sql<number>`COUNT(*)::int` })
+    .from(userPosts)
+    .where(
+      and(eq(userPosts.userProfileId, profileId), isNull(userPosts.deletedAt)),
+    );
+
+  return result[0]?.count ?? 0;
+};
+
+export type GetPostingDatesForStreakOptions = {
+  profileId: string;
+  limit?: number;
+};
+
+/**
+ * 連続投稿日数計算用に投稿日を取得（JST基準、新しい順）
+ * 最大limit日分（デフォルト365日）を取得
+ */
+export const getPostingDatesForStreak = async (
+  db: DbClient,
+  options: GetPostingDatesForStreakOptions,
+): Promise<string[]> => {
+  const { profileId, limit = 365 } = options;
+
+  const result = await db
+    .selectDistinct({
+      date: sql<string>`DATE(${userPosts.createdAt} AT TIME ZONE 'Asia/Tokyo')`.as(
+        "date",
+      ),
+    })
+    .from(userPosts)
+    .where(
+      and(eq(userPosts.userProfileId, profileId), isNull(userPosts.deletedAt)),
+    )
+    .orderBy(sql`DATE(${userPosts.createdAt} AT TIME ZONE 'Asia/Tokyo') DESC`)
+    .limit(limit);
+
+  return result.map((r) => r.date);
+};
