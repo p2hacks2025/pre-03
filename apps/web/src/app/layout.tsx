@@ -21,6 +21,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Auth Demo",
   description: "Authentication demo with Hono and Supabase",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
