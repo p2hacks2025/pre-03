@@ -7,13 +7,15 @@ import {
   PersonOutline,
 } from "react-ionicons";
 import { Button } from "@heroui/react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+import { useDiaryModal } from "@/contexts/diary-modal-context";
 
 import { SidebarItem } from "./sidebar-item";
 
 export const Sidebar = () => {
   const pathname = usePathname();
+  const { open: openDiaryModal } = useDiaryModal();
 
   // アクティブ状態に応じたアイコン色
   const getIconColor = (href: string) =>
@@ -59,11 +61,15 @@ export const Sidebar = () => {
 
       <div className="p-4">
         <Button
-          as={Link}
-          href="/diary/new"
           className="w-full bg-[#D6B575] font-medium text-black"
+          onPress={openDiaryModal}
           startContent={
             <CreateOutline color="#000000" width="20px" height="20px" />
+          }
+          endContent={
+            <kbd className="rounded bg-black/10 px-1.5 py-0.5 font-mono text-black/60 text-xs">
+              N
+            </kbd>
           }
         >
           日記を書く

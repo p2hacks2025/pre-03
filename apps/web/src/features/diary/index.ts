@@ -1,6 +1,7 @@
 // Components
 
 export { DiaryForm, type DiaryFormProps } from "./components/diary-form";
+export { DiaryModal } from "./components/diary-modal";
 export {
   ImageUpload,
   type ImageUploadProps,

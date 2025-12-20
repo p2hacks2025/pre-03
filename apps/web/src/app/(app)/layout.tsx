@@ -5,7 +5,10 @@ import { Spinner } from "@heroui/react";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/contexts/auth-context";
+import { DiaryModalProvider } from "@/contexts/diary-modal-context";
+import { DiaryModal } from "@/features/diary";
 import { PopupOverlay, useDailyPopup } from "@/features/popup";
+import { useGlobalShortcuts } from "@/features/shortcuts";
 
 import { Sidebar } from "./_components/sidebar";
 
@@ -14,6 +17,14 @@ import { Sidebar } from "./_components/sidebar";
  */
 const DailyPopupChecker = () => {
   useDailyPopup();
+  return null;
+};
+
+/**
+ * グローバルキーボードショートカットを有効化するコンポーネント
+ */
+const GlobalShortcutsHandler = () => {
+  useGlobalShortcuts();
   return null;
 };
 
@@ -44,11 +55,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-white">
-      <Sidebar />
-      <main className="flex-1 overflow-auto">{children}</main>
-      <DailyPopupChecker />
-      <PopupOverlay />
-    </div>
+    <DiaryModalProvider>
+      <div className="flex min-h-screen bg-white">
+        <Sidebar />
+        <main className="flex-1 overflow-auto">{children}</main>
+        <DailyPopupChecker />
+        <PopupOverlay />
+        <DiaryModal />
+        <GlobalShortcutsHandler />
+      </div>
+    </DiaryModalProvider>
   );
 }

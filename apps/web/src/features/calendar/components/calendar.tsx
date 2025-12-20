@@ -22,10 +22,15 @@ const isFutureWeek = (weekId: string): boolean => {
   return weekStartDate > currentWeekMonday;
 };
 
-const YearHeader = ({ year }: { year: number }) => {
+/** 年区切り線（月カラムの右側に表示） */
+const YearSeparator = ({ year }: { year: number }) => {
   return (
-    <div className="py-2">
-      <p className="text-center font-bold text-white text-xl">{year}年</p>
+    <div className="ml-4 flex h-full flex-shrink-0 flex-col items-center justify-center">
+      <div className="h-full w-px bg-gray-300" />
+      <span className="-rotate-90 whitespace-nowrap font-bold text-gray-500 text-sm">
+        {year}年
+      </span>
+      <div className="h-full w-px bg-gray-300" />
     </div>
   );
 };
@@ -50,20 +55,30 @@ export const Calendar = ({
   }
 
   return (
-    <div className="mb-4">
-      {showYearSeparator && <YearHeader year={monthGroup.year} />}
+    <div className="flex h-full flex-shrink-0">
+      {/* 月カラム */}
+      <div className="flex w-72 flex-shrink-0 flex-col">
+        {/* 月ヘッダー */}
+        <div className="mb-2 flex-shrink-0">
+          <span className="font-bold text-2xl text-gray-900">
+            {monthGroup.month}月
+          </span>
+        </div>
 
-      <div>
-        {visibleWeeks.map((week, index) => (
-          <WeekRow
-            key={week.weekId}
-            week={week}
-            showMonthIndicator={index === 0}
-            month={monthGroup.month}
-            entryDates={monthGroup.entryDates}
-          />
-        ))}
+        {/* 週リスト */}
+        <div className="flex flex-1 flex-col">
+          {visibleWeeks.map((week) => (
+            <WeekRow
+              key={week.weekId}
+              week={week}
+              entryDates={monthGroup.entryDates}
+            />
+          ))}
+        </div>
       </div>
+
+      {/* 年区切り（この月の右側に表示） */}
+      {showYearSeparator && <YearSeparator year={monthGroup.year} />}
     </div>
   );
 };

@@ -9,7 +9,7 @@ import type { DayInfo, WeekInfo } from "../types";
  * 曜日に応じたテキストカラークラスを取得
  * - 日曜日: 赤色 (text-red-500)
  * - 土曜日: 青色 (text-blue-500) - isWeekend が true かつ日曜でない場合
- * - 平日: 通常色 (text-white)
+ * - 平日: 通常色 (text-gray-900)
  */
 const getTextColorClass = (day: DayInfo): string => {
   const isSunday = day.date.getDay() === 0;
@@ -18,55 +18,33 @@ const getTextColorClass = (day: DayInfo): string => {
   return "text-gray-900";
 };
 
-const MonthIndicator = ({ month }: { month: number }) => {
-  return (
-    <div className="flex w-16 items-start justify-center">
-      <span className="font-bold text-2xl text-gray-900">{month}月</span>
-    </div>
-  );
-};
-
 interface WeekDatesRowProps {
   days: DayInfo[];
-  showMonthIndicator?: boolean;
-  month?: number;
   entryDates: string[];
 }
 
-const WeekDatesRow = ({
-  days,
-  showMonthIndicator = false,
-  month,
-  entryDates,
-}: WeekDatesRowProps) => {
+const WeekDatesRow = ({ days, entryDates }: WeekDatesRowProps) => {
   return (
-    <div className="flex items-center">
-      {showMonthIndicator && month !== undefined ? (
-        <MonthIndicator month={month} />
-      ) : (
-        <div className="w-16" />
-      )}
-      <div className="flex flex-1 justify-between px-4">
-        {days.map((day) => {
-          const hasEntry = entryDates.includes(day.dateString);
-          return (
+    <div className="flex items-center justify-between">
+      {days.map((day) => {
+        const hasEntry = entryDates.includes(day.dateString);
+        return (
+          <div
+            key={day.dateString}
+            className="flex w-8 items-center justify-center"
+          >
             <div
-              key={day.dateString}
-              className="flex w-9 items-center justify-center"
+              className={`flex h-8 w-8 items-center justify-center rounded-full ${hasEntry ? "border-2 border-[#4ECCDD]" : ""}`}
             >
-              <div
-                className={`flex h-9 w-9 items-center justify-center rounded-full ${hasEntry ? "border-2 border-[#4ECCDD]" : ""}`}
+              <span
+                className={`text-sm ${getTextColorClass(day)} ${day.isToday ? "font-bold" : "font-medium"}`}
               >
-                <span
-                  className={`text-base ${getTextColorClass(day)} ${day.isToday ? "font-bold" : "font-medium"}`}
-                >
-                  {day.day}
-                </span>
-              </div>
+                {day.day}
+              </span>
             </div>
-          );
-        })}
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -74,12 +52,12 @@ const WeekDatesRow = ({
 const WeekContent = ({ imageUrl }: { imageUrl: string | null }) => {
   if (imageUrl === null) {
     return (
-      <div className="mt-2 flex h-48 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
+      <div className="mt-1 flex h-32 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
         <Image
           src="/images/world-placeholder.png"
           alt="プレースホルダー"
-          width={192}
-          height={192}
+          width={128}
+          height={128}
           className="h-full w-full object-contain"
           unoptimized
         />
@@ -88,12 +66,12 @@ const WeekContent = ({ imageUrl }: { imageUrl: string | null }) => {
   }
 
   return (
-    <div className="mt-2 flex h-48 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
+    <div className="mt-1 flex h-32 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
       <Image
         src={imageUrl}
         alt="週間ワールド"
-        width={192}
-        height={192}
+        width={128}
+        height={128}
         className="h-full w-full object-contain"
         unoptimized
       />
@@ -103,17 +81,10 @@ const WeekContent = ({ imageUrl }: { imageUrl: string | null }) => {
 
 interface WeekRowProps {
   week: WeekInfo;
-  showMonthIndicator?: boolean;
-  month?: number;
   entryDates: string[];
 }
 
-export const WeekRow = ({
-  week,
-  showMonthIndicator = false,
-  month,
-  entryDates,
-}: WeekRowProps) => {
+export const WeekRow = ({ week, entryDates }: WeekRowProps) => {
   const router = useRouter();
 
   const handleClick = () => {
@@ -126,15 +97,8 @@ export const WeekRow = ({
       onClick={handleClick}
       className="mb-2 w-full text-left transition-opacity hover:opacity-80"
     >
-      <WeekDatesRow
-        days={week.days}
-        showMonthIndicator={showMonthIndicator}
-        month={month}
-        entryDates={entryDates}
-      />
-      <div className="ml-16">
-        <WeekContent imageUrl={week.imageUrl} />
-      </div>
+      <WeekDatesRow days={week.days} entryDates={entryDates} />
+      <WeekContent imageUrl={week.imageUrl} />
     </button>
   );
 };

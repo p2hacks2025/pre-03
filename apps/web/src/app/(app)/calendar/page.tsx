@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CalendarOutline, RefreshOutline } from "react-ionicons";
 import { Button, Spinner } from "@heroui/react";
 
@@ -16,21 +16,46 @@ export default function CalendarPage() {
     refresh,
     loadMore,
   } = useCalendar();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<HTMLDivElement>(null);
+  const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
 
-  // 無限スクロール
+  // 初期スクロール位置を右端（現在の月）に設定
   useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer && monthGroups.length > 0 && !hasInitialScrolled) {
+      // requestAnimationFrameで描画完了を待ってからスクロール
+      requestAnimationFrame(() => {
+        scrollContainer.scrollLeft = scrollContainer.scrollWidth;
+        setHasInitialScrolled(true);
+      });
+    }
+  }, [monthGroups.length, hasInitialScrolled]);
+
+  // 横スクロール無限ローディング（左端到達で過去の月をロード）
+  // 初期スクロール完了後にのみオブザーバーを設定
+  useEffect(() => {
+    if (!hasInitialScrolled) return;
+
+    const scrollContainer = scrollContainerRef.current;
+    const observerElement = observerRef.current;
+    if (!scrollContainer || !observerElement) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
           loadMore();
         }
       },
-      { threshold: 0.5 },
+      {
+        root: scrollContainer,
+        rootMargin: "0px 0px 0px 200px", // 左に200px余裕を持ってトリガー
+        threshold: 0,
+      },
     );
-    if (observerRef.current) observer.observe(observerRef.current);
+    observer.observe(observerElement);
     return () => observer.disconnect();
-  }, [hasMore, isLoadingMore, loadMore]);
+  }, [hasInitialScrolled, hasMore, isLoadingMore, loadMore]);
 
   const today = new Date();
   const formattedDate = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
@@ -44,9 +69,12 @@ export default function CalendarPage() {
     );
   }
 
+  // 月グループを逆順にして古い月を左、新しい月を右に配置
+  const reversedMonthGroups = [...monthGroups].reverse();
+
   return (
-    <div className="h-full overflow-auto">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-gray-200 border-b bg-white/95 px-6 py-4 backdrop-blur">
+    <div className="flex h-full flex-col">
+      <header className="z-10 flex flex-shrink-0 items-center justify-between border-gray-200 border-b bg-white/95 px-6 py-4 backdrop-blur">
         <div>
           <h1 className="font-bold text-gray-900 text-xl">カレンダー</h1>
           <p className="text-gray-400 text-sm">{formattedDate}</p>
@@ -82,7 +110,7 @@ export default function CalendarPage() {
       )}
 
       {!isLoading && !error && monthGroups.length === 0 && (
-        <div className="flex flex-col items-center py-12">
+        <div className="flex flex-1 flex-col items-center justify-center py-12">
           <CalendarOutline color="#4B5563" width="48px" height="48px" />
           <p className="mt-4 text-center text-gray-400">
             カレンダーデータがありません
@@ -91,30 +119,37 @@ export default function CalendarPage() {
       )}
 
       {monthGroups.length > 0 && (
-        <div className="p-4">
-          {monthGroups.map((monthGroup, index) => {
-            // 前の月グループと年が違う場合のみ年区切りを表示
-            const prevMonthGroup = monthGroups[index - 1];
+        <div
+          ref={scrollContainerRef}
+          className="flex flex-1 overflow-x-auto overflow-y-hidden"
+        >
+          {/* 左端の監視要素（過去の月をロード） */}
+          <div
+            ref={observerRef}
+            className="flex h-full w-8 flex-shrink-0 items-center justify-center"
+          >
+            {isLoadingMore && <Spinner size="sm" color="warning" />}
+          </div>
+
+          {/* 月グループを横並びで表示 */}
+          {reversedMonthGroups.map((monthGroup, index) => {
+            // 逆順なので、次の月グループ（元の配列で前）と年が違う場合に区切りを表示
+            const nextMonthGroup = reversedMonthGroups[index + 1];
             const showYearSeparator =
-              index === 0 ||
-              (prevMonthGroup && prevMonthGroup.year !== monthGroup.year);
+              nextMonthGroup && nextMonthGroup.year !== monthGroup.year;
 
             return (
-              <Calendar
-                key={monthGroup.monthId}
-                monthGroup={monthGroup}
-                showYearSeparator={showYearSeparator}
-              />
+              <div key={monthGroup.monthId} className="flex-shrink-0 p-4">
+                <Calendar
+                  monthGroup={monthGroup}
+                  showYearSeparator={showYearSeparator}
+                />
+              </div>
             );
           })}
-        </div>
-      )}
 
-      <div ref={observerRef} className="h-4" />
-
-      {isLoadingMore && (
-        <div className="flex justify-center py-4">
-          <Spinner size="sm" color="warning" />
+          {/* 右端のパディング */}
+          <div className="w-4 flex-shrink-0" />
         </div>
       )}
     </div>
