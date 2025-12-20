@@ -1,7 +1,9 @@
 import { Avatar } from "heroui-native";
-import { Image, Text, View } from "react-native";
+import { useState } from "react";
+import { Image, Pressable, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
+import { ImageViewerModal } from "@/components";
 import { FONT_FAMILY } from "@/lib/fonts";
 import { formatRelativeTime } from "../lib/format-relative-time";
 import type { AiTimelineItemProps } from "./types";
@@ -9,6 +11,7 @@ import type { AiTimelineItemProps } from "./types";
 const StyledView = withUniwind(View);
 const StyledText = withUniwind(Text);
 const StyledImage = withUniwind(Image);
+const StyledPressable = withUniwind(Pressable);
 
 export type { AiTimelineItemProps };
 
@@ -34,6 +37,7 @@ export const AiTimelineItem = ({
   author,
 }: AiTimelineItemProps) => {
   const timeAgo = formatRelativeTime(createdAt);
+  const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
 
   return (
     <StyledView className="flex-row rounded-md border-4 border-white bg-[#2C2C2E] p-4">
@@ -77,15 +81,27 @@ export const AiTimelineItem = ({
 
         {/* 添付画像 */}
         {uploadImageUrl && (
-          <StyledView className="mt-3 overflow-hidden rounded-lg">
+          <StyledPressable
+            className="mt-3 overflow-hidden rounded-lg"
+            onPress={() => setIsImageViewerVisible(true)}
+          >
             <StyledImage
               source={{ uri: uploadImageUrl }}
               className="aspect-video w-full"
               resizeMode="cover"
             />
-          </StyledView>
+          </StyledPressable>
         )}
       </StyledView>
+
+      {/* フルスクリーン画像ビューアー */}
+      {uploadImageUrl && (
+        <ImageViewerModal
+          visible={isImageViewerVisible}
+          imageUrl={uploadImageUrl}
+          onClose={() => setIsImageViewerVisible(false)}
+        />
+      )}
     </StyledView>
   );
 };
