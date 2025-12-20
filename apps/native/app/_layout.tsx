@@ -1,9 +1,4 @@
 import "@/globals.css";
-import {
-  DotGothic16_400Regular,
-  useFonts as useDotGothicFonts,
-} from "@expo-google-fonts/dotgothic16";
-import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { HeroUINativeProvider } from "heroui-native";
 import { useEffect } from "react";
@@ -13,20 +8,12 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "@/contexts/auth-context";
 import { PopupProvider } from "@/contexts/popup-context";
 import { PopupOverlay } from "@/features/popup";
+import { useAppFonts } from "@/lib/fonts";
 import { initializeOneSignal } from "@/lib/onesignal";
 
 export default function RootLayout() {
-  // ローカルフォント（ZenKurenaido）
-  const [localFontsLoaded] = useFonts({
-    "ZenKurenaido-Regular": require("../assets/fonts/ZenKurenaido-Regular.ttf"),
-  });
-
-  // Google Fonts（DotGothic16）
-  const [googleFontsLoaded] = useDotGothicFonts({
-    DotGothic16_400Regular,
-  });
-
-  const fontsLoaded = localFontsLoaded && googleFontsLoaded;
+  // 全フォントを一括読み込み
+  const fontsLoaded = useAppFonts();
 
   useEffect(() => {
     initializeOneSignal();

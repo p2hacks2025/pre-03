@@ -2,6 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Image, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
+import { FONT_FAMILY } from "@/lib/fonts";
 import { formatAbsoluteTime } from "../lib/format-absolute-time";
 import type { UserTimelineItemProps } from "./types";
 
@@ -138,7 +139,7 @@ export const UserTimelineItem = ({
         <StyledView>
           <StyledText
             className="mb-1 text-black"
-            style={{ fontFamily: "ZenKurenaido-Regular" }}
+            style={{ fontFamily: FONT_FAMILY.ZEN_KURENAIDO }}
           >
             {formattedDate}
           </StyledText>
@@ -147,7 +148,7 @@ export const UserTimelineItem = ({
         {/* 本文 */}
         <StyledText
           className="text-black text-em leading-5"
-          style={{ fontFamily: "ZenKurenaido-Regular" }}
+          style={{ fontFamily: FONT_FAMILY.ZEN_KURENAIDO }}
         >
           {content}
         </StyledText>
