@@ -4,6 +4,7 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { withUniwind } from "uniwind";
 
 import { useAuth } from "@/contexts/auth-context";
+import { FONT_FAMILY } from "@/lib/fonts";
 
 import { useProfileEdit } from "../hooks";
 import { ProfileAvatarDisplay } from "./profile-avatar-display";
@@ -22,11 +23,23 @@ const COLORS = {
   cardBackground: "#FFFFFF",
 };
 
+// カードの固定幅（iPhone SE3: 375pt でも左右約27ptの余白確保）
+const CARD_WIDTH = 320;
+
+// 下線の固定幅
+const UNDERLINE_WIDTH = 280;
+
+// 表示名エリアの固定高さ（編集時も高さが変わらないように）
+const NAME_AREA_HEIGHT = 36;
+
+// テキスト入力フィールドの幅（下線幅 - ボタン分の余白）
+const TEXT_INPUT_WIDTH = 230;
+
 /**
  * プロフィールカード
  *
- * - プロフィール写真（ピンク縁取り）
- * - ユーザーネーム（インライン編集可能）
+ * - プロフィール写真
+ * - ユーザーネーム（インライン編集可能、中央揃え）
  * - 統計情報（連続投稿 | 投稿総数 | 世界数）
  * - シェアボタン
  */
@@ -47,8 +60,9 @@ export const ProfileCard = () => {
 
   return (
     <StyledView
-      className="mx-4 rounded-3xl p-6"
+      className="rounded-3xl p-6"
       style={{
+        width: CARD_WIDTH,
         backgroundColor: COLORS.cardBackground,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
@@ -62,18 +76,16 @@ export const ProfileCard = () => {
 
       {/* ユーザーネーム + 編集 */}
       <StyledView className="mt-4 items-center">
+        {/* 固定高さのコンテナ（編集時も高さが変わらない） */}
         <StyledView
-          className="flex-row items-center"
-          style={{
-            borderBottomWidth: 2,
-            borderBottomColor: COLORS.goldUnderline,
-            paddingBottom: 4,
-          }}
+          className="items-center justify-center"
+          style={{ height: NAME_AREA_HEIGHT }}
         >
           {isEditing ? (
+            /* 編集モード: TextField（中央揃え） */
             <StyledTextInput
               ref={inputRef}
-              className="rounded-md border border-primary bg-background px-2 py-1 text-center text-foreground text-xl"
+              className="rounded-md border border-primary bg-background px-2 py-1 text-foreground text-xl"
               value={editName}
               onChangeText={setEditName}
               onBlur={cancelEdit}
@@ -81,26 +93,61 @@ export const ProfileCard = () => {
               returnKeyType="done"
               autoFocus
               editable={!isSaving}
-              style={{ minWidth: 150 }}
+              style={{ width: TEXT_INPUT_WIDTH }}
             />
           ) : (
-            <StyledText className="px-2 font-bold text-foreground text-xl">
+            /* 表示モード: 表示名（完全中央揃え） */
+            <StyledText
+              className="font-bold text-foreground text-xl"
+              style={{ fontFamily: FONT_FAMILY.MADOUFMG }}
+            >
               {profile.displayName}
             </StyledText>
           )}
+        </StyledView>
 
+        {/* 下線 + ボタン コンテナ */}
+        <StyledView
+          style={{
+            position: "relative",
+            width: UNDERLINE_WIDTH,
+            marginTop: 4,
+          }}
+        >
+          {/* 下線 */}
+          <StyledView
+            style={{
+              width: "100%",
+              height: 2,
+              backgroundColor: COLORS.goldUnderline,
+            }}
+          />
+
+          {/* ボタン（下線の右端に配置、編集/確定をトグル） */}
           <StyledPressable
-            className="ml-2 rounded-md p-1 active:opacity-70"
+            style={{
+              position: "absolute",
+              right: 2,
+              top: -32,
+              padding: 4,
+            }}
+            className="active:opacity-70"
             onPress={isEditing ? saveEdit : startEdit}
             disabled={isSaving}
           >
             {isSaving ? (
               <Spinner size="sm" />
+            ) : isEditing ? (
+              <StyledIonicons
+                name="checkmark"
+                size={20}
+                className="text-success"
+              />
             ) : (
               <StyledIonicons
-                name={isEditing ? "checkmark" : "pencil-outline"}
-                size={18}
-                className={isEditing ? "text-success" : "text-muted"}
+                name="pencil-outline"
+                size={20}
+                className="text-muted"
               />
             )}
           </StyledPressable>

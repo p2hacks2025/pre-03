@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
+import { FONT_FAMILY } from "@/lib/fonts";
 import { logger } from "@/lib/logger";
 
 const StyledView = withUniwind(View);
@@ -32,7 +33,11 @@ export const ShareWorldButton = () => {
       >
         <StyledText
           className="text-center font-bold text-lg"
-          style={{ color: COLORS.buttonText, lineHeight: 24 }}
+          style={{
+            color: COLORS.buttonText,
+            lineHeight: 24,
+            fontFamily: FONT_FAMILY.MADOUFMG,
+          }}
         >
           今の世界を{"\n"}シェア
         </StyledText>

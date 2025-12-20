@@ -109,14 +109,14 @@ export const ProfileScreen = () => {
         style={{ paddingTop: insets.top + HEADER_HEIGHT }}
       >
         {/* プロフィールカード */}
-        <StyledView className="pt-4" style={{ zIndex: 2 }}>
+        <StyledView className="items-center pt-4" style={{ zIndex: 1 }}>
           <ProfileCard />
         </StyledView>
 
-        {/* 今週の世界（カードと一部重なる） */}
+        {/* 今週の世界 */}
         <StyledView
           className="items-center"
-          style={{ marginTop: -20, zIndex: 1 }}
+          style={{ marginTop: -30, zIndex: 2 }}
         >
           <WeeklyWorldPreview />
         </StyledView>

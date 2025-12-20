@@ -11,6 +11,7 @@ const COLORS = {
   divider: "#E5E5E5",
   valueText: "#333333",
   labelText: "#888888",
+  cardBackground: "#F1F1F1",
 };
 
 interface StatItemProps {
@@ -66,12 +67,24 @@ export const ProfileStatsRow = () => {
   const { streakDays, totalPosts, worldCount } = useProfileStats();
 
   return (
-    <StyledView className="mt-4 flex-row items-center justify-center px-4 py-2">
-      <StatItem value={streakDays} unit="日" label="連続" />
-      <Divider />
-      <StatItem value={totalPosts} unit="件" label="投稿" />
-      <Divider />
-      <StatItem value={worldCount} unit="個" label="世界" />
+    <StyledView
+      className="mt-4 rounded-xl py-3"
+      style={{
+        backgroundColor: COLORS.cardBackground,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 6,
+      }}
+    >
+      <StyledView className="flex-row items-center">
+        <StatItem value={streakDays} unit="日" label="連続" />
+        <Divider />
+        <StatItem value={totalPosts} unit="件" label="投稿" />
+        <Divider />
+        <StatItem value={worldCount} unit="個" label="世界" />
+      </StyledView>
     </StyledView>
   );
 };
