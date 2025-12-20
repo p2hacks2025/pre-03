@@ -12,4 +12,9 @@ export {
 } from "./use-profile-avatar";
 export { useProfileEdit } from "./use-profile-edit";
 export { type ProfileStats, useProfileStats } from "./use-profile-stats";
+export {
+  type ShareData,
+  type UseShareImageReturn,
+  useShareImage,
+} from "./use-share-image";
 export { useWorldScale, type WorldScaleValues } from "./use-world-scale";
