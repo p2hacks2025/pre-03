@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { tokenStorage } from "@/features/auth/lib/token-storage";
+import { popupStorage } from "@/features/popup/lib/popup-storage";
 import { client, createAuthenticatedClient } from "@/lib/api";
 import {
   clearOneSignalExternalUserId,
@@ -208,6 +209,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // ログアウト失敗してもクライアント側はクリア
     }
     await tokenStorage.clearTokens();
+    await popupStorage.clearLastLaunchDate();
     try {
       await clearOneSignalExternalUserId();
     } catch (error) {

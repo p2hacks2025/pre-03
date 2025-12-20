@@ -91,7 +91,7 @@ const authClient = createAuthenticatedClient(accessToken);
 
 | 層 | 技術 |
 |----|------|
-| Web フロントエンド | Next.js 15, React 19, Tailwind CSS 4, shadcn/ui |
+| Web フロントエンド | Next.js 15, React 19, Tailwind CSS 4, HeroUI |
 | モバイル | React Native 0.81, Expo 54, HeroUI Native, Uniwind |
 | バックエンド | Hono 4, Drizzle ORM, Supabase |
 | インフラ | Cloudflare Workers/Pages, Hyperdrive |
@@ -271,7 +271,7 @@ $ pnpm build
 | プロジェクト | ドキュメント | 概要 |
 |-------------|-------------|------|
 | API | [apps/api/CLAUDE.md](./apps/api/CLAUDE.md) | Hono + OpenAPI 実装ガイド |
-| Web | [apps/web/CLAUDE.md](./apps/web/CLAUDE.md) | Next.js + shadcn/ui 実装ガイド |
+| Web | [apps/web/CLAUDE.md](./apps/web/CLAUDE.md) | Next.js + HeroUI 実装ガイド |
 | Native | [apps/native/CLAUDE.md](./apps/native/CLAUDE.md) | Expo + HeroUI Native 実装ガイド |
 | Worker | [apps/worker/CLAUDE.md](./apps/worker/CLAUDE.md) | バッチ処理・定期実行ワーカー |
 

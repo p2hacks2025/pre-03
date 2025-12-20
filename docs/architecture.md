@@ -15,7 +15,7 @@
   - [モノレポ管理: Turborepo + pnpm](#モノレポ管理-turborepo--pnpm)
   - [バックエンド: Hono + Node.js + TypeScript](#バックエンド-hono--nodejs--typescript)
   - [フロントエンド: Next.js + React + TypeScript](#フロントエンド-nextjs--react--typescript)
-  - [スタイル(web): Tailwind CSS (+ shadcn/ui)](#スタイルweb-tailwind-css--shadcnui)
+  - [スタイル(web): Tailwind CSS (+ HeroUI)](#スタイルweb-tailwind-css--heroui)
   - [ネイティブ: React Native + Expo + TypeScript](#ネイティブ-react-native--expo--typescript)
   - [スタイル(native): Uniwind + HeroUI Native](#スタイルnative-uniwind--heroui-native)
   - [環境変数管理: Zod + direnv (+ packages/env)](#環境変数管理-zod--direnv--packagesenv)
@@ -75,13 +75,13 @@
 - React + TypeScript
   - APIとの型安全な連携を実現し、開発効率を向上させるために採用
 
-### スタイル(web): Tailwind CSS (+ shadcn/ui)
+### スタイル(web): Tailwind CSS (+ HeroUI)
 
 - Tailwind CSS
   - メンバーに経験者が多く、コンポーネントをサクッと組めるために採用
-- shadcn/ui
-  - 最低限のUI部品を素早く組み立てるために採用
-  - Tailwind CSSベースでカスタマイズしやすい
+- HeroUI
+  - React Aria ベースのアクセシブルな UI コンポーネントライブラリ
+  - Native 版と共通の設計思想で、Web/Mobile 間の一貫性を確保
 
 ### ネイティブ: React Native + Expo + TypeScript
 
