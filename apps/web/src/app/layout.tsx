@@ -37,8 +37,8 @@ const madoufmg = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Auth Demo",
-  description: "Authentication demo with Hono and Supabase",
+  title: "リフレクト新世界",
+  description: "何気ない日常のキラキラを可視化して充実した生活を実感する",
   icons: {
     icon: "/favicon.png",
   },
