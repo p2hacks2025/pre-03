@@ -1,3 +1,9 @@
+import { useCallback, useEffect, useState } from "react";
+
+import { useAuth } from "@/contexts/auth-context";
+import { createAuthenticatedClient } from "@/lib/api";
+import { logger } from "@/lib/logger";
+
 export interface ProfileStats {
   /** 連続投稿日数 */
   streakDays: number;
@@ -7,20 +13,86 @@ export interface ProfileStats {
   worldCount: number;
   /** ローディング状態 */
   isLoading: boolean;
+  /** エラーメッセージ */
+  error: string | null;
+}
+
+interface UseProfileStatsReturn extends ProfileStats {
+  /** 手動でデータを再取得 */
+  refresh: () => void;
 }
 
 /**
  * プロフィール統計を取得するフック
  *
- * 現時点ではモック値を返す。
- * 将来的には API から投稿データを取得して計算する。
+ * APIからユーザーの統計情報（連続投稿日数、投稿総数、作られた世界の数）を取得する。
  */
-export const useProfileStats = (): ProfileStats => {
-  // TODO: API から実際の統計を取得する
+export const useProfileStats = (): UseProfileStatsReturn => {
+  const { accessToken } = useAuth();
+  const [stats, setStats] = useState<ProfileStats>({
+    streakDays: 0,
+    totalPosts: 0,
+    worldCount: 0,
+    isLoading: true,
+    error: null,
+  });
+
+  const fetchStats = useCallback(async () => {
+    if (!accessToken) {
+      setStats((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: "認証が必要です",
+      }));
+      return;
+    }
+
+    setStats((prev) => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const authClient = createAuthenticatedClient(accessToken);
+      const res = await authClient.user.stats.$get();
+
+      if (res.ok) {
+        const data = await res.json();
+        setStats({
+          streakDays: data.streakDays,
+          totalPosts: data.totalPosts,
+          worldCount: data.worldCount,
+          isLoading: false,
+          error: null,
+        });
+        logger.debug("Profile stats fetched", {
+          streakDays: data.streakDays,
+          totalPosts: data.totalPosts,
+          worldCount: data.worldCount,
+        });
+      } else {
+        const status = res.status as number;
+        logger.warn("Profile stats fetch failed", { status });
+        setStats((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: `取得に失敗しました (${status})`,
+        }));
+      }
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error("Profile stats fetch error", {}, err);
+      setStats((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: "通信エラーが発生しました",
+      }));
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
   return {
-    streakDays: 9,
-    totalPosts: 100,
-    worldCount: 10,
-    isLoading: false,
+    ...stats,
+    refresh: fetchStats,
   };
 };
