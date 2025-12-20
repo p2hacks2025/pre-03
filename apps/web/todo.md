@@ -160,17 +160,18 @@ apps/native（React Native）の機能をapps/web（Next.js 15）にPC向けに�
 
 ---
 
-## Phase 4: ポップアップ・仕上げ
+## Phase 4: ポップアップ・仕上げ ✅
 
 ### 4.1 ポップアップ機能
 
 **新規作成ファイル:**
-- [ ] `src/contexts/popup-context.tsx`
-- [ ] `src/features/popup/index.ts`
-- [ ] `src/features/popup/hooks/use-daily-popup.ts`
-- [ ] `src/features/popup/components/popup-overlay.tsx`
-- [ ] `src/features/popup/components/popup-card.tsx`
-- [ ] `src/features/popup/lib/popup-storage.ts`
+- [x] `src/contexts/popup-context.tsx`
+- [x] `src/features/popup/index.ts`
+- [x] `src/features/popup/hooks/use-daily-popup.ts`
+- [x] `src/features/popup/components/popup-overlay.tsx`
+- [x] `src/features/popup/components/popup-card.tsx`
+- [x] `src/features/popup/lib/popup-storage.ts`
+- [x] `src/features/popup/types.ts`
 
 **移植元:**
 - `apps/native/src/contexts/popup-context.tsx`

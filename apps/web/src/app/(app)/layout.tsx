@@ -5,8 +5,17 @@ import { Spinner } from "@heroui/react";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/contexts/auth-context";
+import { PopupOverlay, useDailyPopup } from "@/features/popup";
 
 import { Sidebar } from "./_components/sidebar";
+
+/**
+ * 日次ポップアップチェックを行うコンポーネント
+ */
+const DailyPopupChecker = () => {
+  useDailyPopup();
+  return null;
+};
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -38,6 +47,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-[#1C1C1E]">
       <Sidebar />
       <main className="flex-1 overflow-auto">{children}</main>
+      <DailyPopupChecker />
+      <PopupOverlay />
     </div>
   );
 }

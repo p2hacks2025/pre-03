@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { AuthProvider } from "@/contexts/auth-context";
+import { PopupProvider } from "@/contexts/popup-context";
 
 import { Providers } from "./providers";
 
@@ -34,7 +35,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <Providers>{children}</Providers>
+          <PopupProvider>
+            <Providers>{children}</Providers>
+          </PopupProvider>
         </AuthProvider>
       </body>
     </html>
