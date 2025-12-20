@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@heroui/react";
+import Image from "next/image";
 
 interface PopupCardProps {
   title: string;
@@ -31,11 +32,13 @@ export const PopupCard = ({
 
         {imageUrl && (
           <div className="mb-4 flex justify-center">
-            <div className="h-60 w-60 overflow-hidden rounded-xl">
-              <img
+            <div className="relative h-60 w-60 overflow-hidden rounded-xl">
+              <Image
                 src={imageUrl}
                 alt=""
-                className="h-full w-full object-cover"
+                fill
+                className="object-cover"
+                unoptimized
               />
             </div>
           </div>
