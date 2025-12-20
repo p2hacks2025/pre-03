@@ -9,7 +9,16 @@ const env = createEnv({
 });
 
 export default defineConfig({
-  schema: "./src/schema",
+  schema: [
+    "./src/schema/ai-posts.ts",
+    "./src/schema/ai-profiles.ts",
+    "./src/schema/relations.ts",
+    "./src/schema/user-posts.ts",
+    "./src/schema/user-profiles.ts",
+    "./src/schema/weekly-worlds.ts",
+    "./src/schema/world-build-logs.ts",
+    // auth.ts は Supabase 管理のため除外
+  ],
   out: "../../supabase/migrations",
   dialect: "postgresql",
   dbCredentials: {

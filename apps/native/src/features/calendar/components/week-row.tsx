@@ -56,7 +56,7 @@ const WeekDatesRow = ({
           return (
             <StyledView key={day.dateString} className="w-8 items-center">
               <StyledView
-                className={`h-9 w-9 items-center justify-center rounded-full ${hasEntry ? "border-[2px]" : ""}`}
+                className={`h-8 w-8 items-center justify-center rounded-full ${hasEntry ? "border-2" : ""}`}
                 style={hasEntry ? { borderColor: "#4ECCDD" } : undefined}
               >
                 <StyledText

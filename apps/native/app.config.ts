@@ -48,6 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     edgeToEdgeEnabled: true,
     versionCode: buildConfig.android.versionCode,
+    userInterfaceStyle: "light",
   },
   web: {
     favicon: "./assets/favicon.png",

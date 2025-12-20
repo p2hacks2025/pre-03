@@ -4,6 +4,7 @@ import { runSeeders } from "./runner";
 import type { SeedOptions } from "./seeders";
 import { aiProfilesSeeder } from "./seeders/ai-profiles";
 // Data seeders（データ初期化）
+import { demoPostsSeeder } from "./seeders/demo-posts";
 import { postsSeeder } from "./seeders/posts";
 // Infrastructure seeders（インフラ初期化）
 import { storageSeeder } from "./seeders/storage";
@@ -62,6 +63,7 @@ const main = async () => {
     aiProfilesSeeder,
     usersSeeder,
     postsSeeder,
+    demoPostsSeeder,
     testWeeklyWorldsSeeder,
     weeklyWorldsSeeder,
     workerPostsSeeder,

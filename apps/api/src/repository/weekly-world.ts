@@ -5,6 +5,7 @@ import {
   gte,
   isNull,
   lte,
+  sql,
   type WeeklyWorld,
   weeklyWorlds,
 } from "@packages/db";
@@ -65,4 +66,24 @@ export const getWeeklyWorldByDate = async (
     .limit(1);
 
   return result[0] ?? null;
+};
+
+/**
+ * ユーザーの週間ワールド総数を取得
+ */
+export const countWeeklyWorlds = async (
+  db: DbClient,
+  profileId: string,
+): Promise<number> => {
+  const result = await db
+    .select({ count: sql<number>`COUNT(*)::int` })
+    .from(weeklyWorlds)
+    .where(
+      and(
+        eq(weeklyWorlds.userProfileId, profileId),
+        isNull(weeklyWorlds.deletedAt),
+      ),
+    );
+
+  return result[0]?.count ?? 0;
 };

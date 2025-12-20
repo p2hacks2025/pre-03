@@ -21,7 +21,8 @@ export interface UpdateProfileNameParams {
 export interface ProfileEditState {
   isEditing: boolean;
   isSaving: boolean;
-  editName: string;
+  /** 編集中の表示名（下書き） */
+  draftDisplayName: string;
 }
 
 /**
@@ -30,6 +31,15 @@ export interface ProfileEditState {
 export interface ProfileEditActions {
   startEdit: () => void;
   cancelEdit: () => void;
-  setEditName: (name: string) => void;
+  setDraftDisplayName: (name: string) => void;
   saveEdit: () => Promise<void>;
+}
+
+/**
+ * useProfileEdit の戻り値
+ */
+export interface UseProfileEditReturn
+  extends ProfileEditState,
+    ProfileEditActions {
+  inputRef: React.RefObject<import("react-native").TextInput | null>;
 }

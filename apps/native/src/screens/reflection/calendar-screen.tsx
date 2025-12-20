@@ -167,9 +167,8 @@ export const CalendarScreen = () => {
         inverted
         contentContainerStyle={{
           paddingHorizontal: 16,
-          paddingTop: insets.bottom + 16,
+          paddingBottom: totalHeaderHeight,
         }}
-        style={{ paddingTop: totalHeaderHeight }}
         removeClippedSubviews={true}
         maxToRenderPerBatch={5}
         windowSize={5}
