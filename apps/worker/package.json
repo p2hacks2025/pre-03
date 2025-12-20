@@ -4,6 +4,7 @@
   "scripts": {
     "job": "tsx src/cli.ts run",
     "daemon": "tsx src/daemon.ts",
+    "script": "tsx",
     "check": "biome check .",
     "check:fix": "biome check --write --unsafe .",
     "typecheck": "tsc --noEmit",
