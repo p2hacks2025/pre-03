@@ -113,16 +113,18 @@ apps/native（React Native）の機能をapps/web（Next.js 15）にPC向けに�
 
 ---
 
-## Phase 3: プロフィール・日記作成
+## Phase 3: プロフィール・日記作成 ✅
 
 ### 3.1 プロフィール機能
 
 **新規作成ファイル:**
-- [ ] `src/features/profile/index.ts`
-- [ ] `src/features/profile/hooks/use-profile-entries.ts`
-- [ ] `src/features/profile/hooks/use-profile-stats.ts`
-- [ ] `src/features/profile/components/profile-header.tsx`
-- [ ] `src/features/profile/components/entry-list.tsx`
+- [x] `src/features/profile/index.ts`
+- [x] `src/features/profile/hooks/use-profile-entries.ts`
+- [x] `src/features/profile/hooks/use-profile-stats.ts`
+- [x] `src/features/profile/hooks/use-profile-edit.ts`
+- [x] `src/features/profile/hooks/use-profile-avatar.ts`
+- [x] `src/features/profile/components/profile-header.tsx`
+- [x] `src/features/profile/components/entry-list.tsx`
 
 **移植元:**
 - `apps/native/src/features/profile/`
@@ -130,7 +132,7 @@ apps/native（React Native）の機能をapps/web（Next.js 15）にPC向けに�
 ### 3.2 プロフィール画面
 
 **新規作成ファイル:**
-- [ ] `src/app/(app)/profile/page.tsx`
+- [x] `src/app/(app)/profile/page.tsx`
 
 **既存活用:**
 - `src/app/dashboard/_components/avatar-upload.tsx` を参考
@@ -138,10 +140,10 @@ apps/native（React Native）の機能をapps/web（Next.js 15）にPC向けに�
 ### 3.3 日記作成機能
 
 **新規作成ファイル:**
-- [ ] `src/features/diary/index.ts`
-- [ ] `src/features/diary/hooks/use-diary-submit.ts`
-- [ ] `src/features/diary/components/image-upload.tsx`
-- [ ] `src/features/diary/components/diary-form.tsx`
+- [x] `src/features/diary/index.ts`
+- [x] `src/features/diary/hooks/use-diary-submit.ts`
+- [x] `src/features/diary/components/image-upload.tsx`
+- [x] `src/features/diary/components/diary-form.tsx`
 
 **移植元:**
 - `apps/native/src/features/diary/`
@@ -150,7 +152,7 @@ apps/native（React Native）の機能をapps/web（Next.js 15）にPC向けに�
 ### 3.4 日記作成画面（モーダル）
 
 **新規作成ファイル:**
-- [ ] `src/app/(app)/diary/new/page.tsx`
+- [x] `src/app/(app)/diary/new/page.tsx`
 
 **PC向け最適化:**
 - ドラッグ&ドロップ対応
