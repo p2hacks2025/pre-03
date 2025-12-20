@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { DocumentTextOutline, RefreshOutline } from "react-ionicons";
 import { Button, Spinner } from "@heroui/react";
 
+import { usePageHeader } from "@/contexts/page-header-context";
 import { Timeline, useTimeline } from "@/features/timeline";
 
 export default function HomePage() {
@@ -16,7 +17,38 @@ export default function HomePage() {
     refresh,
     fetchMore,
   } = useTimeline();
+  const { setHeader } = usePageHeader();
   const observerRef = useRef<HTMLDivElement>(null);
+
+  const today = new Date();
+  const formattedDate = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
+
+  const rightContent = useMemo(
+    () => (
+      <Button
+        isIconOnly
+        variant="light"
+        onPress={refresh}
+        isDisabled={isLoading}
+      >
+        <RefreshOutline
+          color="#9CA3AF"
+          width="20px"
+          height="20px"
+          cssClasses={isLoading ? "animate-spin" : ""}
+        />
+      </Button>
+    ),
+    [isLoading, refresh],
+  );
+
+  useEffect(() => {
+    setHeader({
+      title: "新世界の声",
+      subtitle: formattedDate,
+      rightContent,
+    });
+  }, [setHeader, formattedDate, rightContent]);
 
   // 無限スクロール
   useEffect(() => {
@@ -37,9 +69,6 @@ export default function HomePage() {
     refresh();
   }, [refresh]);
 
-  const today = new Date();
-  const formattedDate = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
-
   if (isLoading && entries.length === 0) {
     return (
       <div className="flex h-full flex-col items-center justify-center">
@@ -51,26 +80,6 @@ export default function HomePage() {
 
   return (
     <div className="h-full overflow-auto">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-gray-200 border-b bg-white/95 px-6 py-4 backdrop-blur">
-        <div>
-          <h1 className="font-bold text-gray-900 text-xl">新世界の声</h1>
-          <p className="text-gray-400 text-sm">{formattedDate}</p>
-        </div>
-        <Button
-          isIconOnly
-          variant="light"
-          onPress={refresh}
-          isDisabled={isLoading}
-        >
-          <RefreshOutline
-            color="#9CA3AF"
-            width="20px"
-            height="20px"
-            cssClasses={isLoading ? "animate-spin" : ""}
-          />
-        </Button>
-      </header>
-
       <div className="mx-auto max-w-2xl">
         {error && (
           <div className="mx-4 mt-4 rounded-lg bg-danger/10 p-4 text-center">

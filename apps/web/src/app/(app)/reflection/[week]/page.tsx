@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronBackOutline, ChevronForwardOutline } from "react-ionicons";
 import { Button, Spinner } from "@heroui/react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
+import { usePageHeader } from "@/contexts/page-header-context";
 import {
   DetailDiary,
   DetailTabs,
@@ -20,6 +21,7 @@ export default function ReflectionDetailPage() {
   const params = useParams();
   const router = useRouter();
   const weekId = params.week as string;
+  const { setHeader } = usePageHeader();
 
   const [activeTab, setActiveTab] = useState<TabType>("diary");
 
@@ -41,6 +43,50 @@ export default function ReflectionDetailPage() {
     startDate,
     endDate,
   } = useWeekNavigation(weekId);
+
+  const leftContent = useMemo(
+    () => (
+      <Button
+        isIconOnly
+        variant="light"
+        isDisabled={!canGoPrev}
+        onPress={() => router.push(`/reflection/${prevWeekStartDate}`)}
+      >
+        <ChevronBackOutline
+          color={canGoPrev ? "#9CA3AF" : "#D1D5DB"}
+          width="24px"
+          height="24px"
+        />
+      </Button>
+    ),
+    [canGoPrev, prevWeekStartDate, router],
+  );
+
+  const rightContent = useMemo(
+    () => (
+      <Button
+        isIconOnly
+        variant="light"
+        isDisabled={!canGoNext}
+        onPress={() => router.push(`/reflection/${nextWeekStartDate}`)}
+      >
+        <ChevronForwardOutline
+          color={canGoNext ? "#9CA3AF" : "#D1D5DB"}
+          width="24px"
+          height="24px"
+        />
+      </Button>
+    ),
+    [canGoNext, nextWeekStartDate, router],
+  );
+
+  useEffect(() => {
+    setHeader({
+      title: `${startDate} - ${endDate}`,
+      leftContent,
+      rightContent,
+    });
+  }, [setHeader, startDate, endDate, leftContent, rightContent]);
 
   // 初回レンダリング後にプリフェッチ
   useEffect(() => {
@@ -114,41 +160,6 @@ export default function ReflectionDetailPage() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      {/* ヘッダー */}
-      <header className="flex items-center justify-between border-gray-200 border-b bg-white px-4 py-3">
-        <Button
-          isIconOnly
-          variant="light"
-          isDisabled={!canGoPrev}
-          onPress={() => router.push(`/reflection/${prevWeekStartDate}`)}
-        >
-          <ChevronBackOutline
-            color={canGoPrev ? "#9CA3AF" : "#4B5563"}
-            width="24px"
-            height="24px"
-          />
-        </Button>
-
-        <div className="text-center">
-          <h1 className="font-bold text-gray-900 text-lg">
-            {startDate} - {endDate}
-          </h1>
-        </div>
-
-        <Button
-          isIconOnly
-          variant="light"
-          isDisabled={!canGoNext}
-          onPress={() => router.push(`/reflection/${nextWeekStartDate}`)}
-        >
-          <ChevronForwardOutline
-            color={canGoNext ? "#9CA3AF" : "#4B5563"}
-            width="24px"
-            height="24px"
-          />
-        </Button>
-      </header>
-
       {/* メインコンテンツ */}
       <div className="flex-1 overflow-auto">
         <div className="mx-auto max-w-2xl">

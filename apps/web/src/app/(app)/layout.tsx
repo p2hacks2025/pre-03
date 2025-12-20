@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/contexts/auth-context";
 import { DiaryModalProvider } from "@/contexts/diary-modal-context";
+import { PageHeaderProvider } from "@/contexts/page-header-context";
 import { DiaryModal } from "@/features/diary";
 import { PopupOverlay, useDailyPopup } from "@/features/popup";
 import { useGlobalShortcuts } from "@/features/shortcuts";
 
+import { Header } from "./_components/header";
 import { Sidebar } from "./_components/sidebar";
 
 /**
@@ -56,14 +58,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <DiaryModalProvider>
-      <div className="flex min-h-screen bg-white">
-        <Sidebar />
-        <main className="flex-1 overflow-auto">{children}</main>
-        <DailyPopupChecker />
-        <PopupOverlay />
-        <DiaryModal />
-        <GlobalShortcutsHandler />
-      </div>
+      <PageHeaderProvider>
+        <div className="flex min-h-screen bg-white">
+          <Sidebar />
+          <div className="flex flex-1 flex-col overflow-auto">
+            <Header />
+            <main className="flex-1">{children}</main>
+          </div>
+          <DailyPopupChecker />
+          <PopupOverlay />
+          <DiaryModal />
+          <GlobalShortcutsHandler />
+        </div>
+      </PageHeaderProvider>
     </DiaryModalProvider>
   );
 }

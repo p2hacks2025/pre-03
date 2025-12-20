@@ -26,13 +26,14 @@ export const DetailDiary = ({ diaryEntries }: DetailDiaryProps) => {
 
   return (
     <div className="flex flex-col gap-3 px-4 pt-4 pb-6">
-      {diaryEntries.map((entry) => (
+      {diaryEntries.map((entry, index) => (
         <UserTimelineItem
           key={entry.id}
           content={entry.content}
           createdAt={entry.createdAt}
           uploadImageUrl={entry.uploadImageUrl}
           author={{ username: "", avatarUrl: null }}
+          index={index}
         />
       ))}
     </div>

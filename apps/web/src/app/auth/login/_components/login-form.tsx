@@ -28,7 +28,7 @@ export const LoginForm = () => {
       await login(values.email, values.password);
       router.push("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "ログインに失敗しました");
     }
   };
 
@@ -41,7 +41,7 @@ export const LoginForm = () => {
           <Input
             {...field}
             type="email"
-            label="Email"
+            label="メールアドレス"
             placeholder="user@example.com"
             isInvalid={!!error}
             errorMessage={error?.message}
@@ -56,7 +56,7 @@ export const LoginForm = () => {
           <Input
             {...field}
             type="password"
-            label="Password"
+            label="パスワード"
             placeholder="********"
             isInvalid={!!error}
             errorMessage={error?.message}
@@ -76,7 +76,7 @@ export const LoginForm = () => {
         fullWidth
         isLoading={form.formState.isSubmitting}
       >
-        Login
+        ログイン
       </Button>
     </form>
   );

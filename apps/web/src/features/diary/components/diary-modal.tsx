@@ -10,7 +10,7 @@ import { DiaryForm } from "./diary-form";
 
 /**
  * 日記作成モーダル
- * サイドバーを除く部分の中央に表示
+ * 画面全体の中央に表示
  */
 export const DiaryModal = () => {
   const { isOpen, close } = useDiaryModal();
@@ -39,7 +39,7 @@ export const DiaryModal = () => {
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 left-60 z-40 flex items-center justify-center bg-black/50 p-6">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-6">
       <div className="w-full max-w-2xl animate-[fadeIn_200ms_ease-out] rounded-xl bg-white shadow-xl">
         <header className="flex items-center justify-between border-gray-200 border-b px-6 py-4">
           <h2 className="font-bold text-gray-900 text-xl">日記を書く</h2>

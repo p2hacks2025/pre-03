@@ -31,7 +31,7 @@ export const SignupForm = () => {
       await signup(values.email, values.password, values.displayName);
       router.push("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Signup failed");
+      setError(err instanceof Error ? err.message : "登録に失敗しました");
     }
   };
 
@@ -58,7 +58,7 @@ export const SignupForm = () => {
           <Input
             {...field}
             type="email"
-            label="Email"
+            label="メールアドレス"
             placeholder="user@example.com"
             isInvalid={!!error}
             errorMessage={error?.message}
@@ -73,7 +73,7 @@ export const SignupForm = () => {
           <Input
             {...field}
             type="password"
-            label="Password"
+            label="パスワード"
             placeholder="********"
             isInvalid={!!error}
             errorMessage={error?.message}
@@ -88,7 +88,7 @@ export const SignupForm = () => {
           <Input
             {...field}
             type="password"
-            label="Confirm Password"
+            label="パスワード（確認）"
             placeholder="********"
             isInvalid={!!error}
             errorMessage={error?.message}
@@ -108,7 +108,7 @@ export const SignupForm = () => {
         fullWidth
         isLoading={form.formState.isSubmitting}
       >
-        Sign Up
+        新規登録
       </Button>
     </form>
   );

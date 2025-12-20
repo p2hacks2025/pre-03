@@ -1,79 +1,57 @@
 "use client";
 
-import { useState } from "react";
-import { LogOutOutline, RefreshOutline } from "react-ionicons";
-import { Button, Spinner } from "@heroui/react";
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { PulseOutline } from "react-ionicons";
+import { Button } from "@heroui/react";
+import Link from "next/link";
 
-import { useAuth } from "@/contexts/auth-context";
-import {
-  EntryList,
-  ProfileHeader,
-  useProfileEntries,
-} from "@/features/profile";
+import { usePageHeader } from "@/contexts/page-header-context";
+import { ProfileCard, WeeklyWorldPreview } from "@/features/profile";
+import { PROFILE_COLORS } from "@/features/profile/lib/colors";
 
 export default function ProfilePage() {
-  const router = useRouter();
-  const { logout } = useAuth();
-  const { refresh, isLoading } = useProfileEntries();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { setHeader } = usePageHeader();
 
-  const handleLogout = async () => {
-    const confirmed = window.confirm("ログアウトしますか？");
-    if (!confirmed) return;
-
-    setIsLoggingOut(true);
-    try {
-      await logout();
-      router.push("/auth/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
+  useEffect(() => {
+    setHeader({
+      title: "プロフィール",
+      rightContent: (
+        <Button as={Link} href="/health" isIconOnly variant="light">
+          <PulseOutline color="#9CA3AF" width="20px" height="20px" />
+        </Button>
+      ),
+    });
+  }, [setHeader]);
 
   return (
-    <div className="h-full overflow-auto">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-gray-200 border-b bg-white/95 px-6 py-4 backdrop-blur">
-        <h1 className="font-bold text-gray-900 text-xl">プロフィール</h1>
-        <div className="flex items-center gap-2">
-          <Button
-            isIconOnly
-            variant="light"
-            onPress={refresh}
-            isDisabled={isLoading}
-          >
-            <RefreshOutline
-              color="#9CA3AF"
-              width="20px"
-              height="20px"
-              cssClasses={isLoading ? "animate-spin" : ""}
-            />
-          </Button>
-          <Button
-            isIconOnly
-            variant="light"
-            onPress={handleLogout}
-            isDisabled={isLoggingOut}
-          >
-            {isLoggingOut ? (
-              <Spinner size="sm" />
-            ) : (
-              <LogOutOutline color="#EF4444" width="20px" height="20px" />
-            )}
-          </Button>
-        </div>
-      </header>
+    <div
+      className="relative min-h-full overflow-hidden"
+      style={{ backgroundColor: "#FFFFFF" }}
+    >
+      {/* 背景の円（装飾）- カードの下部分のみをカバー */}
+      <div
+        className="-translate-x-1/2 pointer-events-none absolute left-1/2"
+        style={{
+          top: "40%",
+          width: "200vw",
+          height: "200vw",
+          borderRadius: "50%",
+          backgroundColor: PROFILE_COLORS.background,
+          zIndex: 0,
+        }}
+      />
 
-      <div className="mx-auto max-w-2xl">
-        {/* プロフィールヘッダー（ゴールド背景） */}
-        <div style={{ backgroundColor: "#C4A86C" }}>
-          <ProfileHeader />
+      {/* メインコンテンツ */}
+      <div className="relative z-10 mx-auto max-w-2xl px-4">
+        {/* プロフィールカード */}
+        <div className="flex justify-center pt-8">
+          <ProfileCard />
         </div>
 
-        {/* エントリー一覧 */}
-        <EntryList />
+        {/* 今週の世界 */}
+        <div className="-mt-8 flex justify-center">
+          <WeeklyWorldPreview />
+        </div>
       </div>
     </div>
   );

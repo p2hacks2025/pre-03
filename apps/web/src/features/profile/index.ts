@@ -1,7 +1,15 @@
 // Components
-
-export { EntryList } from "./components/entry-list";
-export { ProfileHeader } from "./components/profile-header";
+export { ProfileAvatarDisplay } from "./components/profile-avatar-display";
+export { ProfileCard } from "./components/profile-card";
+export { ProfileStatsRow } from "./components/profile-stats-row";
+export { ShareWorldButton } from "./components/share-world-button";
+export { StatDivider, StatItem } from "./components/stat-item";
+export { WeeklyWorldPreview } from "./components/weekly-world-preview";
+// Hooks
+export {
+  type CurrentWeekWorldReturn,
+  useCurrentWeekWorld,
+} from "./hooks/use-current-week-world";
 export {
   type UseProfileAvatarReturn,
   useProfileAvatar,
@@ -10,13 +18,9 @@ export {
   type UseProfileEditReturn,
   useProfileEdit,
 } from "./hooks/use-profile-edit";
-// Hooks
-export {
-  type SortOrder,
-  type UseProfileEntriesReturn,
-  useProfileEntries,
-} from "./hooks/use-profile-entries";
 export {
   type ProfileStats,
   useProfileStats,
 } from "./hooks/use-profile-stats";
+
+export type { StatItemProps } from "./components/stat-item";

@@ -18,12 +18,12 @@ export const DetailTabs = ({ activeTab, onTabChange }: DetailTabsProps) => {
       <div className="flex">
         <button
           type="button"
-          className="flex-1 border-white border-b-2 py-3 text-center"
+          className="flex-1 border-gray-400 border-b-2 py-3 text-center"
           onClick={() => onTabChange("diary")}
         >
           <span
             className={`font-bold text-xl transition-colors ${
-              activeTab === "diary" ? "text-[#DF6800]" : "text-white"
+              activeTab === "diary" ? "text-[#DF6800]" : "text-gray-400"
             }`}
           >
             日記
@@ -31,12 +31,12 @@ export const DetailTabs = ({ activeTab, onTabChange }: DetailTabsProps) => {
         </button>
         <button
           type="button"
-          className="flex-1 border-white border-b-2 py-3 text-center"
+          className="flex-1 border-gray-400 border-b-2 py-3 text-center"
           onClick={() => onTabChange("timeline")}
         >
           <span
             className={`font-bold text-xl transition-colors ${
-              activeTab === "timeline" ? "text-[#DF6800]" : "text-white"
+              activeTab === "timeline" ? "text-[#DF6800]" : "text-gray-400"
             }`}
           >
             住人の様子

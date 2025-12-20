@@ -69,6 +69,11 @@ const convertApiWeeksToWeekInfo = (apiWeeks: CalendarWeek[]): WeekInfo[] => {
 };
 
 /**
+ * 初期ロード時に取得する月数
+ */
+const INITIAL_MONTHS_COUNT = 6;
+
+/**
  * カレンダーデータを取得するカスタムフック
  *
  * @example
@@ -200,6 +205,83 @@ export const useCalendar = (): UseCalendarReturn => {
   );
 
   /**
+   * 初期ロード用：複数月分を一括取得
+   */
+  const fetchInitialMonths = useCallback(
+    async (startYear: number, startMonth: number, count: number) => {
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+      let year = startYear;
+      let month = startMonth;
+      const newMonthGroups: MonthGroup[] = [];
+
+      logger.debug("Fetching initial months", { startYear, startMonth, count });
+
+      for (let i = 0; i < count; i++) {
+        // 2年前より古い場合は終了
+        if (isOlderThanTwoYears(year, month)) break;
+
+        const monthId = getMonthId(year, month);
+        if (fetchedMonths.current.has(monthId)) {
+          const prev = getPreviousMonth(year, month);
+          year = prev.year;
+          month = prev.month;
+          continue;
+        }
+
+        try {
+          const res = await client.reflection.calendar.$get({
+            query: { year, month },
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            const newWeeks = convertApiWeeksToWeekInfo(data.weeks);
+            fetchedMonths.current.add(monthId);
+
+            newMonthGroups.push({
+              monthId,
+              month,
+              year,
+              weeks: newWeeks,
+              entryDates: data.entryDates,
+            });
+
+            logger.debug("Month fetched", {
+              year,
+              month,
+              weeksCount: newWeeks.length,
+            });
+          }
+        } catch (_error) {
+          logger.warn("Failed to fetch month, skipping", { year, month });
+        }
+
+        const prev = getPreviousMonth(year, month);
+        year = prev.year;
+        month = prev.month;
+      }
+
+      nextMonth.current = { year, month };
+      const hasMoreData = !isOlderThanTwoYears(year, month);
+
+      logger.info("Initial months fetched", {
+        count: newMonthGroups.length,
+        hasMore: hasMoreData,
+      });
+
+      setState({
+        monthGroups: newMonthGroups,
+        isLoading: false,
+        isFetchingMore: false,
+        error: null,
+        hasMore: hasMoreData,
+      });
+    },
+    [],
+  );
+
+  /**
    * 初回ロード
    */
   useEffect(() => {
@@ -211,8 +293,8 @@ export const useCalendar = (): UseCalendarReturn => {
     fetchedMonths.current.clear();
     nextMonth.current = null;
 
-    fetchMonth(currentYear, currentMonth, true);
-  }, [fetchMonth]);
+    fetchInitialMonths(currentYear, currentMonth, INITIAL_MONTHS_COUNT);
+  }, [fetchInitialMonths]);
 
   /**
    * 追加読み込み（前月を取得）
@@ -251,8 +333,8 @@ export const useCalendar = (): UseCalendarReturn => {
     nextMonth.current = null;
     setState((prev) => ({ ...prev, monthGroups: [] }));
 
-    fetchMonth(currentYear, currentMonth, true);
-  }, [fetchMonth]);
+    fetchInitialMonths(currentYear, currentMonth, INITIAL_MONTHS_COUNT);
+  }, [fetchInitialMonths]);
 
   return {
     monthGroups: state.monthGroups,

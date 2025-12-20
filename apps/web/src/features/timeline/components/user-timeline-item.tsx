@@ -1,5 +1,7 @@
 import Image from "next/image";
 
+import { FONT_FAMILY } from "@/lib/fonts";
+
 import { formatAbsoluteTime } from "../lib/format-time";
 
 import type { UserTimelineItemProps } from "./types";
@@ -25,11 +27,15 @@ export const UserTimelineItem = ({
   content,
   createdAt,
   uploadImageUrl,
+  index = 0,
 }: UserTimelineItemProps) => {
   const formattedDate = formatAbsoluteTime(createdAt);
 
   return (
-    <div className="overflow-hidden rounded-md border border-[#A28758]">
+    <div
+      className="animate-[fadeIn_200ms_ease-out_forwards] overflow-hidden rounded-md border border-[#A28758]"
+      style={{ opacity: 0, animationDelay: `${index * 50}ms` }}
+    >
       <div
         className="relative rounded-md p-5"
         style={{ backgroundColor: "#FFF4DE" }}
@@ -41,10 +47,18 @@ export const UserTimelineItem = ({
         />
 
         {/* 日時表示 */}
-        <p className="relative mb-1 text-black">{formattedDate}</p>
+        <p
+          className="relative mb-1 text-black"
+          style={{ fontFamily: FONT_FAMILY.ZEN_KURENAIDO }}
+        >
+          {formattedDate}
+        </p>
 
         {/* 本文 */}
-        <p className="relative whitespace-pre-wrap text-black leading-5">
+        <p
+          className="relative whitespace-pre-wrap text-black leading-5"
+          style={{ fontFamily: FONT_FAMILY.ZEN_KURENAIDO }}
+        >
           {content}
         </p>
 

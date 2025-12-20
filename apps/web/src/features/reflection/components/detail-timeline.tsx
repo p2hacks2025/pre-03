@@ -26,13 +26,14 @@ export const DetailTimeline = ({ timelineItems }: DetailTimelineProps) => {
 
   return (
     <div className="flex flex-col gap-3 px-4 pt-4 pb-6">
-      {timelineItems.map((item) => (
+      {timelineItems.map((item, index) => (
         <AiTimelineItem
           key={item.id}
           content={item.content}
           createdAt={item.createdAt}
           uploadImageUrl={item.uploadImageUrl}
           author={item.author}
+          index={index}
         />
       ))}
     </div>

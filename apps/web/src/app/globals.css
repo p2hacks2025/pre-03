@@ -23,3 +23,24 @@
     transform: translateY(0);
   }
 }
+
+/* Profile World Floating Animation */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(10px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes shadowPulse {
+  0%,
+  100% {
+    transform: scale(1.4);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}

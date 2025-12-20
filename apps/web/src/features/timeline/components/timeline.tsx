@@ -20,11 +20,11 @@ export interface TimelineProps {
 export const Timeline = ({ items }: TimelineProps) => {
   return (
     <div className="flex flex-col gap-3 p-4">
-      {items.map((item) =>
+      {items.map((item, index) =>
         item.type === "ai" ? (
-          <AiTimelineItem key={`ai-${item.id}`} {...item} />
+          <AiTimelineItem key={`ai-${item.id}`} {...item} index={index} />
         ) : (
-          <UserTimelineItem key={`user-${item.id}`} {...item} />
+          <UserTimelineItem key={`user-${item.id}`} {...item} index={index} />
         ),
       )}
     </div>
