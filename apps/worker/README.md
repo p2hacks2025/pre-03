@@ -8,7 +8,7 @@
 
 ## ディレクトリ構造
 
-`jobs → tasks` の2層構造
+`jobs → tasks → lib/infra` の3層構造
 
 ```
 src
@@ -19,8 +19,18 @@ src
 ├── tasks
 │   └── {task-name}.ts
 └── lib
-    ├── context.ts
-    ├── env.ts
+    ├── infra/          # インフラ層（DB・外部サービス操作）
+    │   ├── weekly-world.ts
+    │   ├── user-post.ts
+    │   ├── ai-post.ts
+    │   ├── user-profile.ts
+    │   └── storage.ts
+    ├── assets.ts       # アセット読み込み
+    ├── constants.ts    # 定数定義
+    ├── context.ts      # WorkerContext 生成
+    ├── env.ts          # 環境変数パース
+    ├── llm-config.ts   # LLM設定
+    ├── prompt.ts       # プロンプト定義
     └── index.ts
 ```
 
@@ -31,11 +41,14 @@ src
 | ファイル/ディレクトリ | 役割 | 触る頻度 |
 |---------------------|------|---------|
 | `jobs/` | ジョブ層（複数タスクのオーケストレーション） | 🟢 ジョブ追加 |
-| `tasks/` | タスク層（単一処理の実装） | 🟢 タスク追加 |
+| `tasks/` | タスク層（ビジネスロジック実装） | 🟢 タスク追加 |
+| `lib/infra/` | インフラ層（DB・外部サービス操作） | 🟡 DB操作追加時 |
 | `daemon.ts` | スケジュール定義・cron 登録 | 🟡 スケジュール追加時 |
 | `cli.ts` | CLI エントリーポイント | 🚫 稀 |
 | `lib/context.ts` | WorkerContext 生成 | 🟡 依存追加時 |
 | `lib/env.ts` | 環境変数パース | 🟡 環境変数追加時 |
+| `lib/prompt.ts` | プロンプト定義 | 🟡 プロンプト変更時 |
+| `lib/llm-config.ts` | LLM設定（モデル・パラメータ） | 🟡 LLM設定変更時 |
 
 ## 共通package
 

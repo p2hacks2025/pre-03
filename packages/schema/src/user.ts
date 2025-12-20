@@ -68,3 +68,26 @@ export const UpdateProfileOutputSchema = z
   .openapi("UpdateProfileOutput");
 
 export type UpdateProfileOutput = z.infer<typeof UpdateProfileOutputSchema>;
+
+/**
+ * GET /user/stats - プロフィール統計情報
+ */
+
+export const GetProfileStatsOutputSchema = z
+  .object({
+    totalPosts: z.number().int().min(0).openapi({
+      description: "ユーザーの総投稿数",
+      example: 100,
+    }),
+    worldCount: z.number().int().min(0).openapi({
+      description: "作られた世界の数",
+      example: 10,
+    }),
+    streakDays: z.number().int().min(0).openapi({
+      description: "連続投稿日数",
+      example: 9,
+    }),
+  })
+  .openapi("GetProfileStatsOutput");
+
+export type GetProfileStatsOutput = z.infer<typeof GetProfileStatsOutputSchema>;

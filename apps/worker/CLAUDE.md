@@ -42,8 +42,10 @@ cli.ts / daemon.ts（エントリーポイント）
 jobs/（ジョブ層）
     ↓ 呼び出し
 tasks/（タスク層）
+    ↓ 呼び出し
+lib/infra/（インフラ層）
     ↓ 使用
-lib/（共通ユーティリティ）
+lib/（共通ユーティリティ: context, assets, constants, env, prompt, llm-config）
 ```
 
 ---
@@ -57,17 +59,38 @@ src/
 │
 ├── jobs/               # ジョブ層（タスクのオーケストレーション）
 │   ├── index.ts        # ジョブ登録・エクスポート
-│   └── {job-name}.ts   # 個別ジョブ（health-check.ts）
+│   ├── health-check.ts
+│   ├── daily-update.ts
+│   ├── weekly-reset.ts
+│   ├── ai-post-short-term.ts
+│   ├── ai-post-long-term.ts
+│   └── notification-test.ts
 │
-├── tasks/              # タスク層（単一処理）
+├── tasks/              # タスク層（ビジネスロジック）
 │   ├── index.ts        # タスクエクスポート
-│   └── {task-name}.ts  # 個別タスク（health.ts）
+│   ├── health.ts       # ヘルスチェック
+│   ├── daily-update.ts # 日次更新処理
+│   ├── weekly-reset.ts # 週次リセット処理
+│   ├── ai-post.ts      # AI投稿生成
+│   ├── notification.ts # 通知処理
+│   └── utils.ts        # ユーティリティ関数
 │
-└── lib/                # 共通ユーティリティ
-    ├── index.ts        # 統合エクスポート
-    ├── assets.ts       # アセット読み込み（画像・プロンプト）
-    ├── context.ts      # WorkerContext 生成
-    └── env.ts          # 環境変数パース
+├── lib/                # 共通ユーティリティ
+│   ├── index.ts        # 統合エクスポート
+│   ├── assets.ts       # アセット読み込み（画像）
+│   ├── constants.ts    # 定数定義
+│   ├── context.ts      # WorkerContext 生成
+│   ├── env.ts          # 環境変数パース
+│   ├── llm-config.ts   # LLM設定（モデル・パラメータ）
+│   ├── prompt.ts       # プロンプト定義
+│   │
+│   └── infra/          # インフラ層（DB・外部サービス操作）
+│       ├── index.ts    # 統合エクスポート
+│       ├── weekly-world.ts   # WeeklyWorld CRUD
+│       ├── user-post.ts      # UserPost 取得
+│       ├── ai-post.ts        # AiPost CRUD
+│       ├── user-profile.ts   # UserProfile 取得
+│       └── storage.ts        # Supabase Storage 操作
 ```
 
 ---
@@ -91,7 +114,8 @@ apps/worker (@repo/worker)
 └─── @packages/logger ──────────┘
 
 外部依存:
-├─── @google/genai ─────────────  Gemini API クライアント
+├─── @google/genai ─────────────  Gemini API クライアント（画像生成）
+├─── openai ────────────────────  OpenAI API クライアント（テキスト生成）
 ├─── @supabase/supabase-js ───── Supabase クライアント
 ├─── node-cron ─────────────────  スケジューラー
 ├─── dotenv ────────────────────  環境変数読み込み
@@ -115,22 +139,43 @@ apps/worker (@repo/worker)
 
 ### tasks/（タスク層）
 
-単一の処理を実行するタスク層。DB 操作、外部 API 呼び出しなど。
+ビジネスロジックを実装するタスク層。infra 層を使用して処理を実行。
 
 | ファイル | 役割 |
 |---------|------|
 | `index.ts` | タスクエクスポート |
-| `{task-name}.ts` | 個別タスクの実装 |
+| `health.ts` | ヘルスチェック（DB・Supabase 接続確認） |
+| `daily-update.ts` | 日次更新処理（画像生成・ワールド更新） |
+| `weekly-reset.ts` | 週次リセット処理（新週ワールド作成） |
+| `ai-post.ts` | AI投稿生成処理 |
+| `notification.ts` | 通知処理 |
+| `utils.ts` | 日付計算などのユーティリティ |
 
 → 実装例は [RECIPES.md](./RECIPES.md#タスクの追加) を参照
+
+### lib/infra/（インフラ層）
+
+データベース・外部サービスへのアクセスを提供するインフラ層。
+
+| ファイル | 役割 |
+|---------|------|
+| `index.ts` | 統合エクスポート |
+| `weekly-world.ts` | WeeklyWorld CRUD（取得・作成・更新） |
+| `user-post.ts` | UserPost 取得（日別・週別・ランダム） |
+| `ai-post.ts` | AiPost CRUD（作成・重複チェック） |
+| `user-profile.ts` | UserProfile 取得 |
+| `storage.ts` | Supabase Storage 操作（画像アップロード） |
 
 ### lib/（共通ユーティリティ）
 
 | ファイル | 役割 |
 |---------|------|
-| `assets.ts` | アセット読み込み（ベース画像、ガイド画像、システムプロンプト） |
+| `assets.ts` | アセット読み込み（ベース画像） |
+| `constants.ts` | 定数定義（フィールドID範囲など） |
 | `context.ts` | `WorkerContext` 生成（db, logger, supabase, env） |
 | `env.ts` | 環境変数パース（dotenv + @t3-oss/env-core） |
+| `llm-config.ts` | LLM設定（モデル名・パラメータ） |
+| `prompt.ts` | プロンプト定義（シーン記述・画像生成用） |
 | `index.ts` | 統合エクスポート |
 
 → 拡張方法は [RECIPES.md](./RECIPES.md#workercontext-の拡張) を参照
@@ -201,14 +246,15 @@ pnpm worker daemon
 
 | パターン | 参考ファイル |
 |---------|-------------|
-| DB 操作タスク | `tasks/health.ts`（`checkDb`）、`tasks/daily-update.ts` |
-| Supabase 操作タスク | `tasks/health.ts`（`checkSupabase`） |
-| Storage 操作タスク | `tasks/daily-update.ts`（`uploadGeneratedImage`） |
-| 外部 API 呼び出しタスク | `tasks/daily-update.ts`（`generateImage`） |
-| 複数タスクのオーケストレーション | `jobs/health-check.ts`、`jobs/daily-update.ts` |
+| DB 操作（infra層） | `lib/infra/weekly-world.ts`、`lib/infra/user-post.ts` |
+| Storage 操作（infra層） | `lib/infra/storage.ts` |
+| タスク実装（処理統合） | `tasks/daily-update.ts`、`tasks/ai-post.ts` |
+| 外部 API 呼び出し | `tasks/daily-update.ts`（`generateImage`, `generateSceneDescription`） |
+| ジョブ実装（オーケストレーション） | `jobs/daily-update.ts`、`jobs/ai-post-short-term.ts` |
 | スケジュール定義 | `daemon.ts`（`schedules` 配列） |
 | Context 拡張 | `lib/context.ts` |
-| アセット読み込み | `lib/assets.ts` |
+| プロンプト管理 | `lib/prompt.ts` |
+| LLM設定管理 | `lib/llm-config.ts` |
 
 ---
 
@@ -230,8 +276,12 @@ pnpm worker daemon
 
 | ジョブ名 | 説明 |
 |---------|------|
-| `daily-update` | 1日の終わりに画像を更新（Gemini API で画像生成） |
 | `health-check` | DB・Supabase 接続チェック |
+| `daily-update` | 日次画像更新（Gemini API で画像生成） |
+| `weekly-reset` | 週次リセット（新週ワールド作成） |
+| `ai-post-short-term` | 短期AI投稿生成（直近投稿への反応） |
+| `ai-post-long-term` | 長期AI投稿生成（過去投稿への反応） |
+| `notification-test` | 通知テスト |
 
 ---
 
@@ -244,8 +294,11 @@ pnpm worker daemon
 | `DATABASE_URL` | PostgreSQL 接続文字列 |
 | `SUPABASE_URL` | Supabase プロジェクト URL |
 | `SUPABASE_ANON_KEY` | Supabase 匿名キー |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase サービスロールキー |
 | `GOOGLE_API_KEY` | Google AI API キー（Gemini 画像生成用） |
-| `DEFAULT_AI_PROFILE_ID` | デフォルトの AI プロファイル UUID |
+| `OPENAI_API_KEY` | OpenAI API キー（テキスト生成用） |
+| `ONESIGNAL_APP_ID` | OneSignal アプリID（通知用） |
+| `ONESIGNAL_REST_API_KEY` | OneSignal REST API キー |
 
 ### 環境変数の読み込み
 

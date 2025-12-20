@@ -65,10 +65,7 @@ export const LoginScreen = () => {
         <StyledView className="flex-1 justify-center">
           <StyledView className="mb-8 items-center">
             <StyledText className="font-bold text-3xl text-foreground">
-              おかえりなさい
-            </StyledText>
-            <StyledText className="mt-2 text-center text-muted">
-              アカウントにログインして続けましょう
+              ログイン
             </StyledText>
           </StyledView>
 

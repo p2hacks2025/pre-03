@@ -6,17 +6,7 @@ import type { TextInput } from "react-native";
 import { useAuth } from "@/contexts/auth-context";
 import { createAuthenticatedClient } from "@/lib/api";
 
-import type {
-  ProfileEditActions,
-  ProfileEditState,
-  UpdateProfileNameParams,
-} from "../types";
-
-export interface UseProfileEditReturn
-  extends ProfileEditState,
-    ProfileEditActions {
-  inputRef: React.RefObject<TextInput | null>;
-}
+import type { UpdateProfileNameParams, UseProfileEditReturn } from "../types";
 
 /**
  * プロフィール名を保存
@@ -56,12 +46,14 @@ export const useProfileEdit = (): UseProfileEditReturn => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [editName, setEditName] = useState(profile?.displayName ?? "");
+  const [draftDisplayName, setDraftDisplayName] = useState(
+    profile?.displayName ?? "",
+  );
   const inputRef = useRef<TextInput | null>(null);
 
   const startEdit = () => {
     if (!profile) return;
-    setEditName(profile.displayName);
+    setDraftDisplayName(profile.displayName);
     setIsEditing(true);
     setTimeout(() => {
       inputRef.current?.focus();
@@ -70,14 +62,14 @@ export const useProfileEdit = (): UseProfileEditReturn => {
 
   const cancelEdit = () => {
     if (!profile) return;
-    setEditName(profile.displayName);
+    setDraftDisplayName(profile.displayName);
     setIsEditing(false);
   };
 
   const saveEdit = async () => {
     if (!profile) return;
 
-    const trimmedName = editName.trim();
+    const trimmedName = draftDisplayName.trim();
 
     if (!trimmedName) {
       toast.show({
@@ -128,10 +120,10 @@ export const useProfileEdit = (): UseProfileEditReturn => {
   return {
     isEditing,
     isSaving,
-    editName,
+    draftDisplayName,
     startEdit,
     cancelEdit,
-    setEditName,
+    setDraftDisplayName,
     saveEdit,
     inputRef,
   };

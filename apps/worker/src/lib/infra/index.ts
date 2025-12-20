@@ -1,6 +1,7 @@
 // AI Post
 export {
   type CreateAiPostParams,
+  countRecentAiPosts,
   createAiPost,
   getRandomAiProfile,
   hasExistingAiPost,
