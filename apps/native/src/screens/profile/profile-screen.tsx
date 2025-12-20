@@ -2,23 +2,21 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Spinner, useToast } from "heroui-native";
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
 import { HEADER_HEIGHT, Header } from "@/components";
 import { useAuth } from "@/contexts/auth-context";
-import { EntryList, ProfileHeader } from "@/features/profile";
+import {
+  BackgroundCircle,
+  ProfileCard,
+  WeeklyWorldPreview,
+} from "@/features/profile";
 
 const StyledView = withUniwind(View);
-const StyledScrollView = withUniwind(ScrollView);
 const StyledPressable = withUniwind(Pressable);
 const StyledIonicons = withUniwind(Ionicons);
-
-// カラー定義
-const COLORS = {
-  headerBackground: "#C4A86C",
-};
 
 export const ProfileScreen = () => {
   const router = useRouter();
@@ -94,28 +92,35 @@ export const ProfileScreen = () => {
   );
 
   return (
-    <StyledView className="flex-1 bg-background">
+    <StyledView className="flex-1 bg-white">
+      {/* 背景の円（最背面） */}
+      <BackgroundCircle />
+
+      {/* Header（最前面） */}
       <Header
         title="プロフィール"
         leftContent={leftContent}
         rightContent={rightContent}
       />
 
-      <StyledScrollView
+      {/* メインコンテンツ */}
+      <StyledView
         className="flex-1"
-        contentContainerStyle={{
-          paddingTop: insets.top + HEADER_HEIGHT,
-          paddingBottom: insets.bottom + 16,
-        }}
+        style={{ paddingTop: insets.top + HEADER_HEIGHT }}
       >
-        {/* プロフィール情報（ゴールド背景） */}
-        <StyledView style={{ backgroundColor: COLORS.headerBackground }}>
-          <ProfileHeader />
+        {/* プロフィールカード */}
+        <StyledView className="pt-4" style={{ zIndex: 2 }}>
+          <ProfileCard />
         </StyledView>
 
-        {/* エントリー一覧 */}
-        <EntryList />
-      </StyledScrollView>
+        {/* 今週の世界（カードと一部重なる） */}
+        <StyledView
+          className="items-center"
+          style={{ marginTop: -20, zIndex: 1 }}
+        >
+          <WeeklyWorldPreview />
+        </StyledView>
+      </StyledView>
     </StyledView>
   );
 };
