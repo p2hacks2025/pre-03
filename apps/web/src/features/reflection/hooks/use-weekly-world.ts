@@ -7,7 +7,7 @@ import {
   parseISODate,
 } from "@/features/calendar/lib/date-utils";
 import { client } from "@/lib/api";
-import { logger } from "@/lib/logger";
+import { clientLogger as logger } from "@/lib/logger-client";
 
 import type { WeeklyWorldData } from "../types";
 

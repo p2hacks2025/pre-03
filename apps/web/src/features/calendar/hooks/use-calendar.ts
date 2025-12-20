@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { client } from "@/lib/api";
-import { logger } from "@/lib/logger";
+import { clientLogger as logger } from "@/lib/logger-client";
 
 import { createWeekInfo, parseISODate } from "../lib/date-utils";
 

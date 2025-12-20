@@ -29,7 +29,7 @@ export const SignupForm = () => {
     setError("");
     try {
       await signup(values.email, values.password, values.displayName);
-      router.push("/dashboard");
+      router.push("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Signup failed");
     }

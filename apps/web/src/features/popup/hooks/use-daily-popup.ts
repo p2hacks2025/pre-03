@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { usePopup } from "@/contexts/popup-context";
 import { client } from "@/lib/api";
-import { logger } from "@/lib/logger";
+import { clientLogger as logger } from "@/lib/logger-client";
 
 import { popupStorage } from "../lib/popup-storage";
 

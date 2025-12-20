@@ -4,7 +4,7 @@ import { useState } from "react";
 import { postMultipart } from "@packages/api-contract";
 
 import { client } from "@/lib/api";
-import { logger } from "@/lib/logger";
+import { clientLogger as logger } from "@/lib/logger-client";
 
 import type { CreateEntryOutput } from "@packages/schema/entry";
 

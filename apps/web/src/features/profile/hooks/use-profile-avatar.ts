@@ -5,7 +5,7 @@ import { postMultipart } from "@packages/api-contract";
 
 import { useAuth } from "@/contexts/auth-context";
 import { client } from "@/lib/api";
-import { logger } from "@/lib/logger";
+import { clientLogger as logger } from "@/lib/logger-client";
 
 import type { UploadAvatarOutput } from "@packages/schema/user";
 

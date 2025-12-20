@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { client } from "@/lib/api";
-import { logger } from "@/lib/logger";
+import { clientLogger as logger } from "@/lib/logger-client";
 
 import type { TimelineEntry } from "@packages/schema/entry";
 
