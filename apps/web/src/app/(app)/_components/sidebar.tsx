@@ -17,10 +17,10 @@ export const Sidebar = () => {
 
   // アクティブ状態に応じたアイコン色
   const getIconColor = (href: string) =>
-    pathname === href ? "#D6B575" : "#9CA3AF";
+    pathname === href ? "#a07a2e" : "#9CA3AF";
 
   return (
-    <aside className="flex h-screen w-60 flex-col border-gray-200 border-r bg-white">
+    <aside className="sticky top-0 flex h-screen w-60 flex-col border-gray-200 border-r bg-white">
       <div className="flex h-16 items-center px-4">
         <h1 className="font-bold text-gray-900 text-lg">新世界の声</h1>
       </div>

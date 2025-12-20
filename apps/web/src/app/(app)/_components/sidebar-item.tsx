@@ -18,10 +18,10 @@ export const SidebarItem = ({ href, icon, label }: SidebarItemProps) => {
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-sm transition-colors ${
+      className={`flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-sm transition-all ${
         isActive
-          ? "bg-[#D6B575]/20 text-[#D6B575]"
-          : "text-gray-400 hover:bg-gray-800 hover:text-white"
+          ? "bg-[#D6B575]/20 text-[#a07a2e]"
+          : "text-gray-500 hover:bg-gray-100 hover:text-gray-500"
       }`}
     >
       {icon}
