@@ -1,7 +1,13 @@
 "use client";
 
+import {
+  CheckmarkCircleOutline,
+  CloseCircleOutline,
+  FileTrayStackedOutline,
+  GlobeOutline,
+  ServerOutline,
+} from "react-ionicons";
 import { Button, Card, CardBody, Chip } from "@heroui/react";
-import { CheckCircle2, Database, Globe, Server, XCircle } from "lucide-react";
 import Link from "next/link";
 
 type HealthResult = {
@@ -17,9 +23,9 @@ interface HealthContentProps {
 
 const StatusIcon = ({ ok }: { ok: boolean }) => {
   return ok ? (
-    <CheckCircle2 className="h-5 w-5 text-green-500" />
+    <CheckmarkCircleOutline color="#22C55E" width="20px" height="20px" />
   ) : (
-    <XCircle className="h-5 w-5 text-red-500" />
+    <CloseCircleOutline color="#EF4444" width="20px" height="20px" />
   );
 };
 
@@ -36,9 +42,13 @@ export const HealthContent = ({ api, db }: HealthContentProps) => {
             }`}
           >
             {allOk ? (
-              <CheckCircle2 className="h-6 w-6 text-green-600" />
+              <CheckmarkCircleOutline
+                color="#16A34A"
+                width="24px"
+                height="24px"
+              />
             ) : (
-              <XCircle className="h-6 w-6 text-red-600" />
+              <CloseCircleOutline color="#DC2626" width="24px" height="24px" />
             )}
           </div>
           <h1 className="font-semibold text-lg">
@@ -50,7 +60,7 @@ export const HealthContent = ({ api, db }: HealthContentProps) => {
           <CardBody className="divide-y divide-divider p-0">
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
-                <Server className="h-4 w-4 text-default-500" />
+                <ServerOutline color="#71717A" width="16px" height="16px" />
                 <div>
                   <p className="font-medium text-sm">API Server</p>
                   <p className="text-default-500 text-xs">{api.message}</p>
@@ -60,7 +70,7 @@ export const HealthContent = ({ api, db }: HealthContentProps) => {
             </div>
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
-                <Globe className="h-4 w-4 text-default-500" />
+                <GlobeOutline color="#71717A" width="16px" height="16px" />
                 <div>
                   <p className="font-medium text-sm">Environment</p>
                   <p className="text-default-500 text-xs">API runtime</p>
@@ -76,7 +86,11 @@ export const HealthContent = ({ api, db }: HealthContentProps) => {
             </div>
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
-                <Database className="h-4 w-4 text-default-500" />
+                <FileTrayStackedOutline
+                  color="#71717A"
+                  width="16px"
+                  height="16px"
+                />
                 <div>
                   <p className="font-medium text-sm">Database</p>
                   <p className="text-default-500 text-xs">{db.message}</p>
