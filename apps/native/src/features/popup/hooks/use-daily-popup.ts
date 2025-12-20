@@ -81,6 +81,13 @@ export const useDailyPopup = () => {
   const hasCheckedRef = useRef(false);
 
   useEffect(() => {
+    logger.debug("useDailyPopup effect", {
+      isLoaded,
+      isAuthenticated,
+      hasAccessToken: !!accessToken,
+      hasChecked: hasCheckedRef.current,
+    });
+
     if (!isLoaded || !isAuthenticated || !accessToken || hasCheckedRef.current)
       return;
     hasCheckedRef.current = true;
@@ -99,7 +106,6 @@ export const useDailyPopup = () => {
           logger.debug("Already checked this date, skipping popup");
           return;
         }
-
         await popupStorage.setLastLaunchDate(response.date);
 
         logger.info("Daily update response", {
@@ -110,6 +116,11 @@ export const useDailyPopup = () => {
         });
 
         const popupItems = createPopupItemsFromResponse(response);
+        logger.debug("Popup items to enqueue", {
+          count: popupItems.length,
+          ids: popupItems.map((i) => i.id),
+        });
+
         for (const item of popupItems) {
           enqueue(item);
         }
