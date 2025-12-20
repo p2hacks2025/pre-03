@@ -34,8 +34,8 @@ const getPopupTitle = (type: "daily" | "weekly"): string => {
  */
 const getPopupMessage = (type: "daily" | "weekly"): string => {
   return type === "weekly"
-    ? "先週の日記がまとまり、新世界が完成しました。1週間でどんな出来事があったか振り返ってみましょう。"
-    : "昨日の日記によって、あなたの世界が成長しました。今日も起こったことを記録してみましょう。";
+    ? "新世界が完成しました。\n先週の記録を振り返りましょう。"
+    : "世界が変化しました。\n今日も続けて記録してみましょう。";
 };
 
 /**
@@ -53,7 +53,7 @@ const createPopupItemsFromResponse = (
       title: getPopupTitle("weekly"),
       message: getPopupMessage("weekly"),
       imageUrl: response.weekly.imageUrl,
-      closeButtonLabel: "確認しました",
+      closeButtonLabel: "OK",
     });
   }
 
@@ -63,7 +63,7 @@ const createPopupItemsFromResponse = (
       title: getPopupTitle("daily"),
       message: getPopupMessage("daily"),
       imageUrl: response.daily.imageUrl,
-      closeButtonLabel: "閉じる",
+      closeButtonLabel: "OK",
     });
   }
 
@@ -81,6 +81,13 @@ export const useDailyPopup = () => {
   const hasCheckedRef = useRef(false);
 
   useEffect(() => {
+    logger.debug("useDailyPopup effect", {
+      isLoaded,
+      isAuthenticated,
+      hasAccessToken: !!accessToken,
+      hasChecked: hasCheckedRef.current,
+    });
+
     if (!isLoaded || !isAuthenticated || !accessToken || hasCheckedRef.current)
       return;
     hasCheckedRef.current = true;
@@ -99,7 +106,6 @@ export const useDailyPopup = () => {
           logger.debug("Already checked this date, skipping popup");
           return;
         }
-
         await popupStorage.setLastLaunchDate(response.date);
 
         logger.info("Daily update response", {
@@ -110,6 +116,11 @@ export const useDailyPopup = () => {
         });
 
         const popupItems = createPopupItemsFromResponse(response);
+        logger.debug("Popup items to enqueue", {
+          count: popupItems.length,
+          ids: popupItems.map((i) => i.id),
+        });
+
         for (const item of popupItems) {
           enqueue(item);
         }

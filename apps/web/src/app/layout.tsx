@@ -1,6 +1,8 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { DotGothic16, Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 
 import { AuthProvider } from "@/contexts/auth-context";
+import { PopupProvider } from "@/contexts/popup-context";
 
 import { Providers } from "./providers";
 
@@ -18,9 +20,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const dotGothic = DotGothic16({
+  variable: "--font-dot-gothic",
+  weight: "400",
+  subsets: ["latin"],
+});
+
+const zenKurenaido = localFont({
+  src: "../../public/fonts/ZenKurenaido-Regular.ttf",
+  variable: "--font-zen-kurenaido",
+});
+
+const madoufmg = localFont({
+  src: "../../public/fonts/madoufmg.ttf",
+  variable: "--font-madoufmg",
+});
+
 export const metadata: Metadata = {
-  title: "Auth Demo",
-  description: "Authentication demo with Hono and Supabase",
+  title: "リフレクト新世界",
+  description: "何気ない日常のキラキラを可視化して充実した生活を実感する",
   icons: {
     icon: "/favicon.png",
   },
@@ -32,12 +50,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="light">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${dotGothic.variable} ${zenKurenaido.variable} ${madoufmg.variable} antialiased`}
       >
         <AuthProvider>
-          <Providers>{children}</Providers>
+          <PopupProvider>
+            <Providers>{children}</Providers>
+          </PopupProvider>
         </AuthProvider>
       </body>
     </html>

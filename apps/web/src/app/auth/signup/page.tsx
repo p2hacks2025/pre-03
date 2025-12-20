@@ -10,17 +10,17 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center p-8">
       <Card className="w-full max-w-md p-2">
         <CardHeader className="flex flex-col items-center gap-2">
-          <h2 className="font-semibold text-2xl">Sign Up</h2>
-          <p className="text-default-500 text-small">Create a new account</p>
+          <h2 className="font-semibold text-2xl">新規登録</h2>
+          <p className="text-default-500 text-small">新しいアカウントを作成</p>
         </CardHeader>
         <CardBody>
           <SignupForm />
         </CardBody>
         <CardFooter className="justify-center">
           <p className="text-default-500 text-sm">
-            Already have an account?{" "}
+            すでにアカウントをお持ちの方は{" "}
             <Link href="/auth/login" className="text-primary hover:underline">
-              Login
+              ログイン
             </Link>
           </p>
         </CardFooter>

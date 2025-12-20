@@ -2,3 +2,45 @@
 @plugin "../../hero.ts";
 @source "../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
 @custom-variant dark (&:is(.dark *));
+
+/* Popup Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Profile World Floating Animation */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(10px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes shadowPulse {
+  0%,
+  100% {
+    transform: scale(1.4);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
