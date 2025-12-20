@@ -1,0 +1,128 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+
+import { useAuth } from "@/contexts/auth-context";
+import { usePopup } from "@/contexts/popup-context";
+import { client } from "@/lib/api";
+import { clientLogger as logger } from "@/lib/logger-client";
+
+import { popupStorage } from "../lib/popup-storage";
+
+import type { DailyUpdateResponse, PopupConfig } from "../types";
+
+/**
+ * 日付更新 API を呼び出す
+ */
+const fetchDailyUpdate = async (): Promise<DailyUpdateResponse> => {
+  const res = await client.reflection["date-update"].$get();
+
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
+  }
+
+  return res.json();
+};
+
+/**
+ * ステータスに応じたポップアップのタイトルを返す
+ */
+const getPopupTitle = (type: "daily" | "weekly"): string => {
+  return type === "weekly" ? "週間サマリー" : "今日の振り返り";
+};
+
+/**
+ * ステータスに応じたポップアップのメッセージを返す
+ */
+const getPopupMessage = (type: "daily" | "weekly"): string => {
+  return type === "weekly"
+    ? "新世界が完成しました。\n先週の記録を振り返りましょう。"
+    : "世界が変化しました。\n今日も続けて記録してみましょう。";
+};
+
+/**
+ * API レスポンスからポップアップアイテムのリストを生成
+ * ウィークリーが先、デイリーが後（優先度順）
+ */
+const createPopupItemsFromResponse = (
+  response: DailyUpdateResponse,
+): PopupConfig[] => {
+  const items: PopupConfig[] = [];
+
+  if (response.weekly) {
+    items.push({
+      id: `weekly-${response.date}`,
+      title: getPopupTitle("weekly"),
+      message: getPopupMessage("weekly"),
+      imageUrl: response.weekly.imageUrl,
+      closeButtonLabel: "OK",
+    });
+  }
+
+  if (response.daily) {
+    items.push({
+      id: `daily-${response.date}`,
+      title: getPopupTitle("daily"),
+      message: getPopupMessage("daily"),
+      imageUrl: response.daily.imageUrl,
+      closeButtonLabel: "OK",
+    });
+  }
+
+  return items;
+};
+
+/**
+ * useDailyPopup
+ * 毎日 JST 0:00 以降の初回起動時に日付更新をチェックし、
+ * 更新があればポップアップを表示する
+ */
+export const useDailyPopup = () => {
+  const { enqueue, isLoaded } = usePopup();
+  const { user } = useAuth();
+  const hasCheckedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isLoaded || !user || hasCheckedRef.current) return;
+    hasCheckedRef.current = true;
+
+    const checkAndShowPopup = async () => {
+      try {
+        const lastLaunchDate = popupStorage.getLastLaunchDate();
+        const response = await fetchDailyUpdate();
+
+        logger.debug("Daily popup check", {
+          responseDate: response.date,
+          lastLaunchDate,
+        });
+
+        if (lastLaunchDate === response.date) {
+          logger.debug("Already checked this date, skipping popup");
+          return;
+        }
+
+        popupStorage.setLastLaunchDate(response.date);
+
+        logger.info("Daily update response", {
+          date: response.date,
+          status: response.status,
+          hasDaily: !!response.daily,
+          hasWeekly: !!response.weekly,
+        });
+
+        const popupItems = createPopupItemsFromResponse(response);
+        for (const item of popupItems) {
+          enqueue(item);
+        }
+      } catch (error) {
+        logger.error(
+          "Failed to check daily update",
+          {},
+          error instanceof Error ? error : new Error(String(error)),
+        );
+      }
+    };
+
+    checkAndShowPopup();
+  }, [enqueue, isLoaded, user]);
+};

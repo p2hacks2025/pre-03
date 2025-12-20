@@ -7,7 +7,7 @@ Next.js 15 + App Router によるフロントエンドアプリケーション�
 | カテゴリ | 技術 |
 |---------|------|
 | フレームワーク | Next.js 15 + App Router |
-| UI ライブラリ | shadcn/ui（Radix UI ベース） |
+| UI ライブラリ | HeroUI（@heroui/react） |
 | スタイリング | Tailwind CSS 4 |
 | フォーム | react-hook-form + Zod |
 | API 通信 | Hono RPC（@packages/api-contract） |
@@ -67,6 +67,7 @@ app/{route}/
 src/
 ├── app/                          # Next.js App Router
 │   ├── layout.tsx                # ルートレイアウト（AuthProvider）
+│   ├── providers.tsx             # HeroUI プロバイダー
 │   ├── page.tsx                  # ホームページ
 │   ├── globals.css               # グローバルスタイル（Tailwind）
 │   ├── auth/
@@ -87,9 +88,6 @@ src/
 │   │       └── avatar-upload.tsx
 │   └── health/
 │       └── page.tsx              # Server Component（async）
-│
-├── components/
-│   └── ui/                       # shadcn/ui コンポーネント
 │
 ├── contexts/
 │   └── auth-context.tsx          # 認証状態管理（React Context）
@@ -138,36 +136,47 @@ src/
 
 ---
 
-## UI ライブラリ（shadcn/ui）
+## UI ライブラリ（HeroUI）
 
-Radix UI をベースにした、カスタマイズ可能なコンポーネントライブラリ。
+React Aria をベースにした、アクセシブルでカスタマイズ可能なコンポーネントライブラリ。
 
-### 導入済みコンポーネント
+### プロバイダー設定
 
-| コンポーネント | ファイル | 用途 |
-|--------------|---------|------|
-| Avatar | `components/ui/avatar.tsx` | アバター表示 |
-| Badge | `components/ui/badge.tsx` | ステータスラベル |
-| Button | `components/ui/button.tsx` | ボタン（6 variants） |
-| Card | `components/ui/card.tsx` | カードレイアウト |
-| Form | `components/ui/form.tsx` | react-hook-form 統合 |
-| Input | `components/ui/input.tsx` | テキスト入力 |
-| Label | `components/ui/label.tsx` | フォームラベル |
+アプリケーション全体を `HeroUIProvider` でラップする必要がある。`app/providers.tsx` で設定済み。
 
-### コンポーネント追加
+```tsx
+// app/providers.tsx
+import { HeroUIProvider } from "@heroui/react";
 
-```bash
-# 新しいコンポーネントを追加
-pnpm dlx shadcn@latest add <component-name>
-
-# 例: Dialog を追加
-pnpm dlx shadcn@latest add dialog
+export function Providers({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  return <HeroUIProvider navigate={router.push}>{children}</HeroUIProvider>;
+}
 ```
 
-### 設定ファイル
+### 使用方法
 
-- `components.json`: shadcn/ui 設定
-- パスエイリアス: `@/components/ui/*`
+コンポーネントは `@heroui/react` から直接インポートして使用。
+
+```tsx
+import { Button, Input, Card } from "@heroui/react";
+
+// フォームでの使用例
+<Input
+  label="Email"
+  placeholder="user@example.com"
+  isInvalid={!!error}
+  errorMessage={error?.message}
+/>
+
+<Button color="primary" isLoading={isSubmitting}>
+  Submit
+</Button>
+```
+
+### ドキュメント
+
+- [HeroUI 公式ドキュメント](https://www.heroui.com/docs)
 
 ---
 
@@ -184,14 +193,6 @@ pnpm dlx shadcn@latest add dialog
 | `_lib/` | ページローカルロジック（validations, hooks） |
 
 → 実装例は [RECIPES.md](./RECIPES.md#ページの追加) を参照
-
-### components/（UI 層）
-
-再利用可能な UI コンポーネント。
-
-| フォルダ | 役割 |
-|---------|------|
-| `ui/` | shadcn/ui コンポーネント |
 
 ### contexts/（状態管理層）
 
@@ -293,7 +294,7 @@ pnpm dlx shadcn@latest add dialog
 ## 参考リンク
 
 - [Next.js 公式ドキュメント](https://nextjs.org/docs)
-- [shadcn/ui 公式](https://ui.shadcn.com/)
+- [HeroUI 公式ドキュメント](https://www.heroui.com/docs)
 - [Hono RPC](https://hono.dev/docs/guides/rpc)
 - [@opennextjs/cloudflare](https://opennext.js.org/cloudflare)
 - [Tailwind CSS 4](https://tailwindcss.com/docs)

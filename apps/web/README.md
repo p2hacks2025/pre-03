@@ -8,7 +8,7 @@
 
 ## ディレクトリ構造
 
-`app/ -> components/ -> lib/` の colocation-first 構造
+`app/ -> lib/` の colocation-first 構造
 
 ```
 src
@@ -17,10 +17,8 @@ src
 │   │   ├── page.tsx          # ページコンポーネント
 │   │   ├── _components/      # ページローカルコンポーネント
 │   │   └── _lib/             # ページローカルロジック
-│   └── layout.tsx
-├── components
-│   ├── ui/                   # shadcn/ui コンポーネント
-│   └── common/               # 複数ページ共有コンポーネント
+│   ├── layout.tsx
+│   └── providers.tsx         # HeroUI プロバイダー
 ├── contexts                  # グローバル Context
 ├── lib                       # グローバルユーティリティ
 └── middleware.ts             # リクエストログ・ID管理
@@ -35,14 +33,13 @@ src
 | `app/{route}/page.tsx` | ページコンポーネント | 🟢 ページ実装 |
 | `app/{route}/_components/` | ページローカルコンポーネント | 🟢 ページ実装 |
 | `app/{route}/_lib/` | ページローカルロジック（validations, hooks） | 🟢 ページ実装 |
-| `components/ui/` | shadcn/ui コンポーネント | 🟡 UI追加時 |
-| `components/common/` | 複数ページ共有コンポーネント | 🟡 共有化時 |
 | `middleware.ts` | リクエストログ・ID管理 | 🚫 稀 |
 | `env.ts` | 環境変数定義 | 🟡 環境変数追加時 |
 | `lib/api.ts` | API クライアント（Client Component 用） | 🚫 稀 |
 | `lib/api-server.ts` | API クライアント（Server Component 用） | 🚫 稀 |
 | `contexts/auth-context.tsx` | 認証状態管理 | 🚫 稀 |
 | `app/layout.tsx` | ルートレイアウト | 🚫 稀 |
+| `app/providers.tsx` | HeroUI プロバイダー | 🚫 稀 |
 
 ## 共通 package
 
@@ -62,7 +59,7 @@ src
 1. `app/{route}/page.tsx` にページコンポーネントを作成
 2. `app/{route}/_components/` にページ固有コンポーネントを配置
 3. （必要なら）`app/{route}/_lib/` にバリデーション・hooks を配置
-4. UI コンポーネントは `components/ui/` から import
+4. UI コンポーネントは `@heroui/react` から import
 
 -> 詳細な実装例は [RECIPES.md](./RECIPES.md#ページの追加) を参照
 
@@ -77,7 +74,7 @@ src
 
 1. `@packages/schema` のスキーマを使用（または `_lib/validations.ts` で拡張）
 2. `react-hook-form` + `@hookform/resolvers/zod` でフォーム状態管理
-3. `components/ui/form` の FormField でフィールドを構築
+3. HeroUI の `Input`, `Button` などのコンポーネントを使用
 
 ### ファイルアップロード機能の追加
 
