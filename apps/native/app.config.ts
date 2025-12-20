@@ -41,11 +41,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     buildNumber: String(buildConfig.ios.buildNumber),
   },
   android: {
+    package: "net.uiro.noval_android",
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff",
     },
     edgeToEdgeEnabled: true,
+    versionCode: buildConfig.android.versionCode,
   },
   web: {
     favicon: "./assets/favicon.png",

@@ -14,7 +14,8 @@
     "clean": "rm -rf node_modules/.cache .expo dist web-build",
     "eas:build": "eas build --platform all",
     "eas:build:ios": "eas build --platform ios --auto-submit",
-    "xcode:build:ios": "./scripts/build-ios.sh"
+    "build:ios": "./scripts/build-ios.sh",
+    "build:android": "./scripts/build-android.sh"
   },
   "dependencies": {
     "@expo-google-fonts/dotgothic16": "^0.4.1",
