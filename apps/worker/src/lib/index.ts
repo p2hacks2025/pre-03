@@ -20,6 +20,7 @@ export { getContext, type WorkerContext } from "./context";
 export { type Env, env } from "./env";
 export {
   type CreateAiPostParams,
+  countRecentAiPosts,
   createAiPost,
   createOrUpdateWorldBuildLog,
   createWeeklyWorld,
@@ -38,3 +39,8 @@ export {
   uploadGeneratedImage,
 } from "./infra/index";
 export { LLM_CONFIG, type LLMConfigKey } from "./llm-config";
+export {
+  getUnreplacedVariables,
+  interpolatePrompt,
+  type TemplateVariables,
+} from "./prompt";
