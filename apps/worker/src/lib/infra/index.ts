@@ -3,7 +3,9 @@ export {
   type CreateAiPostParams,
   countRecentAiPosts,
   countRecentAiPostsForUser,
+  countRecentAiPostsForUsers,
   createAiPost,
+  createAiPostsBatch,
   getRandomAiProfile,
   hasExistingAiPost,
 } from "./ai-post";

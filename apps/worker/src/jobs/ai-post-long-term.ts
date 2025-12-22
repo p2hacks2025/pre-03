@@ -1,4 +1,4 @@
-import { countRecentAiPostsForUser, type WorkerContext } from "@/lib";
+import { countRecentAiPostsForUsers, type WorkerContext } from "@/lib";
 import {
   AI_POST_CONFIG,
   fetchRandomHistoricalPostsForUser,
@@ -51,14 +51,16 @@ export const aiPostLongTerm = async (
       userCount: userIds.length,
     });
 
+    const recentCountMap = await countRecentAiPostsForUsers(
+      ctx,
+      userIds,
+      AI_POST_CONFIG.FREQUENCY_CHECK_WINDOW_MINUTES,
+    );
+
     // ユーザーごとにループ
     for (const userProfileId of userIds) {
       // ユーザーごとの頻度チェック
-      const userRecentCount = await countRecentAiPostsForUser(
-        ctx,
-        userProfileId,
-        AI_POST_CONFIG.FREQUENCY_CHECK_WINDOW_MINUTES,
-      );
+      const userRecentCount = recentCountMap.get(userProfileId) ?? 0;
       if (userRecentCount >= AI_POST_CONFIG.MAX_POSTS_PER_HOUR) {
         ctx.logger.debug("Skipping user: over per-user limit", {
           userProfileId,

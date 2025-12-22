@@ -1,7 +1,9 @@
 import type { AiProfile, UserPost } from "@packages/db";
 import OpenAI from "openai";
 import {
+  type CreateAiPostParams,
   createAiPost,
+  createAiPostsBatch,
   getAiPostGenerationPrompt,
   getAiPostStandalonePrompt,
   getRandomAiProfile,
@@ -323,20 +325,21 @@ export const processUserAiPosts = async (
     AI_POST_CONFIG.POSTS_PER_USER,
   );
 
-  let generated = 0;
-  for (const content of contents) {
-    await createAiPost(ctx, {
-      aiProfileId: aiProfile.id,
-      userProfileId: group.userProfileId,
-      content,
-      sourceStartAt,
-      sourceEndAt,
-      publishedAt: getRandomPublishedAt(scheduleMin, scheduleMax),
-    });
-    generated++;
+  if (contents.length === 0) {
+    return { generated: 0 };
   }
 
-  return { generated };
+  const posts: CreateAiPostParams[] = contents.map((content) => ({
+    aiProfileId: aiProfile.id,
+    userProfileId: group.userProfileId,
+    content,
+    sourceStartAt,
+    sourceEndAt,
+    publishedAt: getRandomPublishedAt(scheduleMin, scheduleMax),
+  }));
+
+  const created = await createAiPostsBatch(ctx, posts);
+  return { generated: created.length };
 };
 
 export const processHistoricalAiPost = async (
@@ -354,18 +357,19 @@ export const processHistoricalAiPost = async (
   );
   const sourceDate = new Date(diary.createdAt);
 
-  let generated = 0;
-  for (const content of contents) {
-    await createAiPost(ctx, {
-      aiProfileId: aiProfile.id,
-      userProfileId: diary.userProfileId,
-      content,
-      sourceStartAt: sourceDate,
-      sourceEndAt: sourceDate,
-      publishedAt: getRandomPublishedAt(scheduleMin, scheduleMax),
-    });
-    generated++;
+  if (contents.length === 0) {
+    return { generated: 0 };
   }
 
-  return { generated };
+  const posts: CreateAiPostParams[] = contents.map((content) => ({
+    aiProfileId: aiProfile.id,
+    userProfileId: diary.userProfileId,
+    content,
+    sourceStartAt: sourceDate,
+    sourceEndAt: sourceDate,
+    publishedAt: getRandomPublishedAt(scheduleMin, scheduleMax),
+  }));
+
+  const created = await createAiPostsBatch(ctx, posts);
+  return { generated: created.length };
 };

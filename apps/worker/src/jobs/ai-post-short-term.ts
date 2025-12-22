@@ -1,4 +1,4 @@
-import { countRecentAiPostsForUser, type WorkerContext } from "@/lib";
+import { countRecentAiPostsForUsers, type WorkerContext } from "@/lib";
 import {
   AI_POST_CONFIG,
   calculateUserChance,
@@ -59,14 +59,16 @@ export const aiPostShortTerm = async (
       maxMinutes,
     });
 
+    const userIds = allGroups.map((g) => g.userProfileId);
+    const recentCountMap = await countRecentAiPostsForUsers(
+      ctx,
+      userIds,
+      AI_POST_CONFIG.FREQUENCY_CHECK_WINDOW_MINUTES,
+    );
+
     // ユーザーごとにループ（フォールバック方式）
     for (const userGroup of allGroups) {
-      // ユーザーごとの残り枠チェック
-      const userRecentCount = await countRecentAiPostsForUser(
-        ctx,
-        userGroup.userProfileId,
-        AI_POST_CONFIG.FREQUENCY_CHECK_WINDOW_MINUTES,
-      );
+      const userRecentCount = recentCountMap.get(userGroup.userProfileId) ?? 0;
       if (userRecentCount >= AI_POST_CONFIG.MAX_POSTS_PER_HOUR) {
         ctx.logger.debug("Skipping user: over per-user limit", {
           userProfileId: userGroup.userProfileId,
