@@ -58,6 +58,14 @@ jobs:
       - name: Restart worker daemon
         run: |
           cd apps/worker
+          # pm2管理のプロセスを停止・削除
+          pm2 stop worker || true
           pm2 delete worker || true
+          # 残存するdaemon.tsプロセスをすべてkill
+          pkill -f "src/daemon.ts" || true
+          sleep 2
+          # まだ残っていれば強制終了
+          pkill -9 -f "src/daemon.ts" || true
+          # 新規起動
           pm2 start "pnpm daemon" --name worker
           pm2 save
