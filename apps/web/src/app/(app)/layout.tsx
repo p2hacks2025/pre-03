@@ -59,11 +59,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <DiaryModalProvider>
       <PageHeaderProvider>
-        <div className="flex min-h-screen bg-white">
+        <div className="flex h-screen bg-white">
           <Sidebar />
-          <div className="flex flex-1 flex-col overflow-auto">
+          <div className="flex flex-1 flex-col overflow-hidden">
             <Header />
-            <main className="flex-1">{children}</main>
+            <main id="main-scroll-container" className="flex-1 overflow-auto">
+              {children}
+            </main>
           </div>
           <DailyPopupChecker />
           <PopupOverlay />
