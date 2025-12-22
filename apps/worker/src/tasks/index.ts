@@ -1,5 +1,6 @@
 export {
   AI_POST_CONFIG,
+  calculateUserChance,
   type DiaryGroup,
   fetchRandomHistoricalPosts,
   fetchRecentUserPosts,
@@ -12,6 +13,8 @@ export {
   processHistoricalAiPost,
   processUserAiPosts,
   shouldExecuteWithChance,
+  TIME_WINDOWS,
+  type TimeWindow,
 } from "./ai-post";
 export {
   fetchImageAsBase64,

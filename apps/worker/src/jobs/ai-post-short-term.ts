@@ -1,11 +1,13 @@
 import { countRecentAiPosts, type WorkerContext } from "@/lib";
 import {
   AI_POST_CONFIG,
+  calculateUserChance,
   fetchRecentUserPosts,
   generateStandalonePosts,
   groupPostsByUser,
   processUserAiPosts,
   shouldExecuteWithChance,
+  TIME_WINDOWS,
 } from "@/tasks";
 
 export type AiPostShortTermJobResult = {
@@ -52,76 +54,96 @@ export const aiPostShortTerm = async (
       return { ...result, skipped: true };
     }
 
-    // 下限未満の場合は強制実行、それ以外は10%確率
-    const isBelowMinimum = recentPostCount < AI_POST_CONFIG.MIN_POSTS_PER_HOUR;
-    const shouldExecute =
-      isBelowMinimum ||
-      shouldExecuteWithChance(AI_POST_CONFIG.SHORT_TERM_POST_CHANCE);
-
-    if (!shouldExecute) {
-      ctx.logger.info("Skipping: probability check failed");
-      return { ...result, skipped: true };
+    // スタンドアロン投稿を生成（2%確率）
+    if (shouldExecuteWithChance(AI_POST_CONFIG.SHORT_TERM_POST_CHANCE)) {
+      const standalone = await generateStandalonePosts(
+        ctx,
+        AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
+        AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
+      );
+      result.standaloneGenerated = standalone.generated;
+      result.errors.push(...standalone.errors);
     }
 
-    if (isBelowMinimum) {
-      ctx.logger.info("Force execution: below minimum threshold");
-    }
+    // 24時間分のポストを1回で取得（DBアクセス最適化）
+    const maxMinutes = TIME_WINDOWS[TIME_WINDOWS.length - 1].minutes; // 1440分
+    const allPosts = await fetchRecentUserPosts(ctx, maxMinutes);
+    const now = Date.now();
 
-    // 残り枠が少ない場合は投稿数を動的に調整
-    let effectivePostCount: number = AI_POST_CONFIG.POSTS_PER_USER;
-    if (remaining < 3) {
-      effectivePostCount = Math.floor(Math.random() * (remaining + 1));
-      ctx.logger.info("Adjusted post count due to remaining capacity", {
-        remaining,
-        effectivePostCount,
-      });
-      if (effectivePostCount === 0) {
-        return { ...result, skipped: true };
-      }
-    }
+    ctx.logger.info("Fetched all posts for processing", {
+      totalPosts: allPosts.length,
+      maxMinutes,
+    });
 
-    // スタンドアロン投稿を生成
-    const standalone = await generateStandalonePosts(
-      ctx,
-      AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
-      AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
-    );
-    result.standaloneGenerated = standalone.generated;
-    result.errors.push(...standalone.errors);
-
-    // ユーザー投稿を処理
-    const posts = await fetchRecentUserPosts(
-      ctx,
-      AI_POST_CONFIG.SHORT_TERM_MINUTES,
-    );
-    const groups = groupPostsByUser(posts);
-
-    for (const group of groups) {
-      try {
-        const { generated } = await processUserAiPosts(
+    // 時間範囲ごとにユーザー投稿を処理
+    for (const window of TIME_WINDOWS) {
+      // 残り枠チェック
+      const currentRemaining =
+        AI_POST_CONFIG.MAX_POSTS_PER_HOUR -
+        (await countRecentAiPosts(
           ctx,
-          group,
-          AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
-          AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
-        );
-        result.generatedPosts += generated;
-        if (generated > 0) {
-          result.processedUsers++;
+          AI_POST_CONFIG.FREQUENCY_CHECK_WINDOW_MINUTES,
+        ));
+      if (currentRemaining <= 0) {
+        ctx.logger.info("Stopping: over upper limit during processing");
+        break;
+      }
+
+      // メモリ上でフィルタリング
+      const cutoff = now - window.minutes * 60 * 1000;
+      const filteredPosts = allPosts.filter(
+        (p) => new Date(p.createdAt).getTime() >= cutoff,
+      );
+      const groups = groupPostsByUser(filteredPosts);
+
+      ctx.logger.debug("Processing time window", {
+        minutes: window.minutes,
+        userCount: groups.length,
+        totalPosts: filteredPosts.length,
+      });
+
+      for (const group of groups) {
+        const postCount = group.posts.length;
+        const chance = calculateUserChance(postCount, window);
+
+        // ユーザーごとに確率判定
+        if (!shouldExecuteWithChance(chance)) {
+          continue;
         }
-      } catch (error) {
-        result.errors.push(
-          `User ${group.userProfileId}: ${(error as Error).message}`,
-        );
-        result.success = false;
-        ctx.logger.error(
-          "Failed to process user",
-          { userProfileId: group.userProfileId },
-          error as Error,
-        );
+
+        ctx.logger.info("User selected for AI response", {
+          userProfileId: group.userProfileId,
+          postCount,
+          chance,
+          windowMinutes: window.minutes,
+        });
+
+        try {
+          const { generated } = await processUserAiPosts(
+            ctx,
+            group,
+            AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
+            AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
+          );
+          result.generatedPosts += generated;
+          if (generated > 0) {
+            result.processedUsers++;
+          }
+        } catch (error) {
+          result.errors.push(
+            `User ${group.userProfileId}: ${(error as Error).message}`,
+          );
+          result.success = false;
+          ctx.logger.error(
+            "Failed to process user",
+            { userProfileId: group.userProfileId },
+            error as Error,
+          );
+        }
       }
     }
 
-    if (standalone.errors.length > 0) {
+    if (result.errors.length > 0) {
       result.success = false;
     }
 

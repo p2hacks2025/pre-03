@@ -13,6 +13,33 @@ import {
   type WorkerContext,
 } from "@/lib";
 
+// 確率上限
+export const USER_CHANCE_MAX = 0.25;
+
+// 時間範囲ごとの確率設定
+// 短い範囲: perPostChance高め（短時間で多く投稿 = 活発 = 高確率）
+// 長い範囲: perPostChance低め（長時間での投稿 = 普通 = 確率あまり上げない）
+export const TIME_WINDOWS = [
+  { minutes: 30, baseChance: 0.15, perPostChance: 0.01 }, // 30分: 1投稿=15%, 3投稿=17%, 11投稿=25%
+  { minutes: 60, baseChance: 0.1, perPostChance: 0.005 }, // 1時間: 1投稿=10%, 3投稿=11%
+  { minutes: 360, baseChance: 0.05, perPostChance: 0.0025 }, // 6時間: 1投稿=5%, 3投稿=5.5%
+  { minutes: 720, baseChance: 0.03, perPostChance: 0.0015 }, // 12時間: 1投稿=3%, 3投稿=3.3%
+  { minutes: 1440, baseChance: 0.02, perPostChance: 0.001 }, // 24時間: 1投稿=2%, 3投稿=2.2%
+] as const;
+
+export type TimeWindow = (typeof TIME_WINDOWS)[number];
+
+// ユーザーのポスト数に応じた確率計算（上限25%）
+export const calculateUserChance = (
+  postCount: number,
+  window: TimeWindow,
+): number => {
+  return Math.min(
+    window.baseChance + (postCount - 1) * window.perPostChance,
+    USER_CHANCE_MAX,
+  );
+};
+
 // Constants
 export const AI_POST_CONFIG = {
   SHORT_TERM_MINUTES: 30,
