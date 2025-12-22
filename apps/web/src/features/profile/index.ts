@@ -2,7 +2,6 @@
 export { ProfileAvatarDisplay } from "./components/profile-avatar-display";
 export { ProfileCard } from "./components/profile-card";
 export { ProfileStatsRow } from "./components/profile-stats-row";
-export { ShareWorldButton } from "./components/share-world-button";
 export { StatDivider, StatItem } from "./components/stat-item";
 export { WeeklyWorldPreview } from "./components/weekly-world-preview";
 // Hooks

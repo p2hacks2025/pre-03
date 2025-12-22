@@ -135,7 +135,7 @@ export default function ReflectionDetailPage() {
           variant="light"
           className="mt-4"
         >
-          カレンダーに戻る
+          振り返りに戻る
         </Button>
       </div>
     );
@@ -152,7 +152,7 @@ export default function ReflectionDetailPage() {
           variant="light"
           className="mt-4"
         >
-          カレンダーに戻る
+          振り返りに戻る
         </Button>
       </div>
     );

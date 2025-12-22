@@ -42,16 +42,6 @@ const getPreviousMonth = (
 };
 
 /**
- * 2年前より古いかチェック
- */
-const isOlderThanTwoYears = (year: number, month: number): boolean => {
-  const targetDate = new Date(year, month - 1, 1);
-  const twoYearsAgo = new Date();
-  twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
-  return targetDate < twoYearsAgo;
-};
-
-/**
  * 月IDを生成
  */
 const getMonthId = (year: number, month: number): string => {
@@ -158,16 +148,10 @@ export const useCalendar = (): UseCalendarReturn => {
           const prevMonth = getPreviousMonth(year, month);
           nextMonth.current = prevMonth;
 
-          const hasMoreData = !isOlderThanTwoYears(
-            prevMonth.year,
-            prevMonth.month,
-          );
-
           logger.info("Calendar fetched", {
             year,
             month,
             weeksCount: newWeeks.length,
-            hasMore: hasMoreData,
           });
 
           setState((prev) => ({
@@ -177,7 +161,7 @@ export const useCalendar = (): UseCalendarReturn => {
             isLoading: false,
             isFetchingMore: false,
             error: null,
-            hasMore: hasMoreData,
+            hasMore: true,
           }));
         } else {
           logger.warn("Calendar fetch failed", { status: res.status });
@@ -218,9 +202,6 @@ export const useCalendar = (): UseCalendarReturn => {
       logger.debug("Fetching initial months", { startYear, startMonth, count });
 
       for (let i = 0; i < count; i++) {
-        // 2年前より古い場合は終了
-        if (isOlderThanTwoYears(year, month)) break;
-
         const monthId = getMonthId(year, month);
         if (fetchedMonths.current.has(monthId)) {
           const prev = getPreviousMonth(year, month);
@@ -263,11 +244,9 @@ export const useCalendar = (): UseCalendarReturn => {
       }
 
       nextMonth.current = { year, month };
-      const hasMoreData = !isOlderThanTwoYears(year, month);
 
       logger.info("Initial months fetched", {
         count: newMonthGroups.length,
-        hasMore: hasMoreData,
       });
 
       setState({
@@ -275,7 +254,7 @@ export const useCalendar = (): UseCalendarReturn => {
         isLoading: false,
         isFetchingMore: false,
         error: null,
-        hasMore: hasMoreData,
+        hasMore: true,
       });
     },
     [],
@@ -307,10 +286,6 @@ export const useCalendar = (): UseCalendarReturn => {
     let { year, month } = nextMonth.current;
 
     while (fetchedMonths.current.has(getMonthId(year, month))) {
-      if (isOlderThanTwoYears(year, month)) {
-        setState((prev) => ({ ...prev, hasMore: false }));
-        return;
-      }
       const prev = getPreviousMonth(year, month);
       year = prev.year;
       month = prev.month;
