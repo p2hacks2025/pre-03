@@ -105,3 +105,29 @@ export const countRecentAiPosts = async (
 
   return Number(result[0]?.count ?? 0);
 };
+
+/**
+ * 直近N分間に特定ユーザーに対して公開されたAI投稿の数を取得
+ */
+export const countRecentAiPostsForUser = async (
+  ctx: WorkerContext,
+  userProfileId: string,
+  minutes: number,
+): Promise<number> => {
+  const since = new Date(Date.now() - minutes * 60 * 1000);
+  const now = new Date();
+
+  const result = await ctx.db
+    .select({ count: sql<number>`count(*)` })
+    .from(aiPosts)
+    .where(
+      and(
+        eq(aiPosts.userProfileId, userProfileId),
+        gte(aiPosts.publishedAt, since),
+        lte(aiPosts.publishedAt, now),
+        isNull(aiPosts.deletedAt),
+      ),
+    );
+
+  return Number(result[0]?.count ?? 0);
+};

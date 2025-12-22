@@ -6,7 +6,9 @@ import {
   getAiPostStandalonePrompt,
   getRandomAiProfile,
   getRandomHistoricalPosts,
+  getRandomHistoricalPostsForUser,
   getRecentUserPosts,
+  getUserIdsWithHistoricalPosts,
   hasExistingAiPost,
   interpolatePrompt,
   LLM_CONFIG,
@@ -44,7 +46,6 @@ export const calculateUserChance = (
 export const AI_POST_CONFIG = {
   SHORT_TERM_MINUTES: 30,
   LONG_TERM_EXCLUDE_DAYS: 7,
-  LONG_TERM_FETCH_COUNT: 10,
   SHORT_TERM_SCHEDULE_MIN: 1,
   SHORT_TERM_SCHEDULE_MAX: 30,
   LONG_TERM_SCHEDULE_MIN: 60,
@@ -56,6 +57,8 @@ export const AI_POST_CONFIG = {
   STANDALONE_POST_COUNT: 1,
   SHORT_TERM_POST_CHANCE: 0.02,
   LONG_TERM_POST_CHANCE: 0.5,
+  LONG_TERM_USER_CHANCE: 0.5, // ユーザーごとの確率（50%）
+  LONG_TERM_POSTS_PER_USER: 2, // ユーザーごとの投稿数
   // 頻度制御
   FREQUENCY_CHECK_WINDOW_MINUTES: 60,
   MAX_POSTS_PER_HOUR: 5,
@@ -265,6 +268,27 @@ export const fetchRandomHistoricalPosts = async (
   excludeDays: number,
 ): Promise<UserPost[]> => {
   return getRandomHistoricalPosts(ctx, count, excludeDays);
+};
+
+export const fetchUserIdsWithHistoricalPosts = async (
+  ctx: WorkerContext,
+  excludeDays: number,
+): Promise<string[]> => {
+  return getUserIdsWithHistoricalPosts(ctx, excludeDays);
+};
+
+export const fetchRandomHistoricalPostsForUser = async (
+  ctx: WorkerContext,
+  userProfileId: string,
+  excludeDays: number,
+  count: number,
+): Promise<UserPost[]> => {
+  return getRandomHistoricalPostsForUser(
+    ctx,
+    userProfileId,
+    excludeDays,
+    count,
+  );
 };
 
 export const processUserAiPosts = async (

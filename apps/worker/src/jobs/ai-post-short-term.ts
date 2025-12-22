@@ -1,4 +1,4 @@
-import { countRecentAiPosts, type WorkerContext } from "@/lib";
+import { countRecentAiPostsForUser, type WorkerContext } from "@/lib";
 import {
   AI_POST_CONFIG,
   calculateUserChance,
@@ -34,26 +34,6 @@ export const aiPostShortTerm = async (
   };
 
   try {
-    // 頻度制御: 直近1時間の投稿数をチェック
-    const recentPostCount = await countRecentAiPosts(
-      ctx,
-      AI_POST_CONFIG.FREQUENCY_CHECK_WINDOW_MINUTES,
-    );
-    const remaining = AI_POST_CONFIG.MAX_POSTS_PER_HOUR - recentPostCount;
-
-    ctx.logger.info("Frequency check", {
-      recentPostCount,
-      maxPerHour: AI_POST_CONFIG.MAX_POSTS_PER_HOUR,
-      minPerHour: AI_POST_CONFIG.MIN_POSTS_PER_HOUR,
-      remaining,
-    });
-
-    // 上限超過時はスキップ
-    if (remaining <= 0) {
-      ctx.logger.info("Skipping: over upper limit", { recentPostCount });
-      return { ...result, skipped: true };
-    }
-
     // スタンドアロン投稿を生成（2%確率）
     if (shouldExecuteWithChance(AI_POST_CONFIG.SHORT_TERM_POST_CHANCE)) {
       const standalone = await generateStandalonePosts(
@@ -81,16 +61,18 @@ export const aiPostShortTerm = async (
 
     // ユーザーごとにループ（フォールバック方式）
     for (const userGroup of allGroups) {
-      // 残り枠チェック
-      const currentRemaining =
-        AI_POST_CONFIG.MAX_POSTS_PER_HOUR -
-        (await countRecentAiPosts(
-          ctx,
-          AI_POST_CONFIG.FREQUENCY_CHECK_WINDOW_MINUTES,
-        ));
-      if (currentRemaining <= 0) {
-        ctx.logger.info("Stopping: over upper limit during processing");
-        break;
+      // ユーザーごとの残り枠チェック
+      const userRecentCount = await countRecentAiPostsForUser(
+        ctx,
+        userGroup.userProfileId,
+        AI_POST_CONFIG.FREQUENCY_CHECK_WINDOW_MINUTES,
+      );
+      if (userRecentCount >= AI_POST_CONFIG.MAX_POSTS_PER_HOUR) {
+        ctx.logger.debug("Skipping user: over per-user limit", {
+          userProfileId: userGroup.userProfileId,
+          recentCount: userRecentCount,
+        });
+        continue;
       }
 
       // 時間範囲を短い順にチェック（フォールバック）

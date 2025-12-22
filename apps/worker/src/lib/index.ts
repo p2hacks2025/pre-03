@@ -21,6 +21,7 @@ export { type Env, env } from "./env";
 export {
   type CreateAiPostParams,
   countRecentAiPosts,
+  countRecentAiPostsForUser,
   createAiPost,
   createOrUpdateWorldBuildLog,
   createWeeklyWorld,
@@ -28,7 +29,9 @@ export {
   getAllUserProfiles,
   getRandomAiProfile,
   getRandomHistoricalPosts,
+  getRandomHistoricalPostsForUser,
   getRecentUserPosts,
+  getUserIdsWithHistoricalPosts,
   getUserPostsByDate,
   getUserPostsForWeek,
   getWeeklyWorld,

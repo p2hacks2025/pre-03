@@ -101,3 +101,44 @@ export const getRandomHistoricalPosts = async (
     .orderBy(sql`RANDOM()`)
     .limit(count);
 };
+
+/**
+ * 過去投稿があるユーザーIDのリストを取得
+ */
+export const getUserIdsWithHistoricalPosts = async (
+  ctx: WorkerContext,
+  excludeDays: number,
+): Promise<string[]> => {
+  const excludeDate = new Date(Date.now() - excludeDays * 24 * 60 * 60 * 1000);
+  const result = await ctx.db
+    .selectDistinct({ userProfileId: userPosts.userProfileId })
+    .from(userPosts)
+    .where(
+      and(lt(userPosts.createdAt, excludeDate), isNull(userPosts.deletedAt)),
+    );
+  return result.map((r) => r.userProfileId);
+};
+
+/**
+ * 特定ユーザーの過去投稿からランダムにN件を取得
+ */
+export const getRandomHistoricalPostsForUser = async (
+  ctx: WorkerContext,
+  userProfileId: string,
+  excludeDays: number,
+  count: number,
+): Promise<UserPost[]> => {
+  const excludeDate = new Date(Date.now() - excludeDays * 24 * 60 * 60 * 1000);
+  return ctx.db
+    .select()
+    .from(userPosts)
+    .where(
+      and(
+        eq(userPosts.userProfileId, userProfileId),
+        lt(userPosts.createdAt, excludeDate),
+        isNull(userPosts.deletedAt),
+      ),
+    )
+    .orderBy(sql`RANDOM()`)
+    .limit(count);
+};
