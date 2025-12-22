@@ -70,13 +70,17 @@ export const aiPostShortTerm = async (
     const allPosts = await fetchRecentUserPosts(ctx, maxMinutes);
     const now = Date.now();
 
+    // 全ユーザーをグループ化
+    const allGroups = groupPostsByUser(allPosts);
+
     ctx.logger.info("Fetched all posts for processing", {
       totalPosts: allPosts.length,
+      userCount: allGroups.length,
       maxMinutes,
     });
 
-    // 時間範囲ごとにユーザー投稿を処理
-    for (const window of TIME_WINDOWS) {
+    // ユーザーごとにループ（フォールバック方式）
+    for (const userGroup of allGroups) {
       // 残り枠チェック
       const currentRemaining =
         AI_POST_CONFIG.MAX_POSTS_PER_HOUR -
@@ -89,36 +93,32 @@ export const aiPostShortTerm = async (
         break;
       }
 
-      // メモリ上でフィルタリング
-      const cutoff = now - window.minutes * 60 * 1000;
-      const filteredPosts = allPosts.filter(
-        (p) => new Date(p.createdAt).getTime() >= cutoff,
-      );
-      const groups = groupPostsByUser(filteredPosts);
+      // 時間範囲を短い順にチェック（フォールバック）
+      for (const window of TIME_WINDOWS) {
+        const cutoff = now - window.minutes * 60 * 1000;
+        const postsInWindow = userGroup.posts.filter(
+          (p) => new Date(p.createdAt).getTime() >= cutoff,
+        );
 
-      ctx.logger.debug("Processing time window", {
-        minutes: window.minutes,
-        userCount: groups.length,
-        totalPosts: filteredPosts.length,
-      });
+        // この時間範囲に投稿がなければ次の範囲へ
+        if (postsInWindow.length === 0) continue;
 
-      for (const group of groups) {
-        const postCount = group.posts.length;
-        const chance = calculateUserChance(postCount, window);
-
-        // ユーザーごとに確率判定
-        if (!shouldExecuteWithChance(chance)) {
-          continue;
-        }
+        // 投稿があれば確率判定
+        const chance = calculateUserChance(postsInWindow.length, window);
+        if (!shouldExecuteWithChance(chance)) break; // 判定失敗でも終了
 
         ctx.logger.info("User selected for AI response", {
-          userProfileId: group.userProfileId,
-          postCount,
+          userProfileId: userGroup.userProfileId,
+          postCount: postsInWindow.length,
           chance,
           windowMinutes: window.minutes,
         });
 
         try {
+          const group = {
+            userProfileId: userGroup.userProfileId,
+            posts: postsInWindow,
+          };
           const { generated } = await processUserAiPosts(
             ctx,
             group,
@@ -131,15 +131,16 @@ export const aiPostShortTerm = async (
           }
         } catch (error) {
           result.errors.push(
-            `User ${group.userProfileId}: ${(error as Error).message}`,
+            `User ${userGroup.userProfileId}: ${(error as Error).message}`,
           );
           result.success = false;
           ctx.logger.error(
             "Failed to process user",
-            { userProfileId: group.userProfileId },
+            { userProfileId: userGroup.userProfileId },
             error as Error,
           );
         }
+        break; // 1ユーザー1回で終了（フォールバック）
       }
     }
 
