@@ -348,6 +348,14 @@ export const processHistoricalAiPost = async (
   scheduleMin: number,
   scheduleMax: number,
 ): Promise<{ generated: number }> => {
+  const sourceDate = new Date(diary.createdAt);
+
+  if (
+    await hasExistingAiPost(ctx, diary.userProfileId, sourceDate, sourceDate)
+  ) {
+    return { generated: 0 };
+  }
+
   const aiProfile = await getRandomAiProfile(ctx);
   const contents = await generateAiPostContents(
     ctx,
@@ -355,7 +363,6 @@ export const processHistoricalAiPost = async (
     diary.content,
     AI_POST_CONFIG.POSTS_PER_USER,
   );
-  const sourceDate = new Date(diary.createdAt);
 
   if (contents.length === 0) {
     return { generated: 0 };
