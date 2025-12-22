@@ -1,8 +1,8 @@
 {
   "ios": {
-    "buildNumber": 17
+    "buildNumber": 23
   },
   "android": {
-    "versionCode": 8
+    "versionCode": 11
   }
 }

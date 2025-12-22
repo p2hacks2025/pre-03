@@ -30,6 +30,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: true,
     bundleIdentifier: "net.uiro.noval-ios",
     infoPlist: {
+      CFBundleDisplayName: "リフレクト新世界",
       ITSAppUsesNonExemptEncryption: false,
       NSCameraUsageDescription:
         "日記に写真を添付するためにカメラへのアクセスが必要です。",
