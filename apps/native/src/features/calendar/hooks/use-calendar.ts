@@ -2,7 +2,6 @@ import type { CalendarWeek } from "@packages/schema/reflection";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/contexts/auth-context";
-import { createAuthenticatedClient } from "@/lib/api";
 import { logger } from "@/lib/logger";
 
 import { createWeekInfo, parseISODate } from "../lib/date-utils";
@@ -84,7 +83,7 @@ const convertApiWeeksToWeekInfo = (apiWeeks: CalendarWeek[]): WeekInfo[] => {
  * ```
  */
 export const useCalendar = (): UseCalendarReturn => {
-  const { accessToken } = useAuth();
+  const { isAuthenticated, getAuthenticatedClient } = useAuth();
   const [state, setState] = useState<CalendarState>({
     monthGroups: [],
     isLoading: true,
@@ -103,7 +102,7 @@ export const useCalendar = (): UseCalendarReturn => {
    */
   const fetchMonth = useCallback(
     async (year: number, month: number, isInitial: boolean) => {
-      if (!accessToken) {
+      if (!isAuthenticated) {
         setState({
           monthGroups: [],
           isLoading: false,
@@ -135,7 +134,7 @@ export const useCalendar = (): UseCalendarReturn => {
       logger.debug("Fetching calendar", { year, month });
 
       try {
-        const authClient = createAuthenticatedClient(accessToken);
+        const authClient = getAuthenticatedClient();
         const res = await authClient.reflection.calendar.$get({
           query: { year, month },
         });
@@ -198,7 +197,7 @@ export const useCalendar = (): UseCalendarReturn => {
         }));
       }
     },
-    [accessToken],
+    [isAuthenticated, getAuthenticatedClient],
   );
 
   /**

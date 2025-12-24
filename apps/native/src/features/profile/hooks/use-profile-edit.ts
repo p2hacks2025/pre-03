@@ -1,10 +1,10 @@
+import type { ApiClient } from "@packages/api-contract";
 import { ErrorResponseSchema } from "@packages/schema/common/error";
 import { useToast } from "heroui-native";
 import { useRef, useState } from "react";
 import type { TextInput } from "react-native";
 
 import { useAuth } from "@/contexts/auth-context";
-import { createAuthenticatedClient } from "@/lib/api";
 
 import type { UpdateProfileNameParams, UseProfileEditReturn } from "../types";
 
@@ -16,10 +16,8 @@ import type { UpdateProfileNameParams, UseProfileEditReturn } from "../types";
 async function saveProfileName(
   params: UpdateProfileNameParams,
   updateProfile: (updates: { displayName: string }) => void,
-  accessToken: string,
+  authClient: ApiClient,
 ): Promise<void> {
-  const authClient = createAuthenticatedClient(accessToken);
-
   const res = await authClient.user.profile.update.$post({
     json: { displayName: params.displayName },
   });
@@ -41,7 +39,8 @@ async function saveProfileName(
  * UIコンポーネントから編集ロジックを分離するために使用。
  */
 export const useProfileEdit = (): UseProfileEditReturn => {
-  const { profile, updateProfile, accessToken } = useAuth();
+  const { profile, updateProfile, isAuthenticated, getAuthenticatedClient } =
+    useAuth();
   const { toast } = useToast();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -84,7 +83,7 @@ export const useProfileEdit = (): UseProfileEditReturn => {
       return;
     }
 
-    if (!accessToken) {
+    if (!isAuthenticated) {
       toast.show({
         variant: "danger",
         label: "認証エラー",
@@ -95,10 +94,11 @@ export const useProfileEdit = (): UseProfileEditReturn => {
 
     setIsSaving(true);
     try {
+      const authClient = getAuthenticatedClient();
       await saveProfileName(
         { displayName: trimmedName },
         updateProfile,
-        accessToken,
+        authClient,
       );
       setIsEditing(false);
       toast.show({
