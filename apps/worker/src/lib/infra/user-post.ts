@@ -142,3 +142,63 @@ export const getRandomHistoricalPostsForUser = async (
     .orderBy(sql`RANDOM()`)
     .limit(count);
 };
+
+/**
+ * 複数ユーザーの過去投稿からランダムにN件ずつ取得
+ */
+export const getRandomHistoricalPostsForUsers = async (
+  ctx: WorkerContext,
+  userProfileIds: string[],
+  excludeDays: number,
+  countPerUser: number,
+): Promise<Map<string, UserPost[]>> => {
+  if (userProfileIds.length === 0) {
+    return new Map();
+  }
+
+  const excludeDate = new Date(Date.now() - excludeDays * 24 * 60 * 60 * 1000);
+
+  const result = await ctx.db.execute<{
+    id: string;
+    user_profile_id: string;
+    content: string;
+    upload_image_url: string | null;
+    created_at: Date;
+    updated_at: Date;
+    deleted_at: Date | null;
+  }>(sql`
+    SELECT t.*
+    FROM (
+      SELECT p.*,
+             row_number() OVER (
+               PARTITION BY p.user_profile_id
+               ORDER BY random()
+             ) AS rn
+      FROM user_posts p
+      WHERE p.user_profile_id = ANY(${userProfileIds})
+        AND p.created_at < ${excludeDate}
+        AND p.deleted_at IS NULL
+    ) t
+    WHERE t.rn <= ${countPerUser}
+  `);
+
+  const postMap = new Map<string, UserPost[]>();
+  for (const row of result) {
+    const userProfileId = row.user_profile_id;
+    if (!postMap.has(userProfileId)) {
+      postMap.set(userProfileId, []);
+    }
+    const post: UserPost = {
+      id: row.id,
+      userProfileId: row.user_profile_id,
+      content: row.content,
+      uploadImageUrl: row.upload_image_url,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      deletedAt: row.deleted_at,
+    };
+    postMap.get(userProfileId)?.push(post);
+  }
+
+  return postMap;
+};

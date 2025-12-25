@@ -17,6 +17,7 @@ export { uploadGeneratedImage } from "./storage";
 export {
   getRandomHistoricalPosts,
   getRandomHistoricalPostsForUser,
+  getRandomHistoricalPostsForUsers,
   getRecentUserPosts,
   getUserIdsWithHistoricalPosts,
   getUserPostsByDate,

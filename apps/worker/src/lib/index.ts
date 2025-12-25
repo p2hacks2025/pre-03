@@ -32,6 +32,7 @@ export {
   getRandomAiProfile,
   getRandomHistoricalPosts,
   getRandomHistoricalPostsForUser,
+  getRandomHistoricalPostsForUsers,
   getRecentUserPosts,
   getUserIdsWithHistoricalPosts,
   getUserPostsByDate,

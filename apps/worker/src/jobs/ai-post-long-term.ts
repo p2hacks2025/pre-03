@@ -1,7 +1,7 @@
 import { countRecentAiPostsForUsers, type WorkerContext } from "@/lib";
 import {
   AI_POST_CONFIG,
-  fetchRandomHistoricalPostsForUser,
+  fetchRandomHistoricalPostsForUsers,
   fetchUserIdsWithHistoricalPosts,
   processHistoricalAiPost,
   shouldExecuteWithChance,
@@ -57,7 +57,7 @@ export const aiPostLongTerm = async (
       AI_POST_CONFIG.FREQUENCY_CHECK_WINDOW_MINUTES,
     );
 
-    // ユーザーごとにループ
+    const eligibleUserIds: string[] = [];
     for (const userProfileId of userIds) {
       // ユーザーごとの頻度チェック
       const userRecentCount = recentCountMap.get(userProfileId) ?? 0;
@@ -74,13 +74,31 @@ export const aiPostLongTerm = async (
         continue;
       }
 
-      // ランダム2件の過去投稿を取得
-      const posts = await fetchRandomHistoricalPostsForUser(
-        ctx,
-        userProfileId,
-        AI_POST_CONFIG.LONG_TERM_EXCLUDE_DAYS,
-        AI_POST_CONFIG.LONG_TERM_POSTS_PER_USER,
-      );
+      eligibleUserIds.push(userProfileId);
+    }
+
+    ctx.logger.info("Eligible users after probability check", {
+      eligibleCount: eligibleUserIds.length,
+      totalCount: userIds.length,
+    });
+
+    if (eligibleUserIds.length === 0) {
+      ctx.logger.info("ai-post-long-term job completed (no eligible users)", {
+        processedUsers: 0,
+        generatedPosts: 0,
+      });
+      return result;
+    }
+
+    const postsMap = await fetchRandomHistoricalPostsForUsers(
+      ctx,
+      eligibleUserIds,
+      AI_POST_CONFIG.LONG_TERM_EXCLUDE_DAYS,
+      AI_POST_CONFIG.LONG_TERM_POSTS_PER_USER,
+    );
+
+    for (const userProfileId of eligibleUserIds) {
+      const posts = postsMap.get(userProfileId) ?? [];
 
       if (posts.length === 0) {
         continue;

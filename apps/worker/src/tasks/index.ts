@@ -4,6 +4,7 @@ export {
   type DiaryGroup,
   fetchRandomHistoricalPosts,
   fetchRandomHistoricalPostsForUser,
+  fetchRandomHistoricalPostsForUsers,
   fetchRecentUserPosts,
   fetchUserIdsWithHistoricalPosts,
   type GenerationResult,

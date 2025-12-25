@@ -9,6 +9,7 @@ import {
   getRandomAiProfile,
   getRandomHistoricalPosts,
   getRandomHistoricalPostsForUser,
+  getRandomHistoricalPostsForUsers,
   getRecentUserPosts,
   getUserIdsWithHistoricalPosts,
   hasExistingAiPost,
@@ -290,6 +291,20 @@ export const fetchRandomHistoricalPostsForUser = async (
     userProfileId,
     excludeDays,
     count,
+  );
+};
+
+export const fetchRandomHistoricalPostsForUsers = async (
+  ctx: WorkerContext,
+  userProfileIds: string[],
+  excludeDays: number,
+  countPerUser: number,
+): Promise<Map<string, UserPost[]>> => {
+  return getRandomHistoricalPostsForUsers(
+    ctx,
+    userProfileIds,
+    excludeDays,
+    countPerUser,
   );
 };
 
