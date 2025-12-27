@@ -6,6 +6,7 @@ import {
   and,
   eq,
   gte,
+  inArray,
   isNull,
   lte,
   sql,
@@ -83,6 +84,30 @@ export const createAiPost = async (
 };
 
 /**
+ * 複数のAI投稿を一括作成
+ */
+export const createAiPostsBatch = async (
+  ctx: WorkerContext,
+  posts: CreateAiPostParams[],
+): Promise<AiPost[]> => {
+  if (posts.length === 0) {
+    return [];
+  }
+
+  const values = posts.map((params) => ({
+    aiProfileId: params.aiProfileId,
+    userProfileId: params.userProfileId,
+    content: params.content,
+    imageUrl: params.imageUrl ?? null,
+    sourceStartAt: params.sourceStartAt,
+    sourceEndAt: params.sourceEndAt,
+    publishedAt: params.publishedAt,
+  }));
+
+  return ctx.db.insert(aiPosts).values(values).returning();
+};
+
+/**
  * 直近N分間に公開されたAI投稿の数を取得
  */
 export const countRecentAiPosts = async (
@@ -104,4 +129,70 @@ export const countRecentAiPosts = async (
     );
 
   return Number(result[0]?.count ?? 0);
+};
+
+/**
+ * 直近N分間に特定ユーザーに対して公開されたAI投稿の数を取得
+ */
+export const countRecentAiPostsForUser = async (
+  ctx: WorkerContext,
+  userProfileId: string,
+  minutes: number,
+): Promise<number> => {
+  const since = new Date(Date.now() - minutes * 60 * 1000);
+  const now = new Date();
+
+  const result = await ctx.db
+    .select({ count: sql<number>`count(*)` })
+    .from(aiPosts)
+    .where(
+      and(
+        eq(aiPosts.userProfileId, userProfileId),
+        gte(aiPosts.publishedAt, since),
+        lte(aiPosts.publishedAt, now),
+        isNull(aiPosts.deletedAt),
+      ),
+    );
+
+  return Number(result[0]?.count ?? 0);
+};
+
+/**
+ * 直近N分間に複数ユーザーに対して公開されたAI投稿の数を一括取得
+ */
+export const countRecentAiPostsForUsers = async (
+  ctx: WorkerContext,
+  userProfileIds: string[],
+  minutes: number,
+): Promise<Map<string, number>> => {
+  if (userProfileIds.length === 0) {
+    return new Map();
+  }
+
+  const since = new Date(Date.now() - minutes * 60 * 1000);
+  const now = new Date();
+
+  const result = await ctx.db
+    .select({
+      userProfileId: aiPosts.userProfileId,
+      count: sql<number>`count(*)`,
+    })
+    .from(aiPosts)
+    .where(
+      and(
+        inArray(aiPosts.userProfileId, userProfileIds),
+        gte(aiPosts.publishedAt, since),
+        lte(aiPosts.publishedAt, now),
+        isNull(aiPosts.deletedAt),
+      ),
+    )
+    .groupBy(aiPosts.userProfileId);
+
+  const countMap = new Map<string, number>();
+  for (const row of result) {
+    if (row.userProfileId) {
+      countMap.set(row.userProfileId, Number(row.count));
+    }
+  }
+  return countMap;
 };

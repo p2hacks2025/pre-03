@@ -1,23 +1,54 @@
 import type { AiProfile, UserPost } from "@packages/db";
 import OpenAI from "openai";
 import {
+  type CreateAiPostParams,
   createAiPost,
+  createAiPostsBatch,
   getAiPostGenerationPrompt,
   getAiPostStandalonePrompt,
   getRandomAiProfile,
   getRandomHistoricalPosts,
+  getRandomHistoricalPostsForUser,
+  getRandomHistoricalPostsForUsers,
   getRecentUserPosts,
+  getUserIdsWithHistoricalPosts,
   hasExistingAiPost,
   interpolatePrompt,
   LLM_CONFIG,
   type WorkerContext,
 } from "@/lib";
 
+// 確率上限
+export const USER_CHANCE_MAX = 0.25;
+
+// 時間範囲ごとの確率設定
+// 短い範囲: perPostChance高め（短時間で多く投稿 = 活発 = 高確率）
+// 長い範囲: perPostChance低め（長時間での投稿 = 普通 = 確率あまり上げない）
+export const TIME_WINDOWS = [
+  { minutes: 30, baseChance: 0.15, perPostChance: 0.01 }, // 30分: 1投稿=15%, 3投稿=17%, 11投稿=25%
+  { minutes: 60, baseChance: 0.1, perPostChance: 0.005 }, // 1時間: 1投稿=10%, 3投稿=11%
+  { minutes: 360, baseChance: 0.05, perPostChance: 0.0025 }, // 6時間: 1投稿=5%, 3投稿=5.5%
+  { minutes: 720, baseChance: 0.03, perPostChance: 0.0015 }, // 12時間: 1投稿=3%, 3投稿=3.3%
+  { minutes: 1440, baseChance: 0.02, perPostChance: 0.001 }, // 24時間: 1投稿=2%, 3投稿=2.2%
+] as const;
+
+export type TimeWindow = (typeof TIME_WINDOWS)[number];
+
+// ユーザーのポスト数に応じた確率計算（上限25%）
+export const calculateUserChance = (
+  postCount: number,
+  window: TimeWindow,
+): number => {
+  return Math.min(
+    window.baseChance + (postCount - 1) * window.perPostChance,
+    USER_CHANCE_MAX,
+  );
+};
+
 // Constants
 export const AI_POST_CONFIG = {
   SHORT_TERM_MINUTES: 30,
   LONG_TERM_EXCLUDE_DAYS: 7,
-  LONG_TERM_FETCH_COUNT: 10,
   SHORT_TERM_SCHEDULE_MIN: 1,
   SHORT_TERM_SCHEDULE_MAX: 30,
   LONG_TERM_SCHEDULE_MIN: 60,
@@ -29,6 +60,8 @@ export const AI_POST_CONFIG = {
   STANDALONE_POST_COUNT: 1,
   SHORT_TERM_POST_CHANCE: 0.02,
   LONG_TERM_POST_CHANCE: 0.5,
+  LONG_TERM_USER_CHANCE: 0.5, // ユーザーごとの確率（50%）
+  LONG_TERM_POSTS_PER_USER: 2, // ユーザーごとの投稿数
   // 頻度制御
   FREQUENCY_CHECK_WINDOW_MINUTES: 60,
   MAX_POSTS_PER_HOUR: 5,
@@ -240,6 +273,41 @@ export const fetchRandomHistoricalPosts = async (
   return getRandomHistoricalPosts(ctx, count, excludeDays);
 };
 
+export const fetchUserIdsWithHistoricalPosts = async (
+  ctx: WorkerContext,
+  excludeDays: number,
+): Promise<string[]> => {
+  return getUserIdsWithHistoricalPosts(ctx, excludeDays);
+};
+
+export const fetchRandomHistoricalPostsForUser = async (
+  ctx: WorkerContext,
+  userProfileId: string,
+  excludeDays: number,
+  count: number,
+): Promise<UserPost[]> => {
+  return getRandomHistoricalPostsForUser(
+    ctx,
+    userProfileId,
+    excludeDays,
+    count,
+  );
+};
+
+export const fetchRandomHistoricalPostsForUsers = async (
+  ctx: WorkerContext,
+  userProfileIds: string[],
+  excludeDays: number,
+  countPerUser: number,
+): Promise<Map<string, UserPost[]>> => {
+  return getRandomHistoricalPostsForUsers(
+    ctx,
+    userProfileIds,
+    excludeDays,
+    countPerUser,
+  );
+};
+
 export const processUserAiPosts = async (
   ctx: WorkerContext,
   group: DiaryGroup,
@@ -272,20 +340,21 @@ export const processUserAiPosts = async (
     AI_POST_CONFIG.POSTS_PER_USER,
   );
 
-  let generated = 0;
-  for (const content of contents) {
-    await createAiPost(ctx, {
-      aiProfileId: aiProfile.id,
-      userProfileId: group.userProfileId,
-      content,
-      sourceStartAt,
-      sourceEndAt,
-      publishedAt: getRandomPublishedAt(scheduleMin, scheduleMax),
-    });
-    generated++;
+  if (contents.length === 0) {
+    return { generated: 0 };
   }
 
-  return { generated };
+  const posts: CreateAiPostParams[] = contents.map((content) => ({
+    aiProfileId: aiProfile.id,
+    userProfileId: group.userProfileId,
+    content,
+    sourceStartAt,
+    sourceEndAt,
+    publishedAt: getRandomPublishedAt(scheduleMin, scheduleMax),
+  }));
+
+  const created = await createAiPostsBatch(ctx, posts);
+  return { generated: created.length };
 };
 
 export const processHistoricalAiPost = async (
@@ -294,6 +363,14 @@ export const processHistoricalAiPost = async (
   scheduleMin: number,
   scheduleMax: number,
 ): Promise<{ generated: number }> => {
+  const sourceDate = new Date(diary.createdAt);
+
+  if (
+    await hasExistingAiPost(ctx, diary.userProfileId, sourceDate, sourceDate)
+  ) {
+    return { generated: 0 };
+  }
+
   const aiProfile = await getRandomAiProfile(ctx);
   const contents = await generateAiPostContents(
     ctx,
@@ -301,20 +378,20 @@ export const processHistoricalAiPost = async (
     diary.content,
     AI_POST_CONFIG.POSTS_PER_USER,
   );
-  const sourceDate = new Date(diary.createdAt);
 
-  let generated = 0;
-  for (const content of contents) {
-    await createAiPost(ctx, {
-      aiProfileId: aiProfile.id,
-      userProfileId: diary.userProfileId,
-      content,
-      sourceStartAt: sourceDate,
-      sourceEndAt: sourceDate,
-      publishedAt: getRandomPublishedAt(scheduleMin, scheduleMax),
-    });
-    generated++;
+  if (contents.length === 0) {
+    return { generated: 0 };
   }
 
-  return { generated };
+  const posts: CreateAiPostParams[] = contents.map((content) => ({
+    aiProfileId: aiProfile.id,
+    userProfileId: diary.userProfileId,
+    content,
+    sourceStartAt: sourceDate,
+    sourceEndAt: sourceDate,
+    publishedAt: getRandomPublishedAt(scheduleMin, scheduleMax),
+  }));
+
+  const created = await createAiPostsBatch(ctx, posts);
+  return { generated: created.length };
 };

@@ -1,11 +1,13 @@
-import { countRecentAiPosts, type WorkerContext } from "@/lib";
+import { countRecentAiPostsForUsers, type WorkerContext } from "@/lib";
 import {
   AI_POST_CONFIG,
+  calculateUserChance,
   fetchRecentUserPosts,
   generateStandalonePosts,
   groupPostsByUser,
   processUserAiPosts,
   shouldExecuteWithChance,
+  TIME_WINDOWS,
 } from "@/tasks";
 
 export type AiPostShortTermJobResult = {
@@ -32,96 +34,101 @@ export const aiPostShortTerm = async (
   };
 
   try {
-    // 頻度制御: 直近1時間の投稿数をチェック
-    const recentPostCount = await countRecentAiPosts(
-      ctx,
-      AI_POST_CONFIG.FREQUENCY_CHECK_WINDOW_MINUTES,
-    );
-    const remaining = AI_POST_CONFIG.MAX_POSTS_PER_HOUR - recentPostCount;
+    // スタンドアロン投稿を生成（2%確率）
+    if (shouldExecuteWithChance(AI_POST_CONFIG.SHORT_TERM_POST_CHANCE)) {
+      const standalone = await generateStandalonePosts(
+        ctx,
+        AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
+        AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
+      );
+      result.standaloneGenerated = standalone.generated;
+      result.errors.push(...standalone.errors);
+    }
 
-    ctx.logger.info("Frequency check", {
-      recentPostCount,
-      maxPerHour: AI_POST_CONFIG.MAX_POSTS_PER_HOUR,
-      minPerHour: AI_POST_CONFIG.MIN_POSTS_PER_HOUR,
-      remaining,
+    // 24時間分のポストを1回で取得（DBアクセス最適化）
+    const maxMinutes = TIME_WINDOWS[TIME_WINDOWS.length - 1].minutes; // 1440分
+    const allPosts = await fetchRecentUserPosts(ctx, maxMinutes);
+    const now = Date.now();
+
+    // 全ユーザーをグループ化
+    const allGroups = groupPostsByUser(allPosts);
+
+    ctx.logger.info("Fetched all posts for processing", {
+      totalPosts: allPosts.length,
+      userCount: allGroups.length,
+      maxMinutes,
     });
 
-    // 上限超過時はスキップ
-    if (remaining <= 0) {
-      ctx.logger.info("Skipping: over upper limit", { recentPostCount });
-      return { ...result, skipped: true };
-    }
+    const userIds = allGroups.map((g) => g.userProfileId);
+    const recentCountMap = await countRecentAiPostsForUsers(
+      ctx,
+      userIds,
+      AI_POST_CONFIG.FREQUENCY_CHECK_WINDOW_MINUTES,
+    );
 
-    // 下限未満の場合は強制実行、それ以外は10%確率
-    const isBelowMinimum = recentPostCount < AI_POST_CONFIG.MIN_POSTS_PER_HOUR;
-    const shouldExecute =
-      isBelowMinimum ||
-      shouldExecuteWithChance(AI_POST_CONFIG.SHORT_TERM_POST_CHANCE);
-
-    if (!shouldExecute) {
-      ctx.logger.info("Skipping: probability check failed");
-      return { ...result, skipped: true };
-    }
-
-    if (isBelowMinimum) {
-      ctx.logger.info("Force execution: below minimum threshold");
-    }
-
-    // 残り枠が少ない場合は投稿数を動的に調整
-    let effectivePostCount: number = AI_POST_CONFIG.POSTS_PER_USER;
-    if (remaining < 3) {
-      effectivePostCount = Math.floor(Math.random() * (remaining + 1));
-      ctx.logger.info("Adjusted post count due to remaining capacity", {
-        remaining,
-        effectivePostCount,
-      });
-      if (effectivePostCount === 0) {
-        return { ...result, skipped: true };
+    // ユーザーごとにループ（フォールバック方式）
+    for (const userGroup of allGroups) {
+      const userRecentCount = recentCountMap.get(userGroup.userProfileId) ?? 0;
+      if (userRecentCount >= AI_POST_CONFIG.MAX_POSTS_PER_HOUR) {
+        ctx.logger.debug("Skipping user: over per-user limit", {
+          userProfileId: userGroup.userProfileId,
+          recentCount: userRecentCount,
+        });
+        continue;
       }
-    }
 
-    // スタンドアロン投稿を生成
-    const standalone = await generateStandalonePosts(
-      ctx,
-      AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
-      AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
-    );
-    result.standaloneGenerated = standalone.generated;
-    result.errors.push(...standalone.errors);
-
-    // ユーザー投稿を処理
-    const posts = await fetchRecentUserPosts(
-      ctx,
-      AI_POST_CONFIG.SHORT_TERM_MINUTES,
-    );
-    const groups = groupPostsByUser(posts);
-
-    for (const group of groups) {
-      try {
-        const { generated } = await processUserAiPosts(
-          ctx,
-          group,
-          AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
-          AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
+      // 時間範囲を短い順にチェック（フォールバック）
+      for (const window of TIME_WINDOWS) {
+        const cutoff = now - window.minutes * 60 * 1000;
+        const postsInWindow = userGroup.posts.filter(
+          (p) => new Date(p.createdAt).getTime() >= cutoff,
         );
-        result.generatedPosts += generated;
-        if (generated > 0) {
-          result.processedUsers++;
+
+        // この時間範囲に投稿がなければ次の範囲へ
+        if (postsInWindow.length === 0) continue;
+
+        // 投稿があれば確率判定
+        const chance = calculateUserChance(postsInWindow.length, window);
+        if (!shouldExecuteWithChance(chance)) break; // 判定失敗でも終了
+
+        ctx.logger.info("User selected for AI response", {
+          userProfileId: userGroup.userProfileId,
+          postCount: postsInWindow.length,
+          chance,
+          windowMinutes: window.minutes,
+        });
+
+        try {
+          const group = {
+            userProfileId: userGroup.userProfileId,
+            posts: postsInWindow,
+          };
+          const { generated } = await processUserAiPosts(
+            ctx,
+            group,
+            AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MIN,
+            AI_POST_CONFIG.SHORT_TERM_SCHEDULE_MAX,
+          );
+          result.generatedPosts += generated;
+          if (generated > 0) {
+            result.processedUsers++;
+          }
+        } catch (error) {
+          result.errors.push(
+            `User ${userGroup.userProfileId}: ${(error as Error).message}`,
+          );
+          result.success = false;
+          ctx.logger.error(
+            "Failed to process user",
+            { userProfileId: userGroup.userProfileId },
+            error as Error,
+          );
         }
-      } catch (error) {
-        result.errors.push(
-          `User ${group.userProfileId}: ${(error as Error).message}`,
-        );
-        result.success = false;
-        ctx.logger.error(
-          "Failed to process user",
-          { userProfileId: group.userProfileId },
-          error as Error,
-        );
+        break; // 1ユーザー1回で終了（フォールバック）
       }
     }
 
-    if (standalone.errors.length > 0) {
+    if (result.errors.length > 0) {
       result.success = false;
     }
 

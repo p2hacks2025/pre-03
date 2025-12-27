@@ -2,7 +2,10 @@
 export {
   type CreateAiPostParams,
   countRecentAiPosts,
+  countRecentAiPostsForUser,
+  countRecentAiPostsForUsers,
   createAiPost,
+  createAiPostsBatch,
   getRandomAiProfile,
   hasExistingAiPost,
 } from "./ai-post";
@@ -13,7 +16,10 @@ export { uploadGeneratedImage } from "./storage";
 // User Post
 export {
   getRandomHistoricalPosts,
+  getRandomHistoricalPostsForUser,
+  getRandomHistoricalPostsForUsers,
   getRecentUserPosts,
+  getUserIdsWithHistoricalPosts,
   getUserPostsByDate,
   getUserPostsForWeek,
   type UserPostsGroupedByUser,
