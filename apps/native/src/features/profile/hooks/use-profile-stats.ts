@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/auth-context";
-import { createAuthenticatedClient } from "@/lib/api";
 import { logger } from "@/lib/logger";
 
 export interface ProfileStats {
@@ -28,7 +27,7 @@ interface UseProfileStatsReturn extends ProfileStats {
  * APIからユーザーの統計情報（連続投稿日数、投稿総数、作られた世界の数）を取得する。
  */
 export const useProfileStats = (): UseProfileStatsReturn => {
-  const { accessToken } = useAuth();
+  const { isAuthenticated, getAuthenticatedClient } = useAuth();
   const [stats, setStats] = useState<ProfileStats>({
     streakDays: 0,
     totalPosts: 0,
@@ -38,7 +37,7 @@ export const useProfileStats = (): UseProfileStatsReturn => {
   });
 
   const fetchStats = useCallback(async () => {
-    if (!accessToken) {
+    if (!isAuthenticated) {
       setStats((prev) => ({
         ...prev,
         isLoading: false,
@@ -50,7 +49,7 @@ export const useProfileStats = (): UseProfileStatsReturn => {
     setStats((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const authClient = createAuthenticatedClient(accessToken);
+      const authClient = getAuthenticatedClient();
       const res = await authClient.user.stats.$get();
 
       if (res.ok) {
@@ -85,7 +84,7 @@ export const useProfileStats = (): UseProfileStatsReturn => {
         error: "通信エラーが発生しました",
       }));
     }
-  }, [accessToken]);
+  }, [isAuthenticated, getAuthenticatedClient]);
 
   useEffect(() => {
     fetchStats();

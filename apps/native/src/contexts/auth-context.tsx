@@ -1,3 +1,4 @@
+import type { ApiClient } from "@packages/api-contract";
 import type { Profile, User } from "@packages/schema/auth";
 import { ErrorResponseSchema } from "@packages/schema/common/error";
 import {
@@ -6,11 +7,18 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+import { tokenManager } from "@/features/auth/lib/token-manager";
 import { tokenStorage } from "@/features/auth/lib/token-storage";
 import { popupStorage } from "@/features/popup/lib/popup-storage";
-import { client, createAuthenticatedClient } from "@/lib/api";
+import { useAppStateRefresh } from "@/hooks/use-app-state-refresh";
+import {
+  client,
+  createAuthenticatedClient,
+  createAuthenticatedClientWithRetry,
+} from "@/lib/api";
 import {
   clearOneSignalExternalUserId,
   setOneSignalExternalUserId,
@@ -31,6 +39,10 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => void;
   refreshAuth: () => Promise<void>;
+  /** 401自動リトライ付き認証クライアントを取得 */
+  getAuthenticatedClient: () => ApiClient;
+  /** トークンをリフレッシュ */
+  refreshTokenAsync: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -48,6 +60,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // リフレッシュの競合防止用
+  const refreshPromiseRef = useRef<Promise<boolean> | null>(null);
 
   const isAuthenticated = useMemo(
     () => !!user && !!accessToken,
@@ -101,32 +116,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   /**
    * リフレッシュトークンを使ってアクセストークンを更新
+   * 競合防止：既にリフレッシュ中の場合は既存のPromiseを返す
    */
   const tryRefreshToken = useCallback(async (): Promise<boolean> => {
-    const refreshToken = await tokenStorage.getRefreshToken();
-    if (!refreshToken) {
-      return false;
+    // 既にリフレッシュ中の場合は既存のPromiseを返す
+    if (refreshPromiseRef.current) {
+      return refreshPromiseRef.current;
     }
 
-    try {
-      const res = await client.auth.refresh.$post({
-        json: { refreshToken },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-
-        await tokenStorage.setAccessToken(data.session.accessToken);
-        await tokenStorage.setRefreshToken(data.session.refreshToken);
-
-        return await checkAuth(data.session.accessToken);
+    const doRefresh = async (): Promise<boolean> => {
+      const refreshToken = await tokenStorage.getRefreshToken();
+      if (!refreshToken) {
+        return false;
       }
-    } catch {
-      // リフレッシュ失敗
-    }
 
-    await tokenStorage.clearTokens();
-    return false;
+      try {
+        const res = await client.auth.refresh.$post({
+          json: { refreshToken },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+
+          await tokenStorage.setAccessToken(data.session.accessToken);
+          await tokenStorage.setRefreshToken(data.session.refreshToken);
+          // expiresAt を保存
+          if (data.session.expiresAt) {
+            await tokenManager.setExpiresAt(data.session.expiresAt);
+          }
+
+          return await checkAuth(data.session.accessToken);
+        }
+      } catch (error) {
+        console.warn("Token refresh failed:", error);
+      }
+
+      await tokenStorage.clearTokens();
+      await tokenManager.clearExpiresAt();
+      return false;
+    };
+
+    // Promiseを作成してrefに保存
+    refreshPromiseRef.current = doRefresh().finally(() => {
+      refreshPromiseRef.current = null;
+    });
+
+    return refreshPromiseRef.current;
   }, [checkAuth]);
 
   /**
@@ -167,6 +202,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (data.session.refreshToken) {
         await tokenStorage.setRefreshToken(data.session.refreshToken);
       }
+      // expiresAt を保存
+      if (data.session.expiresAt) {
+        await tokenManager.setExpiresAt(data.session.expiresAt);
+      }
 
       // 認証状態を確認して user/profile を取得
       await checkAuth(data.session.accessToken);
@@ -192,6 +231,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (data.session.refreshToken) {
         await tokenStorage.setRefreshToken(data.session.refreshToken);
       }
+      // expiresAt を保存
+      if (data.session.expiresAt) {
+        await tokenManager.setExpiresAt(data.session.expiresAt);
+      }
 
       // 認証状態を確認して user/profile を取得
       await checkAuth(data.session.accessToken);
@@ -209,6 +252,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // ログアウト失敗してもクライアント側はクリア
     }
     await tokenStorage.clearTokens();
+    await tokenManager.clearExpiresAt();
     await popupStorage.clearLastLaunchDate();
     try {
       await clearOneSignalExternalUserId();
@@ -238,6 +282,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [checkAuth, tryRefreshToken]);
 
+  /**
+   * 401自動リトライ付き認証クライアントを取得
+   */
+  const getAuthenticatedClient = useCallback((): ApiClient => {
+    return createAuthenticatedClientWithRetry(
+      () => tokenStorage.getAccessToken(),
+      tryRefreshToken,
+    );
+  }, [tryRefreshToken]);
+
+  // AppState変化時（バックグラウンド→フォアグラウンド）にリフレッシュを試行
+  useAppStateRefresh(refreshAuth);
+
   const value = useMemo(
     () => ({
       user,
@@ -250,6 +307,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       logout,
       updateProfile,
       refreshAuth,
+      getAuthenticatedClient,
+      refreshTokenAsync: tryRefreshToken,
     }),
     [
       user,
@@ -262,6 +321,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       logout,
       updateProfile,
       refreshAuth,
+      getAuthenticatedClient,
+      tryRefreshToken,
     ],
   );
 

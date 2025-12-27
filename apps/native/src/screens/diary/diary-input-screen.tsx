@@ -16,9 +16,9 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 import { useAuth } from "@/contexts/auth-context";
+import { tokenStorage } from "@/features/auth/lib/token-storage";
 import { PhotoGrid } from "@/features/diary";
-import { createAuthenticatedClient } from "@/lib/api";
-import { postMultipartWithAuth } from "@/lib/multipart";
+import { postMultipartWithRetry } from "@/lib/multipart";
 
 const StyledView = withUniwind(View);
 const StyledTextInput = withUniwind(TextInput);
@@ -36,7 +36,8 @@ interface SelectedImage {
 export const DiaryInputScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { accessToken } = useAuth();
+  const { isAuthenticated, getAuthenticatedClient, refreshTokenAsync } =
+    useAuth();
   const { toast } = useToast();
 
   const [content, setContent] = useState("");
@@ -51,7 +52,7 @@ export const DiaryInputScreen = () => {
   };
 
   const handlePost = async () => {
-    if (!accessToken) {
+    if (!isAuthenticated) {
       toast.show({
         variant: "danger",
         label: "認証エラー",
@@ -75,11 +76,12 @@ export const DiaryInputScreen = () => {
         } as unknown as Blob);
       }
 
-      const authClient = createAuthenticatedClient(accessToken);
-      await postMultipartWithAuth<CreateEntryOutput>(
+      const authClient = getAuthenticatedClient();
+      await postMultipartWithRetry<CreateEntryOutput>(
         authClient.entries,
         formData,
-        accessToken,
+        () => tokenStorage.getAccessToken(),
+        refreshTokenAsync,
       );
 
       toast.show({

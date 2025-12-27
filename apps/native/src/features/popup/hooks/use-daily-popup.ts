@@ -1,7 +1,7 @@
+import type { ApiClient } from "@packages/api-contract";
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { usePopup } from "@/contexts/popup-context";
-import { createAuthenticatedClient } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { popupStorage } from "../lib/popup-storage";
 import type { DailyUpdateResponse, PopupConfig } from "../types";
@@ -10,10 +10,9 @@ import type { DailyUpdateResponse, PopupConfig } from "../types";
  * 日付更新 API を呼び出す
  */
 const fetchDailyUpdate = async (
-  accessToken: string,
+  authClient: ApiClient,
 ): Promise<DailyUpdateResponse> => {
-  const client = createAuthenticatedClient(accessToken);
-  const res = await client.reflection["date-update"].$get();
+  const res = await authClient.reflection["date-update"].$get();
 
   if (!res.ok) {
     throw new Error(`API error: ${res.status}`);
@@ -77,25 +76,24 @@ const createPopupItemsFromResponse = (
  */
 export const useDailyPopup = () => {
   const { enqueue, isLoaded } = usePopup();
-  const { accessToken, isAuthenticated } = useAuth();
+  const { isAuthenticated, getAuthenticatedClient } = useAuth();
   const hasCheckedRef = useRef(false);
 
   useEffect(() => {
     logger.debug("useDailyPopup effect", {
       isLoaded,
       isAuthenticated,
-      hasAccessToken: !!accessToken,
       hasChecked: hasCheckedRef.current,
     });
 
-    if (!isLoaded || !isAuthenticated || !accessToken || hasCheckedRef.current)
-      return;
+    if (!isLoaded || !isAuthenticated || hasCheckedRef.current) return;
     hasCheckedRef.current = true;
 
     const checkAndShowPopup = async () => {
       try {
         const lastLaunchDate = await popupStorage.getLastLaunchDate();
-        const response = await fetchDailyUpdate(accessToken);
+        const authClient = getAuthenticatedClient();
+        const response = await fetchDailyUpdate(authClient);
 
         logger.debug("Daily popup check", {
           responseDate: response.date,
@@ -134,5 +132,5 @@ export const useDailyPopup = () => {
     };
 
     checkAndShowPopup();
-  }, [enqueue, isLoaded, isAuthenticated, accessToken]);
+  }, [enqueue, isLoaded, isAuthenticated, getAuthenticatedClient]);
 };

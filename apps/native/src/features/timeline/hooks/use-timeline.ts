@@ -2,7 +2,6 @@ import type { TimelineEntry } from "@packages/schema/entry";
 import { useCallback, useRef, useState } from "react";
 
 import { useAuth } from "@/contexts/auth-context";
-import { createAuthenticatedClient } from "@/lib/api";
 import { logger } from "@/lib/logger";
 
 interface TimelineState {
@@ -38,7 +37,7 @@ interface TimelineState {
  * ```
  */
 export const useTimeline = () => {
-  const { accessToken } = useAuth();
+  const { isAuthenticated, getAuthenticatedClient } = useAuth();
   const [state, setState] = useState<TimelineState>({
     entries: [],
     isLoading: true,
@@ -53,7 +52,7 @@ export const useTimeline = () => {
   const isFetchingMoreRef = useRef(false);
 
   const fetchTimeline = useCallback(async () => {
-    if (!accessToken) {
+    if (!isAuthenticated) {
       setState({
         entries: [],
         isLoading: false,
@@ -76,7 +75,7 @@ export const useTimeline = () => {
     logger.debug("Fetching timeline");
 
     try {
-      const authClient = createAuthenticatedClient(accessToken);
+      const authClient = getAuthenticatedClient();
       const res = await authClient.entries.timeline.$get({
         query: { limit: 20 },
       });
@@ -124,11 +123,11 @@ export const useTimeline = () => {
     } finally {
       isFetchingRef.current = false;
     }
-  }, [accessToken]);
+  }, [isAuthenticated, getAuthenticatedClient]);
 
   const fetchMore = useCallback(async () => {
     if (
-      !accessToken ||
+      !isAuthenticated ||
       !state.nextCursor ||
       state.isFetchingMore ||
       !state.hasMore
@@ -147,7 +146,7 @@ export const useTimeline = () => {
     logger.debug("Fetching more timeline", { cursor: state.nextCursor });
 
     try {
-      const authClient = createAuthenticatedClient(accessToken);
+      const authClient = getAuthenticatedClient();
       const res = await authClient.entries.timeline.$get({
         query: { limit: 20, cursor: state.nextCursor },
       });
@@ -194,7 +193,13 @@ export const useTimeline = () => {
     } finally {
       isFetchingMoreRef.current = false;
     }
-  }, [accessToken, state.nextCursor, state.isFetchingMore, state.hasMore]);
+  }, [
+    isAuthenticated,
+    getAuthenticatedClient,
+    state.nextCursor,
+    state.isFetchingMore,
+    state.hasMore,
+  ]);
 
   // useEffect は削除 - useFocusEffect に統一（home-screen.tsx で呼び出し）
 

@@ -1,12 +1,11 @@
 import type { GetWeeklyWorldOutput } from "@packages/schema/reflection";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useAuth } from "@/contexts/auth-context";
 import {
   formatDateToISO,
   parseISODate,
 } from "@/features/calendar/lib/date-utils";
-import { createAuthenticatedClient } from "@/lib/api";
 import { logger } from "@/lib/logger";
 
 /**
@@ -97,9 +96,7 @@ const getNextWeekStartDate = (weekStartDate: string): string => {
 export const useWeeklyWorldPrefetch = (
   weekStartDate: string,
 ): UseWeeklyWorldPrefetchReturn => {
-  const { accessToken } = useAuth();
-  const accessTokenRef = useRef(accessToken);
-  accessTokenRef.current = accessToken;
+  const { isAuthenticated, getAuthenticatedClient } = useAuth();
 
   const [state, setState] = useState<WeeklyWorldState>(() => {
     // 初期化時にキャッシュをチェック
@@ -128,8 +125,7 @@ export const useWeeklyWorldPrefetch = (
       targetWeek: string,
       options?: { ignoreCache?: boolean },
     ): Promise<WeeklyWorldData | null> => {
-      const token = accessTokenRef.current;
-      if (!token) {
+      if (!isAuthenticated) {
         return null;
       }
 
@@ -154,7 +150,7 @@ export const useWeeklyWorldPrefetch = (
         logger.debug("Fetching weekly world", { targetWeek });
 
         try {
-          const authClient = createAuthenticatedClient(token);
+          const authClient = getAuthenticatedClient();
           const res = await authClient.reflection["weekly-world"].$get({
             query: { weekStartDate: targetWeek },
           });
@@ -206,7 +202,7 @@ export const useWeeklyWorldPrefetch = (
         pendingRequests.delete(targetWeek);
       }
     },
-    [],
+    [isAuthenticated, getAuthenticatedClient],
   );
 
   /**
@@ -214,7 +210,7 @@ export const useWeeklyWorldPrefetch = (
    */
   const fetchCurrentWeek = useCallback(
     async (options?: { ignoreCache?: boolean }) => {
-      if (!accessToken) {
+      if (!isAuthenticated) {
         setState({
           data: { weeklyWorld: null, userPosts: [], aiPosts: [] },
           isLoading: false,
@@ -278,14 +274,14 @@ export const useWeeklyWorldPrefetch = (
         }));
       }
     },
-    [accessToken, weekStartDate, fetchWeeklyWorldData],
+    [isAuthenticated, weekStartDate, fetchWeeklyWorldData],
   );
 
   /**
    * 前後の週をプリフェッチ
    */
   const prefetchAdjacent = useCallback(() => {
-    if (!weekStartDate || !accessToken) return;
+    if (!weekStartDate || !isAuthenticated) return;
 
     const prevWeek = getPrevWeekStartDate(weekStartDate);
     const nextWeek = getNextWeekStartDate(weekStartDate);
@@ -295,7 +291,7 @@ export const useWeeklyWorldPrefetch = (
     // バックグラウンドでプリフェッチ（エラーは無視）
     fetchWeeklyWorldData(prevWeek).catch(() => {});
     fetchWeeklyWorldData(nextWeek).catch(() => {});
-  }, [weekStartDate, accessToken, fetchWeeklyWorldData]);
+  }, [weekStartDate, isAuthenticated, fetchWeeklyWorldData]);
 
   /**
    * 手動リフレッシュ（キャッシュを無視）
