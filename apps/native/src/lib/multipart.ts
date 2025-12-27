@@ -31,7 +31,6 @@ export const postMultipartWithRetry = async <TOutput>(
 ): Promise<TOutput> => {
   const url = endpoint.$url();
 
-  // リクエスト前にトークン期限をチェック
   const isExpiringSoon = await tokenManager.isTokenExpiringSoon();
   if (isExpiringSoon) {
     await refreshToken();
@@ -47,6 +46,7 @@ export const postMultipartWithRetry = async <TOutput>(
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
+        // Content-Type は FormData から自動設定されるので指定しない
       },
       body: formData,
     });
@@ -54,7 +54,6 @@ export const postMultipartWithRetry = async <TOutput>(
 
   let response = await doRequest(accessToken);
 
-  // 401エラーの場合はリフレッシュしてリトライ
   if (response.status === 401) {
     const refreshed = await refreshToken();
     if (refreshed) {

@@ -147,8 +147,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
           return await checkAuth(data.session.accessToken);
         }
-      } catch {
-        // リフレッシュ失敗
+      } catch (error) {
+        console.warn("Token refresh failed:", error);
       }
 
       await tokenStorage.clearTokens();

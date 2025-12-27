@@ -4,7 +4,6 @@ const EXPIRES_AT_KEY = "auth_expires_at";
 
 /**
  * トークン有効期限のリフレッシュ推奨マージン（秒）
- * 期限の5分前にリフレッシュを推奨
  */
 const REFRESH_MARGIN_SECONDS = 5 * 60;
 
@@ -40,13 +39,11 @@ export const tokenManager = {
   },
 
   /**
-   * トークンが期限切れ間近かどうかをチェック
-   * 5分以内に期限切れの場合は true を返す
+   * トークンが期限切れ間近かどうか
    */
   async isTokenExpiringSoon(): Promise<boolean> {
     const expiresAt = await this.getExpiresAt();
     if (expiresAt === null) {
-      // 期限情報がない場合は期限切れとみなす
       return true;
     }
 
@@ -55,7 +52,7 @@ export const tokenManager = {
   },
 
   /**
-   * トークンが完全に期限切れかどうかをチェック
+   * トークンが完全に期限切れかどうか
    */
   async isTokenExpired(): Promise<boolean> {
     const expiresAt = await this.getExpiresAt();
