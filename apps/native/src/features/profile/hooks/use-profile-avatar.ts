@@ -5,8 +5,8 @@ import { useToast } from "heroui-native";
 import { useState } from "react";
 
 import { useAuth } from "@/contexts/auth-context";
-import { createAuthenticatedClient } from "@/lib/api";
-import { postMultipartWithAuth } from "@/lib/multipart";
+import { tokenStorage } from "@/features/auth/lib/token-storage";
+import { postMultipartWithRetry } from "@/lib/multipart";
 
 export interface UseProfileAvatarReturn {
   isUploading: boolean;
@@ -23,12 +23,17 @@ export interface UseProfileAvatarReturn {
  * - ローカル状態を更新
  */
 export const useProfileAvatar = (): UseProfileAvatarReturn => {
-  const { accessToken, updateProfile } = useAuth();
+  const {
+    isAuthenticated,
+    getAuthenticatedClient,
+    refreshTokenAsync,
+    updateProfile,
+  } = useAuth();
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
 
   const pickImage = async () => {
-    if (!accessToken) {
+    if (!isAuthenticated) {
       toast.show({
         variant: "danger",
         label: "認証エラー",
@@ -84,11 +89,12 @@ export const useProfileAvatar = (): UseProfileAvatarReturn => {
       } as unknown as Blob);
 
       // API にアップロード
-      const authClient = createAuthenticatedClient(accessToken);
-      const response = await postMultipartWithAuth<UploadAvatarOutput>(
+      const authClient = getAuthenticatedClient();
+      const response = await postMultipartWithRetry<UploadAvatarOutput>(
         authClient.user.avatar,
         formData,
-        accessToken,
+        () => tokenStorage.getAccessToken(),
+        refreshTokenAsync,
       );
 
       // ローカル状態を更新
