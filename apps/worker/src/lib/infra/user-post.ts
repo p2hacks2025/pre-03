@@ -2,6 +2,7 @@ import {
   and,
   eq,
   gte,
+  inArray,
   isNull,
   lt,
   sql,
@@ -158,46 +159,49 @@ export const getRandomHistoricalPostsForUsers = async (
 
   const excludeDate = new Date(Date.now() - excludeDays * 24 * 60 * 60 * 1000);
 
-  const result = await ctx.db.execute<{
-    id: string;
-    user_profile_id: string;
-    content: string;
-    upload_image_url: string | null;
-    created_at: Date;
-    updated_at: Date;
-    deleted_at: Date | null;
-  }>(sql`
-    SELECT t.*
-    FROM (
-      SELECT p.*,
-             row_number() OVER (
-               PARTITION BY p.user_profile_id
-               ORDER BY random()
-             ) AS rn
-      FROM user_posts p
-      WHERE p.user_profile_id = ANY(${userProfileIds})
-        AND p.created_at < ${excludeDate}
-        AND p.deleted_at IS NULL
-    ) t
-    WHERE t.rn <= ${countPerUser}
-  `);
+  const subquery = ctx.db
+    .select({
+      id: userPosts.id,
+      userProfileId: userPosts.userProfileId,
+      content: userPosts.content,
+      uploadImageUrl: userPosts.uploadImageUrl,
+      createdAt: userPosts.createdAt,
+      updatedAt: userPosts.updatedAt,
+      deletedAt: userPosts.deletedAt,
+      rn: sql<number>`row_number() OVER (
+        PARTITION BY ${userPosts.userProfileId}
+        ORDER BY random()
+      )`.as("rn"),
+    })
+    .from(userPosts)
+    .where(
+      and(
+        inArray(userPosts.userProfileId, userProfileIds),
+        lt(userPosts.createdAt, excludeDate),
+        isNull(userPosts.deletedAt),
+      ),
+    )
+    .as("ranked");
+
+  const result = await ctx.db
+    .select({
+      id: subquery.id,
+      userProfileId: subquery.userProfileId,
+      content: subquery.content,
+      uploadImageUrl: subquery.uploadImageUrl,
+      createdAt: subquery.createdAt,
+      updatedAt: subquery.updatedAt,
+      deletedAt: subquery.deletedAt,
+    })
+    .from(subquery)
+    .where(sql`${subquery.rn} <= ${countPerUser}`);
 
   const postMap = new Map<string, UserPost[]>();
   for (const row of result) {
-    const userProfileId = row.user_profile_id;
-    if (!postMap.has(userProfileId)) {
-      postMap.set(userProfileId, []);
+    if (!postMap.has(row.userProfileId)) {
+      postMap.set(row.userProfileId, []);
     }
-    const post: UserPost = {
-      id: row.id,
-      userProfileId: row.user_profile_id,
-      content: row.content,
-      uploadImageUrl: row.upload_image_url,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      deletedAt: row.deleted_at,
-    };
-    postMap.get(userProfileId)?.push(post);
+    postMap.get(row.userProfileId)?.push(row as UserPost);
   }
 
   return postMap;
