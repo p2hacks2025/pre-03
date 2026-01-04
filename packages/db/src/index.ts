@@ -5,6 +5,7 @@ export {
   eq,
   gt,
   gte,
+  inArray,
   isNull,
   lt,
   lte,
